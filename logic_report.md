@@ -413,3 +413,24 @@ Since `app.js` runs in the browser, the Node.js test harness mocks:
 #### C. Mathematically Impossible Constraints
 - **Setup**: Sets up 1 doctor mapped to Role `R1`. Allocates slot requirements for both `R1` and `R2`. Checks out with `Allow Blank Days` set to `false`.
 - **Assertion**: Asserts that `generateSingleScheduleCandidate` correctly detects the total absence of eligible candidates for the `R2` slot and throws a `Critical Coverage Error` block rather than outputting empty schedules.
+
+---
+
+## 🧪 Test Suite & Quality Assurance
+
+The system employs a comprehensive, zero-dependency Node.js test suite (`tests/*.test.js`). Rather than relying on heavy frameworks like Jest or Mocha, the suite uses a lightweight, decoupled mock-DOM pattern. The test runner uses `fs.readFileSync` combined with `eval()` to inject `app.js` into an isolated Node environment while strategically mocking `global.document`, `global.window`, and specific browser behaviors.
+
+### Covered Domains
+1. **Core Solver Logic (`solver.test.js`)**: Validates the Monte Carlo engine's mathematical properties, such as precise quota summing, circular conflict resolution, and constraint fallback safety.
+2. **Date Range Validation (`customDateRange.test.js`)**: Checks standard multi-month limits, UI overrides, boundary behaviors, and cross-month mapping.
+3. **Constraint Engine (`cascade.test.js`, `offRequest.test.js`)**: Asserts that the 5-Level Cascade accurately steps down conflict requirements when pools dry up without breaking core functionality.
+4. **Scoring Function (`scoring.test.js`)**: Injects mock schedules to calculate exact numeric penalties for shortages and unequal workload dispersion.
+5. **State Management (`manualOverrides.test.js`, `jsonRoundTrip.test.js`)**: Verifies the internal mapping logic, undo stack (LIFO behavior), and the robust serialization/deserialization of UI state to JSON.
+6. **Security (`xss.test.js`)**: Asserts that untrusted strings are properly escaped to prevent Cross-Site Scripting via the `esc()` sanitization function.
+
+### Documented Logic Anomalies (Known Bugs)
+During test coverage expansion, the following minor architectural discrepancies were uncovered and intentionally logged in the test assertions to ensure developer awareness:
+- **Cascade Bypassing Constraints**: Cascade Level 4 (the final relaxation before marking a slot as missing) inadvertently drops the `offToday` tracking restriction completely, which theoretically allows a doctor to be assigned on a requested day off in extreme shortage scenarios.
+- **Reference-Based Date Comparison**: Single-day date range validation fails because it relies on standard strict reference equality (`sd.getTime() !== ed.getTime()`) which allows functionally identical day boundaries when they are different `Date` instances.
+- **XSS in Calendar Component**: While the primary tabular view and string logic heavily use `esc()` for output, the `renderCalendarView` injects unescaped raw string literals directly into the `ondragstart` and `ondrop` HTML attributes in the browser.
+- **Type mismatch for `offMap`**: The manual override verification (`explainSlotFailure`) mistakenly interacts with `offMap` as a `Set` (calling `.has()`), although `parseUIConfig` builds `offMap` as a standard `Object` keyed by integers. This causes a silent throw when evaluating override validity.

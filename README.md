@@ -82,7 +82,7 @@ Built for high reliability, clean execution, and security:
 - **`app.js`**: Contains the scheduling state, Monte Carlo solver search loops, dynamic HTML renderers, and the dual-language translation dictionaries.
 - **`manifest.json`**: Standard web app manifest defining PWA configuration, installable setups, and colors.
 - **`sw.js`**: Service worker script caching key assets for reliable offline performance.
-- **`tests/solver.test.js`**: Lightweight local Node.js unit testing suite verifying corner-case solver behaviors (e.g. circular conflicts, quota sums, and impossible constraints).
+- **`tests/*.test.js`**: A comprehensive, lightweight Node.js unit testing suite that verifies corner-case solver behaviors (e.g., circular conflicts, quota sums, and impossible constraints in `solver.test.js`), UI DOM interactions (JSON export/import in `jsonRoundTrip.test.js`), state management (undo stacks in `manualOverrides.test.js`), and security (XSS assertions in `xss.test.js`). The tests utilize a custom decoupled mock-DOM evaluation pattern to run without requiring heavy frameworks like Jest.
 
 ---
 
