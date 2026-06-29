@@ -1087,9 +1087,17 @@ function parseUIConfig() {
         });
 
         if (!allowBlankDays && totalRequiredShifts !== totalSlotsInMonth) {
-            throw new Error(currentLang === 'th' ? `ข้อผิดพลาด: โควตาเวรทั้งหมด (${totalRequiredShifts}) ต้องเท่ากับจำนวนเวรทั้งหมดในเดือน (${totalSlotsInMonth}) (หรือเปิดใช้งาน "อนุญาตให้เว้นว่าง")` : `Error: The total exact quotas (${totalRequiredShifts}) must equal the total available slots (${totalSlotsInMonth}) unless 'Allow Blank Days' is enabled.`);
+            const diff = Math.abs(totalRequiredShifts - totalSlotsInMonth);
+            const msgTH = totalRequiredShifts < totalSlotsInMonth 
+                ? `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาเพิ่มอีก ${diff} เวรในโควตา (หรือเปิดอนุญาตเว้นว่าง)`
+                : `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาลดโควตาลง ${diff} เวร`;
+            const msgEN = totalRequiredShifts < totalSlotsInMonth 
+                ? `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — add ${diff} more shifts to any role.`
+                : `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — remove ${diff} shifts from any role.`;
+            throw new Error(currentLang === 'th' ? msgTH : msgEN);
         } else if (allowBlankDays && totalRequiredShifts > totalSlotsInMonth) {
-            throw new Error(currentLang === 'th' ? `ข้อผิดพลาด: โควตาเวรทั้งหมด (${totalRequiredShifts}) เกินกว่าจำนวนเวรทั้งหมดในเดือน (${totalSlotsInMonth})` : `Error: The total exact quotas (${totalRequiredShifts}) exceed the total available slots (${totalSlotsInMonth})`);
+            const diff = totalRequiredShifts - totalSlotsInMonth;
+            throw new Error(currentLang === 'th' ? `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) เกินกว่าจำนวนเวรทั้งหมดในเดือน (${totalSlotsInMonth}) - กรุณาลดลง ${diff} เวร` : `Error: Quotas sum to ${totalRequiredShifts} but there are only ${totalSlotsInMonth} slots — remove ${diff} shifts.`);
         }
     }
 
