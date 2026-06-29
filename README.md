@@ -40,6 +40,10 @@
 - **Clipping-Free Sidebar Dropdowns**: Removed container overflow boundaries on the Off Requests list, allowing dropdown menus to render cleanly on top of other sidebar panels rather than clipping.
 - **Localization & Theme**: Supports dynamic switching between Thai (TH) and English (EN) languages, along with a sleek system-synced Dark Mode.
 
+### 4. Installable PWA & Offline Support
+- **Offline Capability**: Features a service worker (`sw.js`) and a web app manifest (`manifest.json`) caching all layout resources, stylesheets, custom fonts, and third-party libraries (Tailwind CSS, SheetJS, Lucide Icons) for complete offline reliability in hospital wards with spotty Wi-Fi.
+- **Installable App**: Fully compliant standard web app configurations allow installing the scheduler directly onto mobile and desktop home screens.
+
 ---
 
 ## 📱 Mobile Performance Optimizations
@@ -70,8 +74,11 @@ Built for high reliability, clean execution, and security:
 
 ## 📂 Architecture
 
-- **`index.html`**: Structures the dashboard layout using Tailwind CSS, including settings for basic config, advanced constraints, role management, and the interactive manual instruction modal.
+- **`index.html`**: Structures the dashboard layout using Tailwind CSS, including settings for basic config, advanced constraints, role management, and the interactive manual instruction modal. Links `manifest.json` and registers the service worker.
 - **`app.js`**: Contains the scheduling state, Monte Carlo solver search loops, dynamic HTML renderers, and the dual-language translation dictionaries.
+- **`manifest.json`**: Standard web app manifest defining PWA configuration, installable setups, and colors.
+- **`sw.js`**: Service worker script caching key assets for reliable offline performance.
+- **`tests/solver.test.js`**: Lightweight local Node.js unit testing suite verifying corner-case solver behaviors (e.g. circular conflicts, quota sums, and impossible constraints).
 
 ---
 

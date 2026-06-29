@@ -15,7 +15,7 @@ The application is built entirely on the client side with a minimal, zero-build 
 
 For a detailed walkthrough of the Monte Carlo simulation logic and constraints, please review [How the algorithm works (Technical Logic Report)](logic_report.md) before making core changes.
 
-## 🚀 How to Run Locally
+## 🚀 How to Run Locally & Run Tests
 
 Since there are no build steps, you can run the project instantly:
 1. Clone the repository.
@@ -24,6 +24,12 @@ Since there are no build steps, you can run the project instantly:
    ```bash
    npx serve .
    ```
+
+### Running Tests
+The project features a local Node.js unit testing suite targeting the core solver algorithm. You can run the tests using Node:
+```bash
+node tests/solver.test.js
+```
 
 ## 📝 Guidelines
 

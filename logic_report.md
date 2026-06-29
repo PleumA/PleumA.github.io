@@ -348,3 +348,49 @@ To secure the application against client-side exploits (like Cross-Site Scriptin
     <button onclick="removeDoctorByIndex(4)">
     ```
     This approach avoids string escaping issues and code injection vulnerabilities.
+
+---
+
+## 📶 Offline PWA (Progressive Web App) Architecture
+
+To support environments with spotty or nonexistent internet connections (such as deep hospital wards or emergency rooms), the application functions as a fully offline-capable Progressive Web App.
+
+### 1. Web App Manifest (`manifest.json`)
+Defines the metadata configuration for the PWA:
+- **Standalone Display Mode**: Launches in a borderless app window, removing standard browser UI inputs (URL bar, navigation keys) to feel like a native application.
+- **Theme and Branding**: Incorporates a clean teal design system color (`#0D9488`) matching the Tailwind CSS primary color palette.
+- **Embedded SVG Icons**: Uses lightweight, standard-compliant inline vector graphics to represent the scheduling app icon on device home screens, saving bandwidth.
+
+### 2. Cache-First Service Worker (`sw.js`)
+Handles offline asset delivery and state synchronization:
+- **Pre-Caching Lifecycle**: During the `install` phase, download and cache core application assets:
+  - Local documents: `./`, `./index.html`, `./app.js`, `./manifest.json`
+  - External CDNs: Tailwind CSS, SheetJS (XLSX export), Lucide Icons, and Google Fonts (Sarabun).
+- **Offline Fallback Route**: Listens to `fetch` events, attempting to retrieve resources directly from the local Cache storage first. If the cache misses, it falls back to the network.
+- **Versioned Cache Invalidation**: Listens to the `activate` event, automatically wiping old versions of caches when updating CACHE_NAME to prevent serving stale client-side logic.
+
+---
+
+## 🧪 Solver Core Test Suite (`tests/solver.test.js`)
+
+Because the scheduling engine is built with randomized Monte Carlo paths and dynamic cascade relaxations, boundary testing is critical to prevent silent calculation regressions. The project implements a lightweight Node.js test runner validating three corner-case scenarios:
+
+### 1. Mocking DOM & Browser Sandboxing
+Since `app.js` runs in the browser, the Node.js test harness mocks:
+- `global.document` (mocking element retrievals via `document.getElementById` and tracking input configs).
+- `global.localStorage` (configured to default to English output mode).
+- `global.window` and event handlers (`addEventListener`).
+
+### 2. Test Cases Covered
+
+#### A. Invalid / Disproportionate Quota Sums
+- **Setup**: Configures 2 doctors mapped to Role `R1`. Sets the `R1` quota to 60 shifts per doctor (total 120 required shifts). Renders a default month of 31 days with 2 slots per day (total 62 available slots).
+- **Assertion**: Asserts that `parseUIConfig()` successfully halts calculation and throws a prescriptive mathematical mismatch exception containing the calculated quota values (`120` and `62`).
+
+#### B. Circular Doctor Conflict Lists
+- **Setup**: Incompatible mapping setup: Doctor `A` conflicts with `B`, `B` conflicts with `C`, and `C` conflicts with `A`. Sets slots per day to 3 (forcing all three doctors to work together).
+- **Assertion**: Evaluates that the Monte Carlo solver runs batch iterations and exits cleanly. The engine must successfully yield a completed schedule by falling back to Cascade Level 4 (ignoring conflicts list) without causing infinite calculation loops or script hangs.
+
+#### C. Mathematically Impossible Constraints
+- **Setup**: Sets up 1 doctor mapped to Role `R1`. Allocates slot requirements for both `R1` and `R2`. Checks out with `Allow Blank Days` set to `false`.
+- **Assertion**: Asserts that `generateSingleScheduleCandidate` correctly detects the total absence of eligible candidates for the `R2` slot and throws a `Critical Coverage Error` block rather than outputting empty schedules.
