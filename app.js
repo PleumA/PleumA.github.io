@@ -2178,9 +2178,9 @@ function renderTableView(config) {
                 colsHtml += `
                     <td class="py-3.5 px-4">
                         <div class="relative group/cell inline-block min-w-[110px]">
-                            <button id="btn-day-${row.day}-slot-${i}" onclick="openCellDropdown(event, 'tablecelldropdown-${row.day}-${i}')" class="w-full text-left text-xs px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm">
-                                <span class="truncate">${displayDoc}</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 opacity-0 group-hover/cell:opacity-60 transition-opacity"><path d="m6 9 6 6 6-6"/></svg>
+                            <button id="btn-day-${row.day}-slot-${i}" aria-label="Day ${row.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." onclick="openCellDropdown(event, 'tablecelldropdown-${row.day}-${i}')" class="w-full text-left text-xs px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm">
+                                <span class="truncate" aria-hidden="true">${displayDoc}</span>
+                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 opacity-0 group-hover/cell:opacity-60 transition-opacity"><path d="m6 9 6 6 6-6"/></svg>
                             </button>
                             <div id="tablecelldropdown-${row.day}-${i}" onclick="event.stopPropagation()" class="absolute left-0 mt-1 w-40 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-20 py-1 hidden max-h-48 overflow-y-auto custom-scrollbar">
                                 ${getCellDropdownOptionsHtml(row.day, i, d, config)}
@@ -2280,9 +2280,9 @@ function renderCalendarView(config) {
 
                 docsHtml += `
                     <div class="relative group/cell">
-                        <button id="btn-cal-day-${dayRow.day}-slot-${i}" onclick="openCellDropdown(event, 'celldropdown-${dayRow.day}-${i}')" class="w-full text-left text-[11px] px-2 py-1 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm">
-                            <span class="truncate">${displayDoc}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5 opacity-0 group-hover/cell:opacity-60 transition-opacity"><path d="m6 9 6 6 6-6"/></svg>
+                        <button id="btn-cal-day-${dayRow.day}-slot-${i}" aria-label="Day ${dayRow.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." onclick="openCellDropdown(event, 'celldropdown-${dayRow.day}-${i}')" class="w-full text-left text-[11px] px-2 py-1 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm">
+                            <span class="truncate" aria-hidden="true">${displayDoc}</span>
+                            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5 opacity-0 group-hover/cell:opacity-60 transition-opacity"><path d="m6 9 6 6 6-6"/></svg>
                         </button>
                         <div id="celldropdown-${dayRow.day}-${i}" onclick="event.stopPropagation()" class="absolute left-0 mt-1 w-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-20 py-1 hidden max-h-48 overflow-y-auto custom-scrollbar">
                             ${getCellDropdownOptionsHtml(dayRow.day, i, doc, config)}
