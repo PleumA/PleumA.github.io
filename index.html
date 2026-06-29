@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดตารางเวรอัตโนมัติ & บันทึกตารางเวร</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+
+    <!-- SheetJS for Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #F8FAFC;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Checkbox Toggle */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #0D9488;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #0D9488;
+        }
+
+        .toggle-checkbox {
+            right: 0;
+            z-index: 1;
+            border-color: #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .toggle-label {
+            width: 3rem;
+            height: 1.5rem;
+            background-color: #cbd5e1;
+            border-radius: 9999px;
+            transition: all 0.3s;
+        }
+
+        /* Custom Scrollbar for list container */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 99px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Dark Mode overrides */
+        .dark body {
+            background-color: #0F172A;
+            /* slate-900 */
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: #1E293B;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 dark:text-slate-100 selection:bg-teal-200 selection:dark:bg-teal-900/60">
+
+    <header
+        class="bg-gradient-to-r from-teal-600 via-emerald-600 to-indigo-600 dark:from-teal-800 dark:via-emerald-800 dark:to-indigo-900 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-sm border border-white/20">
+                    <i data-lucide="calendar" class="w-7 h-7 text-white drop-shadow-sm"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tight" data-i18n="title">ระบบจัดตารางเวรอัตโนมัติ
+                    </h1>
+                    <p class="text-teal-100 text-sm font-medium mt-0.5" data-i18n="subtitle">คำนวณอย่างชาญฉลาดด้วย Smart
+                        Solver • ปรับปรุงตารางด้วยตนเองได้</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 w-full md:w-auto justify-end">
+                <!-- Theme Toggle Button -->
+                <button onclick="toggleDarkMode()" id="btnDarkMode"
+                    class="bg-white/10 hover:bg-white/20 border border-white/10 p-2.5 rounded-xl transition-all active:scale-95 text-white flex items-center justify-center"
+                    title="Toggle Dark/Light Mode">
+                    <i data-lucide="moon" id="iconDarkMode" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Language Toggle Button -->
+                <button onclick="toggleLanguage()" id="btnLanguage"
+                    class="bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-2.5 rounded-xl transition-all active:scale-95 text-white font-bold text-sm tracking-wide"
+                    title="Switch Language">
+                    EN
+                </button>
+
+                <!-- Read Manual Button -->
+                <button onclick="openManualModal()" id="btnManual"
+                    class="bg-white/10 hover:bg-white/20 border border-white/10 p-2.5 rounded-xl transition-all active:scale-95 text-white flex items-center justify-center gap-1.5 font-bold text-sm"
+                    title="Read Manual / คู่มือการใช้งาน">
+                    <i data-lucide="help-circle" class="w-5 h-5"></i>
+                    <span data-i18n="manualBtn">คู่มือ</span>
+                </button>
+
+                <button onclick="generateSchedule()" id="btnCalculate"
+                    class="bg-white text-teal-700 hover:bg-teal-50 dark:bg-slate-800 dark:text-teal-400 dark:hover:bg-slate-700 hover:shadow-md font-bold py-3 px-6 rounded-xl shadow-sm active:scale-95 transition-all flex-1 md:flex-initial flex items-center justify-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-teal-500"></i>
+                    <span data-i18n="calcBtn">คำนวณตารางใหม่</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Left Column: Config -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+
+            <!-- Basic Config -->
+            <div
+                class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+                <div class="bg-slate-50/50 dark:bg-slate-800/40 px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="settings" class="w-5 h-5 text-slate-500 dark:text-slate-400"></i>
+                        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200" data-i18n="basicSettings">
+                            ตั้งค่าพื้นฐาน</h2>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="exportConfigJSON()" title="Export Config" class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="document.getElementById('importConfigFile').click()" title="Import Config" class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                        </button>
+                        <input type="file" id="importConfigFile" accept=".json" class="hidden" onchange="importConfigJSON(event)">
+                    </div>
+                </div>
+                <div class="p-5 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                                data-i18n="monthLabel">เดือน (1-12)</label>
+                            <input type="number" id="inputMonth" min="1" max="12"
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                                data-i18n="yearLabel">ปี (พ.ศ. / ค.ศ.)</label>
+                            <input type="number" id="inputYear"
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
+                        </div>
+                    </div>
+
+                    <!-- Interactive Tag/Chip Input for Doctors -->
+                    <div class="space-y-2">
+                        <label
+                            class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide"
+                            data-i18n="docListLabel">รายชื่อแพทย์</label>
+                        <div id="doctorTagsContainer"
+                            class="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl min-h-[90px] focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 outline-none transition-all cursor-text">
+                            <!-- Input element for adding new names -->
+                            <input type="text" id="doctorInput" placeholder="พิมพ์ชื่อแล้วกด Enter หรือจุลภาค (,)"
+                                class="flex-1 bg-transparent border-none outline-none text-sm min-w-[140px] py-0.5 text-slate-800 dark:text-slate-100">
+                        </div>
+                        <!-- Hidden text field to preserve compatibility with existing parser -->
+                        <textarea id="inputDoctors" class="hidden"></textarea>
+                    </div>
+
+                    <!-- Doctor Roles Mode Toggle -->
+                    <div class="bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <div class="flex items-center justify-between px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="badge-check" class="w-4 h-4 text-violet-500"></i>
+                                <h4 class="font-bold text-sm text-slate-700 dark:text-slate-200" data-i18n="roleToggle">
+                                    โหมดแยกบทบาท (Role-Based)</h4>
+                            </div>
+                            <div
+                                class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
+                                <input type="checkbox" id="chkRoleBased" checked
+                                    class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
+                                <label for="chkRoleBased"
+                                    class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
+                            </div>
+                        </div>
+                        <div id="roleBasedSettings" class="px-4 pb-4 space-y-3 border-t border-slate-200 dark:border-slate-800">
+                            <div class="pt-3">
+                                <label
+                                    class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                                    data-i18n="docRolesLabel">บทบาทของแพทย์ (เช่น A:R1, B:R2)</label>
+                                <input type="text" id="inputDoctorRoles" value="A:R1, B:R2, C:R1, D:R2, E:R1, F:R2"
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                                    data-i18n="defaultRoleSlotsLabel">จำนวนคนแยกตามบทบาท (เช่น R1:1, R2:1)</label>
+                                <input type="text" id="inputDefaultRoleSlots" value="R1:1, R2:1"
+                                    placeholder="เช่น R1:1, R2:1"
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                                    data-i18n="roleQuotasLabel">กำหนดโควตาเวรแบบระบุจำนวน (เช่น R1:12, R2:10)</label>
+                                <input type="text" id="inputRoleQuotas" value=""
+                                    placeholder="เช่น R1:12, R2:10"
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                            data-i18n="specialHolsLabel">วันหยุดพิเศษ (คั่นด้วย ,)</label>
+                        <input type="text" id="inputSpecialHols" placeholder="เช่น 13, 14, 15"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                    </div>
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <label
+                            class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide">
+                            <i data-lucide="coffee" class="w-4 h-4 text-slate-400"></i>
+                            <span data-i18n="noDutyLabel">วันที่งดเวร (ไม่ต้องมีคนอยู่)</span>
+                        </label>
+                        <input type="text" id="inputNoDuty" placeholder="เช่น 15, 16"
+                            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Slots Settings -->
+            <div
+                class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+                <div
+                    class="bg-slate-50/50 dark:bg-slate-800/40 px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                    <i data-lucide="users" class="w-5 h-5 text-indigo-500"></i>
+                    <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200" data-i18n="docsPerDay">
+                        จำนวนแพทย์ต่อวัน</h2>
+                </div>
+                <div class="p-5 space-y-4">
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                            data-i18n="defaultSlots">จำนวนคน (ค่าเริ่มต้น)</label>
+                        <input type="number" id="inputDefaultSlots" value="2" min="1" max="10"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-800 dark:text-slate-100">
+                    </div>
+                    <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label
+                                class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide"
+                                data-i18n="customSlots">กำหนดจำนวนคนเฉพาะวัน</label>
+                            <button onclick="addExtraSlotRow()"
+                                class="text-xs bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition-colors flex items-center gap-1">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span data-i18n="addBtn">เพิ่ม</span>
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3" data-i18n="customSlotsDesc">
+                            ระบุจำนวนคนที่ต้องการใช้เฉพาะบางวันได้</p>
+                        <div id="extraSlotsList" class="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Off Requests -->
+            <div
+                class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800">
+                <div
+                    class="flex justify-between items-center px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                        <i data-lucide="user-minus" class="w-5 h-5 text-orange-500"></i> <span
+                            data-i18n="offRequests">วันขอพัก (Off)</span>
+                    </h2>
+                    <button onclick="addOffRow()"
+                        class="bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-900 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors">
+                        <i data-lucide="plus" class="w-4 h-4"></i> <span data-i18n="addBtn">เพิ่ม</span>
+                    </button>
+                </div>
+                <div id="offRequestsList" class="p-4 space-y-2.5"></div>
+            </div>
+
+            <!-- Advanced Settings -->
+            <div
+                class="bg-slate-50 dark:bg-slate-900/50 rounded-2xl shadow-inner border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200/60 dark:border-slate-800 flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-5 h-5 text-teal-600 dark:text-teal-400"></i>
+                    <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200" data-i18n="advSettings">
+                        เงื่อนไขการจัดเวรขั้นสูง</h2>
+                </div>
+                <div class="p-5 space-y-4 text-sm">
+                    <div class="flex items-center justify-between p-2">
+                        <div>
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleConsecutive">
+                                ห้ามอยู่เวรติดกันทุกกรณี</h4>
+                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
+                                data-i18n="ruleConsecutiveDesc">เว้นอย่างน้อย 1 วัน (รวมวันธรรมดา)</p>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
+                            <input type="checkbox" id="chkPreventConsecutive" checked
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
+                            <label for="chkPreventConsecutive"
+                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2">
+                        <div>
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleGaps">
+                                รักษาระยะห่างของเวร</h4>
+                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1" data-i18n="ruleGapsDesc">
+                                กระจายเวรไม่ให้เกิดช่องว่างที่นานเกินไป</p>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
+                            <input type="checkbox" id="chkPreventLongGaps" checked
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
+                            <label for="chkPreventLongGaps"
+                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2">
+                        <div>
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleBalance">
+                                เฉลี่ยภาระงานของแพทย์ (Balance Workload)</h4>
+                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1" data-i18n="ruleBalanceDesc">
+                                จัดตารางเวรโดยเฉลี่ยจำนวนเวรรวมของทุกคนให้เท่ากันที่สุด</p>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
+                            <input type="checkbox" id="chkBalanceShifts"
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
+                            <label for="chkBalanceShifts"
+                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2">
+                        <div>
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleBlankDays">
+                                อนุญาตให้เว้นว่าง (Allow Blank Days)</h4>
+                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1" data-i18n="ruleBlankDaysDesc">
+                                หากไม่มีแพทย์เพียงพอตามเงื่อนไข ระบบจะปล่อยวันนั้นว่างแทนที่จะบังคับลง</p>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
+                            <input type="checkbox" id="chkAllowBlankDays"
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
+                            <label for="chkAllowBlankDays"
+                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+                        <label
+                            class="block text-xs font-bold text-slate-650 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                            data-i18n="conflictListLabel">รายชื่อแพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict List)</label>
+                        <textarea id="inputConflicts" rows="2" placeholder="เช่น A:B, C:D"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100"></textarea>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-550 mt-1.5 leading-relaxed" data-i18n="conflictDesc">
+                            *ระบุคู่ที่ขัดแย้งกัน เช่น A:B, C:D หรือ A conflicts with B</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Special Rule -->
+            <div id="specialRuleContainer"
+                class="rounded-2xl shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-all overflow-hidden">
+                <div
+                    class="flex justify-between items-center px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-indigo-700 dark:text-indigo-400">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-indigo-500"></i> <span
+                            data-i18n="lockSpecial">ล็อครายชื่อเวรพิเศษ</span>
+                    </h2>
+                    <div
+                        class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
+                        <input type="checkbox" id="chkUseSpecialRule" onchange="toggleSpecialRuleUI()"
+                            class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
+                        <label for="chkUseSpecialRule"
+                            class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
+                    </div>
+                </div>
+
+                <div id="specialRuleBody" class="p-5 space-y-4" style="display: none;">
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5 uppercase tracking-wide"
+                            data-i18n="lockDays">ในช่วงกี่วันแรก?</label>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400"
+                                data-i18n="lockDaysStart">เริ่มวันที่ 1 ถึง</span>
+                            <input type="number" id="inputSpecialDays" value="14"
+                                class="w-20 bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm outline-none text-center focus:border-indigo-500 font-bold text-indigo-700 dark:text-indigo-400">
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5 uppercase tracking-wide"
+                            data-i18n="lockDocs">รายชื่อแพทย์ 1 ในนี้</label>
+                        <div id="specialDocsCheckboxList"
+                            class="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl max-h-40 overflow-y-auto custom-scrollbar">
+                            <!-- Rendered dynamically -->
+                        </div>
+                        <input type="text" id="inputSpecialDocs" class="hidden">
+                        <p class="text-[11px] text-indigo-400 dark:text-indigo-300 mt-2 leading-tight"
+                            data-i18n="lockDesc">*ระบบจะจับคู่คนในกลุ่มนี้ลงเวรทุกวัน โดยห้ามอยู่คู่กันเอง</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Column: Results -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+
+            <!-- Empty State -->
+            <div id="emptyState"
+                class="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-800 border-dashed h-full min-h-[450px] flex flex-col items-center justify-center text-slate-400 p-8 text-center transition-all">
+                <div class="bg-slate-50 dark:bg-slate-800 p-6 rounded-full mb-6 text-teal-400">
+                    <i data-lucide="calendar" class="w-16 h-16"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-600 dark:text-slate-350 mb-2" data-i18n="emptyStateTitle">
+                    พร้อมสำหรับการจัดตาราง</h3>
+                <p class="text-sm max-w-sm leading-relaxed" data-i18n="emptyStateDesc">กรอกชื่อแพทย์ให้ครบถ้วน
+                    จากนั้นคลิก "คำนวณตารางใหม่" เพื่อดูผลลัพธ์</p>
+            </div>
+
+            <!-- Results Container -->
+            <div id="resultsContainer" class="hidden animate-in fade-in duration-500 flex flex-col gap-6">
+
+                <!-- Stats Dashboard Grid -->
+                <div id="statsDashboard" class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in duration-500">
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3">
+                        <div class="bg-teal-50 dark:bg-teal-950/40 p-2.5 rounded-xl text-teal-600 dark:text-teal-400">
+                            <i data-lucide="calendar" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                data-i18n="statsTotal">เวรรวมทั้งหมด</p>
+                            <h4 id="statTotalDuties" class="text-lg font-bold text-slate-800 dark:text-slate-100">0 เวร
+                            </h4>
+                        </div>
+                    </div>
+
+                    <div id="statShortagesCard"
+                        class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3 transition-all duration-300">
+                        <div id="statShortagesIconBg"
+                            class="bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400 transition-colors">
+                            <i id="statShortagesIcon" data-lucide="check-circle" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                data-i18n="statsShortages">เวรขาดแคลน</p>
+                            <h4 id="statShortages" class="text-lg font-bold text-slate-800 dark:text-slate-100">0 วัน
+                            </h4>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3">
+                        <div
+                            class="bg-indigo-50 dark:bg-indigo-950/40 p-2.5 rounded-xl text-indigo-600 dark:text-indigo-400">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                data-i18n="statsAvg">เฉลี่ยเวร/คน</p>
+                            <h4 id="statAvgDuties" class="text-lg font-bold text-slate-800 dark:text-slate-100">0.0</h4>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3">
+                        <div
+                            class="bg-orange-50 dark:bg-orange-950/40 p-2.5 rounded-xl text-orange-600 dark:text-orange-400">
+                            <i data-lucide="scale" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                                data-i18n="statsSpread">ความต่างเวร</p>
+                            <h4 id="statSpread" class="text-sm font-bold text-slate-800 dark:text-slate-100">Min: 0 |
+                                Max: 0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Table -->
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-800/40 px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <h3 class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                            <span class="text-lg">📊</span> <span data-i18n="summaryTitle">สรุปจำนวนเวรรายบุคคล</span>
+                        </h3>
+                        <div class="flex items-center gap-3 font-sans">
+                            <button onclick="copySummary()"
+                                class="flex items-center justify-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-4 py-2 rounded-lg transition-colors">
+                                <i data-lucide="copy" class="w-4 h-4"></i> <span
+                                    data-i18n="copySummaryBtn">คัดลอกสรุป</span>
+                            </button>
+                            <div
+                                class="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                                <span data-i18n="totalShiftsLabel">รวมทั้งหมด</span> <strong id="sumTotalCount"
+                                    class="text-teal-600 dark:text-teal-400 text-sm">0</strong> <span
+                                    data-i18n="shiftsUnit">กะ</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto p-2">
+                        <table class="w-full text-center text-sm">
+                            <thead>
+                                <tr
+                                    class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[12px] uppercase tracking-wider rounded-t-lg">
+                                    <th class="py-3 px-4 text-left font-bold rounded-tl-lg"
+                                        data-i18n="tableHeaderDoctors">แพทย์</th>
+                                    <th class="py-3 px-4 font-bold text-teal-700 dark:text-teal-400"
+                                        data-i18n="tableHeaderWorkdays">ทำการ (จ-ศ)</th>
+                                    <th class="py-3 px-4 font-bold text-orange-700 dark:text-orange-400"
+                                        data-i18n="tableHeaderHolidays">หยุด (ส-อา, พิเศษ)</th>
+                                    <th class="py-3 px-4 font-bold bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-350 rounded-tr-lg"
+                                        data-i18n="tableHeaderTotal">รวมทั้งหมด</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summaryTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <!-- Data from JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Schedule Table & Calendar Panel -->
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden flex flex-col min-h-[600px]">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-800/40 px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                            <h3 class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 shrink-0">
+                                <span class="text-lg">🗓️</span> <span
+                                    data-i18n="scheduleTitle">ตารางเวรปฏิบัติงานจริง</span>
+                            </h3>
+
+                            <!-- View mode switcher tabs -->
+                            <div
+                                class="flex items-center gap-1 bg-slate-200/60 dark:bg-slate-950/80 p-1 rounded-xl self-start font-sans">
+                                <button id="btnTableView" onclick="setViewMode('table')"
+                                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm">
+                                    <i data-lucide="list" class="w-3.5 h-3.5"></i> <span
+                                        data-i18n="tabTable">รายการ</span>
+                                </button>
+                                <button id="btnCalendarView" onclick="setViewMode('calendar')"
+                                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+                                    <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i> <span
+                                        data-i18n="tabCalendar">ปฏิทิน</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 justify-end font-sans">
+                            <!-- Reset Manual Overrides Button (Hidden by default, shown when manual overrides exist) -->
+                            <button id="btnClearOverrides" onclick="clearManualOverrides()"
+                                class="hidden flex items-center justify-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 hover:bg-rose-100 dark:hover:bg-rose-900/50 px-3.5 py-2.5 rounded-xl transition-all">
+                                <i data-lucide="rotate-ccw" class="w-4 h-4"></i> <span
+                                    data-i18n="resetAllBtn">คืนค่าระบบคำนวณทั้งหมด</span>
+                            </button>
+
+                            <button onclick="copyScheduleForExcel()"
+                                class="flex items-center justify-center gap-2 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all">
+                                <i data-lucide="copy" class="w-4 h-4"></i> <span data-i18n="copyExcelBtn">คัดลอกตาราง
+                                    (Excel)</span>
+                            </button>
+                            <button onclick="exportToExcel()"
+                                class="flex items-center justify-center gap-2 bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all">
+                                <i data-lucide="download" class="w-4 h-4"></i> <span data-i18n="exportExcelBtn">โหลด
+                                    .xlsx</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- View Container: Table Mode -->
+                    <div id="tableViewContainer" class="mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 max-h-[600px] custom-scrollbar -webkit-overflow-scrolling-touch">
+                        <table class="w-full text-left text-sm border-collapse min-w-[750px]">
+                            <thead class="sticky top-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-sm"
+                                id="scheduleTableHeader">
+                                <!-- Headers injected via JS -->
+                            </thead>
+                            <tbody id="scheduleTableBody"
+                                class="text-slate-700 dark:text-slate-350 divide-y divide-slate-100 dark:divide-slate-800">
+                                <!-- Data from JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- View Container: Calendar Mode -->
+                    <div id="calendarViewContainer"
+                        class="hidden mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 p-4 bg-slate-50/40 dark:bg-slate-950/20 max-h-[600px] custom-scrollbar -webkit-overflow-scrolling-touch">
+                        <div class="min-w-[700px]">
+                            <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 mb-2"
+                                id="calendarHeaderDays">
+                                <div class="text-rose-500 py-1 uppercase tracking-wider" data-i18n="daySun">อา.</div>
+                                <div class="py-1 uppercase tracking-wider" data-i18n="dayMon">จ.</div>
+                                <div class="py-1 uppercase tracking-wider" data-i18n="dayTue">อ.</div>
+                                <div class="py-1 uppercase tracking-wider" data-i18n="dayWed">พ.</div>
+                                <div class="py-1 uppercase tracking-wider" data-i18n="dayThu">พฤ.</div>
+                                <div class="py-1 uppercase tracking-wider" data-i18n="dayFri">ศ.</div>
+                                <div class="text-rose-500 py-1 uppercase tracking-wider" data-i18n="daySat">ส.</div>
+                            </div>
+                            <div id="calendarGrid" class="grid grid-cols-7 gap-2.5 min-h-[400px]">
+                                <!-- Days injected via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6">
+        <div class="max-w-7xl mx-auto px-4 flex justify-center items-center">
+            <p class="text-sm font-medium text-slate-400 dark:text-slate-500">Developed by <a
+                    class="hover:text-orange-600 dark:hover:text-orange-400 text-orange-400 dark:text-orange-600"
+                    href="https://github.com/PleumA" target="_blank">Arnun Polsuksiri</a> & improved by Antigravity</p>
+        </div>
+    </footer>
+
+    <!-- Manual Modal -->
+    <div id="manualModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onclick="closeManualModal()"></div>
+        <!-- Modal Content Card -->
+        <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col scale-95 transition-transform duration-300">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-teal-50 dark:bg-teal-950/50 p-2.5 rounded-xl text-teal-600 dark:text-teal-400">
+                        <i data-lucide="help-circle" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-850 dark:text-white" data-i18n="manualTitle">คู่มือการใช้งานระบบจัดตารางเวร</h3>
+                </div>
+                <button onclick="closeManualModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6 text-sm leading-relaxed">
+                <p class="text-slate-500 dark:text-slate-400 font-medium" data-i18n="manualIntro">
+                    ระบบจัดตารางเวรนี้ คำนวณด้วยอัลกอริทึม Smart Solver (Monte Carlo Simulation) 300 รอบ เพื่อหาการกระจายเวรที่ดีที่สุด พร้อมทั้งรองรับเงื่อนไขหลากหลายรูปแบบดังนี้:
+                </p>
+                <div class="grid gap-6">
+                    <!-- Section 1 -->
+                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                            <span data-i18n="manualSection1Title">1. การจัดการแพทย์และบทบาท (Roles)</span>
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n="manualSection1Body">
+                            ระบุรายชื่อแพทย์ในรูปแบบ Tag และกำหนดบทบาทในกล่องข้อความ (เช่น <code>A:R1, B:R2</code>) ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน
+                        </p>
+                    </div>
+                    <!-- Section 2 -->
+                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                            <span data-i18n="manualSection2Title">2. จำนวนเวรตามบทบาท (Slots)</span>
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n="manualSection2Body">
+                            กำหนดจำนวนผู้ปฏิบัติงานต่อวัน เช่น <code>R1:1, R2:1</code> (หมายถึงต้องการ R1 1 คน และ R2 1 คน) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'
+                        </p>
+                    </div>
+                    <!-- Section 3 -->
+                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                            <span data-i18n="manualSection3Title">3. แพทย์ที่ขัดแย้งกัน (Conflict List)</span>
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n="manualSection3Body">
+                            ระบุแพทย์ที่ไม่สามารถอยู่เวรร่วมกันในวันเดียวกันได้ เช่น <code>A:B</code> หรือ <code>C conflicts with D</code> อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ
+                        </p>
+                    </div>
+                    <!-- Section 4 -->
+                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                            <span data-i18n="manualSection4Title">4. วันหยุดและวันพัก (Off Requests)</span>
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n="manualSection4Body">
+                            ระบบห้ามจัดเวรซ้อนทับวัน Off หรือก่อนหน้าวัน Off 1 วัน และห้ามอยู่เวรวันหยุด (ส.-อา. + นักขัตฤกษ์) ติดกันเด็ดขาด
+                        </p>
+                    </div>
+                    <!-- Section 5 -->
+                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                            <span data-i18n="manualSection5Title">5. การแก้ไขและตรวจสอบตาราง</span>
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n="manualSection5Body">
+                            ท่านสามารถคลิกที่ชื่อแพทย์ในตารางหรือปฏิทินเพื่อเลือกสลับตัวแพทย์ด้วยตนเอง ระบบจะคำนวณสถิติใหม่พร้อมแสดงป้ายเตือนความขัดแย้ง (Conflict) หรือผิดบทบาท (Role Mismatch) ทันที
+                        </p>
+                    </div>
+                    <!-- Section 6 -->
+                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                            <span data-i18n="manualSection6Title">6. การบันทึก/โหลดและอัปเดตสถิติ</span>
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n="manualSection6Body">
+                            ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ และเมื่อมีการแก้ไขเวรด้วยตนเอง กรุณากดปุ่ม "ยืนยันการเปลี่ยนแปลง" เพื่อเริ่มคำนวณสรุปสถิติใหม่
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end">
+                <button onclick="closeManualModal()" class="bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-sm">
+                    ตกลง / OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 transition-all duration-400 z-50 opacity-0 translate-y-8 scale-95 pointer-events-none">
+        <div id="toastContent"
+            class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm border bg-slate-800 text-white border-slate-700 dark:bg-slate-950">
+            <i id="toastIcon" data-lucide="check-circle-2" class="w-6 h-6 text-emerald-400"></i>
+            <span id="toastMsg">สำเร็จ</span>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script src="app.js"></script>
+</body>
+
+</html>
