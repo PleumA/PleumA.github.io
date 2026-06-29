@@ -1,7 +1,7 @@
 # PleumA.github.io
 ## Automatic On-Call & Night Shift Doctor Scheduler
 
-> **This website was developed by Vibe Code using the Gemini 3.1 Pro Extended version for allocating night-shift doctor duties.**
+> **This website was developed by Vibe Code using Antigravity model Gemini 3.1 Pro, combined with Claude Opus 4.6 version for allocating night-shift doctor duties.**
 
 📖 **[How the algorithm works (Technical Logic Report)](logic_report.md)** — A detailed, deep-dive technical reference on the Monte Carlo solver engine, constraint cascades, scoring metrics, and system architecture. Essential reading for anyone auditing or extending this medical scheduling tool.
 
