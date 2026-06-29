@@ -246,7 +246,9 @@
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                                     data-i18n="docRolesLabel">บทบาทของแพทย์ (เช่น A:R1, B:R2)</label>
                                 <input type="text" id="inputDoctorRoles" value="A:R1, B:R2, C:R1, D:R2, E:R1, F:R2"
+                                    placeholder="e.g., A:R1, B:R2, C:R1"
                                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                                <p class="text-[10px] text-slate-500 mt-1">Format: Name:Role, Name:Role</p>
                             </div>
                             <div>
                                 <label
@@ -411,8 +413,9 @@
                         <label
                             class="block text-xs font-bold text-slate-650 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                             data-i18n="conflictListLabel">รายชื่อแพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict List)</label>
-                        <textarea id="inputConflicts" rows="2" placeholder="เช่น A:B, C:D"
+                        <textarea id="inputConflicts" rows="2" placeholder="e.g., A:B, C:D"
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100"></textarea>
+                        <p class="text-[10px] text-slate-500 mt-1">Format: Name:Name, Name:Name</p>
                         <p class="text-[11px] text-slate-400 dark:text-slate-550 mt-1.5 leading-relaxed" data-i18n="conflictDesc">
                             *ระบุคู่ที่ขัดแย้งกัน เช่น A:B, C:D หรือ A conflicts with B</p>
                     </div>
@@ -680,6 +683,15 @@
                     href="https://github.com/PleumA" target="_blank">Arnun Polsuksiri</a> & improved by Antigravity</p>
         </div>
     </footer>
+
+    <!-- Mobile Doctor Bottom Sheet -->
+    <div id="mobileDoctorSheet" class="fixed inset-0 bg-black/50 z-50 hidden">
+        <div class="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white">เปลี่ยนแพทย์ / Change Doctor</h3>
+            <div id="mobileDoctorList"></div>
+            <button onclick="closeMobileSheet()" class="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl font-bold transition-colors">ยกเลิก / Cancel</button>
+        </div>
+    </div>
 
     <!-- Manual Modal -->
     <div id="manualModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">

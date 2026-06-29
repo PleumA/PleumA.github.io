@@ -2358,14 +2358,14 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config = null, i
     return optionsHtml;
 }
 
+window.closeMobileSheet = function() {
+    const sheet = document.getElementById('mobileDoctorSheet');
+    if (sheet) sheet.classList.add('hidden');
+}
+
+// Keep closeMobileModal in case it's called anywhere else by accident
 window.closeMobileModal = function() {
-    const modal = document.getElementById('mobileDoctorModal');
-    if (modal) {
-        modal.classList.add('opacity-0', 'pointer-events-none');
-        const sheet = modal.querySelector('.bottom-sheet-content');
-        if (sheet) sheet.classList.add('translate-y-full');
-        setTimeout(() => modal.remove(), 300);
-    }
+    window.closeMobileSheet();
 }
 
 // Cell Dropdown Router Trigger
@@ -2381,9 +2381,9 @@ window.openCellDropdown = function (event, dropdownId) {
         if (d.id !== dropdownId) d.classList.add('hidden');
     });
 
-    if (window.innerWidth < 768) {
-        // Parse day and slot from dropdownId
-        // format: celldropdown-DAY-SLOT or tablecelldropdown-DAY-SLOT
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
         const parts = dropdownId.split('-');
         const slotIndex = parseInt(parts.pop());
         const day = parseInt(parts.pop());
@@ -2396,48 +2396,30 @@ window.openCellDropdown = function (event, dropdownId) {
             }
         }
 
-        const titleText = currentLang === 'th' ? `เปลี่ยนแพทย์ประจำวันที่ ${day}` : `Change Doctor for Day ${day}`;
-        const cancelText = currentLang === 'th' ? "ยกเลิก" : "Cancel";
+        const listContainer = document.getElementById('mobileDoctorList');
+        if (!listContainer) return;
 
-        let existingModal = document.getElementById('mobileDoctorModal');
-        if (existingModal) existingModal.remove();
-
-        const modalDiv = document.createElement('div');
-        modalDiv.id = 'mobileDoctorModal';
-        modalDiv.className = 'fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300';
-        modalDiv.onclick = window.closeMobileModal;
-
-        const optionsHtml = getCellDropdownOptionsHtml(day, slotIndex, currentDoc, null, true);
-
-        modalDiv.innerHTML = `
-            <div class="bottom-sheet-content w-full sm:w-[400px] bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl transform translate-y-full transition-transform duration-300 flex flex-col max-h-[85vh]" onclick="event.stopPropagation()">
-                <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl z-10">
-                    <h3 class="text-lg font-bold text-slate-800 dark:text-white">${titleText}</h3>
-                    <button type="button" onclick="closeMobileModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    </button>
-                </div>
-                <div class="overflow-y-auto custom-scrollbar flex-1 pb-2">
-                    <div class="flex flex-col">
-                        ${optionsHtml}
-                    </div>
-                </div>
-                <div class="p-4 border-t border-slate-100 dark:border-slate-800 sticky bottom-0 bg-white dark:bg-slate-900">
-                    <button type="button" onclick="closeMobileModal()" class="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-base transition-colors">
-                        ${cancelText}
-                    </button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modalDiv);
+        let optionsHtml = '';
+        const config = parseUIConfig();
+        const { doctorRoles } = config;
         
-        // Trigger animation
-        requestAnimationFrame(() => {
-            modalDiv.classList.remove('opacity-0', 'pointer-events-none');
-            const sheet = modalDiv.querySelector('.bottom-sheet-content');
-            sheet.classList.remove('translate-y-full');
+        const isOverridden = manualOverrides[day] && manualOverrides[day][slotIndex] !== undefined;
+        if (isOverridden) {
+            optionsHtml += `<button onclick="resetSlotToAuto(${day}, ${slotIndex}); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-indigo-600 dark:text-indigo-400 font-bold transition-colors">คืนค่าระบบคำนวณ</button>`;
+        }
+
+        doctors.forEach((doc, index) => {
+            const isCurrent = doc === currentDoc ? 'text-teal-600 dark:text-teal-400 font-bold' : 'text-slate-700 dark:text-slate-300';
+            const role = doctorRoles[doc] || 'Default';
+            const displayName = role !== 'Default' ? `${doc} (${role})` : doc;
+            optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, ${index}); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left ${isCurrent} transition-colors">${esc(displayName)}</button>`;
         });
+        
+        optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -1); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-red-600 dark:text-red-400 font-bold transition-colors">⚠️ ขาดคน</button>`;
+        optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -2); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-slate-400 dark:text-slate-500 font-bold transition-colors">- ว่าง</button>`;
+
+        listContainer.innerHTML = optionsHtml;
+        document.getElementById('mobileDoctorSheet').classList.remove('hidden');
 
     } else {
         const dropdown = document.getElementById(dropdownId);
