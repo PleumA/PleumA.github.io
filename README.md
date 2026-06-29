@@ -23,6 +23,7 @@
   - **Strict Quota Enforcement**: Doctors who have reached their exact quota are immediately removed from the available pool for all subsequent shifts.
   - **Graceful Dead-end Fallback**: If a day cannot be filled due to quota lockouts, the system outputs `ขาดคน` (Missing) without crashing and shows a warning toast pointing out constraint conflicts.
 - **Dynamic Doctors per Day**: Allows defining a global default slot count or custom slot numbers for specific days. Seamlessly collapses role-specific slot configurations into general pool slots when Role-Based Mode is toggled off.
+- **Custom Date Ranges**: Easily pivot from generating rigid month-based schedules to arbitrary custom date ranges (e.g. Mid-month to mid-month, or quarterly schedules up to 90 days), with the core solver array seamlessly expanding or contracting.
 - **Allow Blank Days (Toggleable)**: When **ON**, allows unassigned slots (`ขาดคน`) if no eligible doctor is available due to constraints. When **OFF** (default), a 5-level **Must-Fill cascade** progressively relaxes spacing, conflict, and off-request rules to force-fill the slot.
 - **Strict Deduplication**: Enforces a strict uniqueness check to ensure the exact same doctor cannot be scheduled for multiple slots on the same day, even during forced Must-Fill cascades.
 - **Conflict / Hate List**: Excludes incompatible doctors (e.g., `A:B` or `A conflicts with B`) from working the same shift.

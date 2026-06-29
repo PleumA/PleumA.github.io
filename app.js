@@ -112,7 +112,16 @@ const translations = {
         manualSection5Title: "5. การแก้ไขและตรวจสอบตาราง",
         manualSection5Body: "ท่านสามารถคลิกที่ชื่อแพทย์ในตารางหรือปฏิทินเพื่อเลือกสลับตัวแพทย์ด้วยตนเอง ระบบจะคำนวณสถิติใหม่พร้อมแสดงป้ายเตือนความขัดแย้ง (Conflict) หรือผิดบทบาท (Role Mismatch) ทันที",
         manualSection6Title: "6. การบันทึก/โหลดและการอัปเดตสถิติ",
-        manualSection6Body: "ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ และเมื่อมีการแก้ไขเวรด้วยตนเอง กรุณากดปุ่ม 'ยืนยันการเปลี่ยนแปลง' เพื่อเริ่มคำนวณสรุปสถิติใหม่"
+        manualSection6Body: "ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ และเมื่อมีการแก้ไขเวรด้วยตนเอง กรุณากดปุ่ม 'ยืนยันการเปลี่ยนแปลง' เพื่อเริ่มคำนวณสรุปสถิติใหม่",
+        customDateRangeToggle: "ใช้ช่วงวันที่กำหนดเอง",
+        startDateLabel: "เริ่ม",
+        endDateLabel: "สิ้นสุด",
+        offRequestCustomNoteText: "ในโหมดช่วงวันที่กำหนดเอง กรุณาระบุวันในรูปแบบ DD/MM/YYYY เช่น 20/05/2026 (หรือ ค.ศ.)",
+        roleSlotsPlaceholder: "เช่น R1:1, R2:1",
+        roleQuotasPlaceholder: "เช่น R1:12, R2:10",
+        csvPlaceholder1: "เช่น 13, 14, 15",
+        csvPlaceholder2: "เช่น 15, 16",
+        docRolesPlaceholder: "เช่น A:R1, B:R2, C:Staff"
     },
     en: {
         title: "Automatic On-Call Scheduler",
@@ -211,7 +220,16 @@ const translations = {
         manualSection5Title: "5. Manual Overrides & Warnings",
         manualSection5Body: "Click any doctor's name in Table or Calendar to manually override. The system updates workload stats and displays real-time warning badges for conflicts or role mismatches.",
         manualSection6Title: "6. Save/Load Config & Stats Sync",
-        manualSection6Body: "Export configuration state as a JSON backup file to instantly reload later. When making manual overrides, click 'Confirm Changes' to sync and recalculate summary reports."
+        manualSection6Body: "Export configuration state as a JSON backup file to instantly reload later. When making manual overrides, click 'Confirm Changes' to sync and recalculate summary reports.",
+        customDateRangeToggle: "Use Custom Date Range",
+        startDateLabel: "Start Date",
+        endDateLabel: "End Date",
+        offRequestCustomNoteText: "In custom date range mode, please enter date as DD/MM/YYYY e.g., 20/05/2026 (AD year)",
+        roleSlotsPlaceholder: "e.g. R1:1, R2:1",
+        roleQuotasPlaceholder: "e.g. R1:12, R2:10",
+        csvPlaceholder1: "e.g. 13, 14, 15",
+        csvPlaceholder2: "e.g. 15, 16",
+        docRolesPlaceholder: "e.g. A:R1, B:R2, C:Staff"
     }
 };
 
@@ -222,6 +240,8 @@ let extraSlotsData = [];
 let globalResult = null;
 let isInitialLoad = true;
 let viewMode = 'table'; // 'table' or 'calendar'
+let isCustomDateRange = false;
+let scheduleDates = [];
 
 // Manual override object tracking custom cell edits
 // Format: { [day]: { [slotIndex]: docName } }
@@ -240,6 +260,31 @@ document.addEventListener('DOMContentLoaded', () => {
     syncDoctorsToInput();
     renderDoctorTags();
     renderSpecialDocsCheckboxList();
+
+    // Custom Date Range Listener
+    const chkCustom = document.getElementById('chkCustomDateRange');
+    if (chkCustom) {
+        chkCustom.addEventListener('change', function (e) {
+            isCustomDateRange = e.target.checked;
+            const customContainer = document.getElementById('customDateRangeContainer');
+            const monthYearContainer = document.getElementById('standardMonthYearContainer');
+            const btnCalendarView = document.getElementById('btnCalendarView');
+            const offNote = document.getElementById('offRequestCustomNote');
+
+            if (isCustomDateRange) {
+                customContainer.classList.remove('hidden');
+                monthYearContainer.classList.add('hidden');
+                if (btnCalendarView) btnCalendarView.classList.add('hidden');
+                if (offNote) offNote.classList.remove('hidden');
+                if (viewMode === 'calendar') window.setViewMode('table');
+            } else {
+                customContainer.classList.add('hidden');
+                monthYearContainer.classList.remove('hidden');
+                if (btnCalendarView) btnCalendarView.classList.remove('hidden');
+                if (offNote) offNote.classList.add('hidden');
+            }
+        });
+    }
 
     // Apply language i18n
     applyTranslations();
@@ -964,21 +1009,26 @@ function parseUIConfig() {
     const calcYear = year > 2500 ? year - 543 : year;
     const specialHols = specialHolidaysInput.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
     const noDutyDays = noDutyDaysInput.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
-    const numDays = new Date(calcYear, month, 0).getDate();
+    let numDays = scheduleDates.length;
+    
+    // Fallback for isolated test environments that don't trigger generateSchedule
+    if (numDays === 0 && !isCustomDateRange) {
+        numDays = new Date(calcYear, month, 0).getDate();
+    }
 
     const holidaySet = new Set(specialHols);
     const noDutySet = new Set(noDutyDays);
 
     for (let d = 1; d <= numDays; d++) {
-        const dateObj = new Date(calcYear, month - 1, d);
+        const dateObj = (scheduleDates.length > 0) ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
         const dayOfWeek = dateObj.getDay();
         if (dayOfWeek === 0 || dayOfWeek === 6) holidaySet.add(d);
     }
 
     const offMap = {};
     offData.forEach(req => {
-        const d = parseInt(req.date);
-        if (!isNaN(d) && req.names) {
+        const d = isCustomDateRange ? req.date.trim() : parseInt(req.date);
+        if (d && req.names) {
             const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
             if (!offMap[d]) offMap[d] = new Set();
             namesArr.forEach(n => offMap[d].add(n));
@@ -987,9 +1037,9 @@ function parseUIConfig() {
 
     const extraSlotsMap = {};
     extraSlotsData.forEach(req => {
-        const d = parseInt(req.date);
+        const d = isCustomDateRange ? req.date.trim() : parseInt(req.date);
         const s = req.slots;
-        if (!isNaN(d) && s) extraSlotsMap[d] = s;
+        if (d && s) extraSlotsMap[d] = s;
     });
 
     const doctorRoles = {};
@@ -1058,7 +1108,15 @@ function parseUIConfig() {
     });
 
     const getRoleSlotsForDay = (day) => {
-        const slotsVal = extraSlotsMap[day];
+        let key = day;
+        if (isCustomDateRange) {
+            const dateObj = scheduleDates[day - 1];
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const yyyy = dateObj.getFullYear();
+            key = `${dd}/${mm}/${yyyy}`;
+        }
+        const slotsVal = extraSlotsMap[key];
         if (slotsVal === undefined) return { ...defaultRoleSlots };
         let dayRoleSlots = {};
         const slotsStr = String(slotsVal).trim();
@@ -1219,8 +1277,28 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
     for (let day = 1; day <= numDays; day++) {
         const isHoliday = holidaySet.has(day);
         const isNoDuty = noDutySet.has(day);
-        const offToday = offMap[day] || new Set();
-        const offTomorrow = offMap[day + 1] || new Set();
+        
+        let offKeyToday = day;
+        let offKeyTomorrow = day + 1;
+        if (isCustomDateRange) {
+            const dateObj = scheduleDates[day - 1];
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const yyyy = dateObj.getFullYear();
+            offKeyToday = `${dd}/${mm}/${yyyy}`;
+            if (day < numDays) {
+                const tomorrowObj = scheduleDates[day];
+                const tm_dd = String(tomorrowObj.getDate()).padStart(2, '0');
+                const tm_mm = String(tomorrowObj.getMonth() + 1).padStart(2, '0');
+                const tm_yyyy = tomorrowObj.getFullYear();
+                offKeyTomorrow = `${tm_dd}/${tm_mm}/${tm_yyyy}`;
+            } else {
+                offKeyTomorrow = null;
+            }
+        }
+        
+        const offToday = offMap[offKeyToday] || new Set();
+        const offTomorrow = (offKeyTomorrow !== null && offMap[offKeyTomorrow]) ? offMap[offKeyTomorrow] : new Set();
 
         let slotsPerDay = 0;
         let dayRoleSlots = getRoleSlotsForDay(day);
@@ -1492,6 +1570,50 @@ window.generateSchedule = async function () {
             isInitialLoad = false;
             return;
         }
+
+        // Custom Date Range Validation & Dates Population
+        if (isCustomDateRange) {
+            const startStr = document.getElementById('inputStartDate').value;
+            const endStr = document.getElementById('inputEndDate').value;
+            if (!startStr || !endStr) {
+                if (btn) btn.innerHTML = originalHtml;
+                isCalculating = false;
+                showToast(currentLang === 'th' ? "กรุณาระบุวันที่เริ่มต้นและสิ้นสุด" : "Please select start and end dates", true);
+                return;
+            }
+            const sd = new Date(startStr);
+            const ed = new Date(endStr);
+            if (sd >= ed && sd.getTime() !== ed.getTime()) {
+                if (btn) btn.innerHTML = originalHtml;
+                isCalculating = false;
+                showToast(currentLang === 'th' ? "วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด" : "Start date must be before end date", true);
+                return;
+            }
+            const diffDays = Math.round((ed - sd) / (1000 * 60 * 60 * 24)) + 1;
+            if (diffDays > 90) {
+                if (btn) btn.innerHTML = originalHtml;
+                isCalculating = false;
+                showToast(currentLang === 'th' ? "ช่วงวันที่เกิน 90 วัน กรุณาตรวจสอบ" : "Range exceeds 90 days, please check", true);
+                return;
+            }
+
+            scheduleDates = [];
+            let curr = new Date(sd);
+            while (curr <= ed) {
+                scheduleDates.push(new Date(curr));
+                curr.setDate(curr.getDate() + 1);
+            }
+        } else {
+            const year = parseInt(document.getElementById('inputYear').value);
+            const month = parseInt(document.getElementById('inputMonth').value);
+            const calcYear = year > 2500 ? year - 543 : year;
+            const daysInMonth = new Date(calcYear, month, 0).getDate();
+            scheduleDates = [];
+            for (let i = 1; i <= daysInMonth; i++) {
+                scheduleDates.push(new Date(calcYear, month - 1, i));
+            }
+        }
+
         isInitialLoad = false;
         isCalculating = true;
 
@@ -1569,8 +1691,16 @@ window.generateSchedule = async function () {
         const enDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
         bestCandidate.schedule.forEach(row => {
-            const dateObj = new Date(calcYear, month - 1, row.day);
+            const dateObj = isCustomDateRange ? scheduleDates[row.day - 1] : new Date(calcYear, month - 1, row.day);
             row.dayName = currentLang === 'th' ? thDays[dateObj.getDay()] : enDays[dateObj.getDay()];
+            
+            if (isCustomDateRange) {
+                const dd = String(dateObj.getDate()).padStart(2, '0');
+                const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const yyyy = currentLang === 'th' ? dateObj.getFullYear() + 543 : dateObj.getFullYear();
+                row.dayDisplay = `${dd}/${mm}/${yyyy}`;
+            }
+
             updateDayNote(row, null, config);
         });
 
@@ -2203,7 +2333,8 @@ function renderTableView(config) {
             noteHtml += '</div>';
         }
 
-        let colsHtml = `<td class="py-3.5 px-6 ${textClass}">${row.day}</td><td class="py-3.5 px-4 ${textClass}">${row.dayName}</td>`;
+        let displayDay = row.dayDisplay || row.day;
+        let colsHtml = `<td class="py-3.5 px-6 ${textClass}">${displayDay}</td><td class="py-3.5 px-4 ${textClass}">${row.dayName}</td>`;
         for (let i = 0; i < globalResult.maxSlots; i++) {
             let docObj = row.selectedDocs[i];
             let d = docObj ? docObj.name : "";
@@ -2506,21 +2637,24 @@ window.openCellDropdown = function (event, dropdownId) {
 };
 
 // Clipboard Copy functions
-function formatShortDate(day, month, year, lang) {
-    const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const monthNamesTh = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-    const mIndex = parseInt(month) - 1;
-    const mName = lang === 'th' ? monthNamesTh[mIndex] : monthNamesEn[mIndex];
-    
+function formatShortDate(dayIndex, month, year, lang) {
+    if (isCustomDateRange && scheduleDates && scheduleDates[dayIndex - 1]) {
+        const dateObj = scheduleDates[dayIndex - 1];
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const yyyy = lang === 'th' ? dateObj.getFullYear() + 543 : dateObj.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    }
+
+    const dd = String(dayIndex).padStart(2, '0');
+    const mm = String(month).padStart(2, '0');
     let y = parseInt(year);
     if (lang === 'th') {
         if (y < 2500) y += 543;
     } else {
         if (y > 2500) y -= 543;
     }
-    const yShort = y.toString().slice(-2);
-    
-    return `${day} ${mName} ${yShort}`;
+    return `${dd}/${mm}/${y}`;
 }
 
 window.copyScheduleForExcel = function () {
@@ -2687,6 +2821,8 @@ window.exportConfigJSON = function () {
         inputs: {
             inputMonth: document.getElementById('inputMonth')?.value || '',
             inputYear: document.getElementById('inputYear')?.value || '',
+            inputStartDate: document.getElementById('inputStartDate')?.value || '',
+            inputEndDate: document.getElementById('inputEndDate')?.value || '',
             inputDefaultSlots: document.getElementById('inputDefaultSlots')?.value || '',
             inputSpecialHols: document.getElementById('inputSpecialHols')?.value || '',
             inputNoDuty: document.getElementById('inputNoDuty')?.value || '',
@@ -2698,6 +2834,7 @@ window.exportConfigJSON = function () {
             inputSpecialDocs: document.getElementById('inputSpecialDocs')?.value || ''
         },
         checkboxes: {
+            chkCustomDateRange: document.getElementById('chkCustomDateRange')?.checked || false,
             chkRoleBased: document.getElementById('chkRoleBased')?.checked || false,
             chkPreventConsecutive: document.getElementById('chkPreventConsecutive')?.checked || false,
             chkPreventLongGaps: document.getElementById('chkPreventLongGaps')?.checked || false,
@@ -2752,6 +2889,12 @@ window.importConfigJSON = function (event) {
                     const el = document.getElementById(id);
                     if (el) el.checked = config.checkboxes[id];
                 });
+            }
+
+            // Explicitly trigger the custom date range toggle logic
+            const chkCustom = document.getElementById('chkCustomDateRange');
+            if (chkCustom) {
+                chkCustom.dispatchEvent(new Event('change'));
             }
 
             // Sync UI components

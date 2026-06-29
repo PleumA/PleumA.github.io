@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Person-Centric View**: Added a new data view mode that pivots the schedule into a person-centric grid (rows representing doctors, columns representing days), making it effortless for individuals to visually track their exact working days across the month.
 - **Inline Constraint Explainer**: Manual schedule overrides are now actively validated. If an administrator assigns a shift that breaks constraints (e.g. consecutive days, requested off days, double-booking), a proactive toast notification precisely explains why the assignment is flagged.
 - **Undo / History Stack**: Added a 20-step memory stack allowing users to safely undo manual cell swaps or resets by pressing `Ctrl+Z` (or `Cmd+Z`), preventing accidental schedule corruption.
+- **Custom Date Ranges**: Added a new toggle in Basic Settings allowing users to compute schedules for arbitrary start and end dates (up to 90 days) instead of being locked to a single calendar month.
+- **Strict DD/MM/YYYY Output**: All UI components, date pickers, and export utilities now strictly output dates in the standard `DD/MM/YYYY` format using `en-GB` HTML lang attributes to override browser defaults.
 - **Drag-and-Drop Editing**: Replaced the previous rigid click-to-swap behavior with intuitive drag-and-drop manipulation on calendar cells, significantly reducing click fatigue during manual editing.
 - **Mobile-First Calendar Layout**: The calendar grid now dynamically collapses from a 7-column grid into a highly readable, vertical daily-scroll layout on narrow mobile screens.
 
@@ -23,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Manual Translation Rendering**: Fixed a bug where English translations of the User Manual stripped out embedded `<code>` tags, causing the remainder of paragraphs to fall back to Thai.
 - **View Container Layout**: Fixed a DOM nesting issue in `calendarViewContainer` that caused the Person-Centric View to render far below the tabs instead of right beneath them.
 - **Export Year Normalization**: Fixed a bug where the exported file name and date columns could incorrectly use the Buddhist Era (BE) year format when exporting in English, or the A.D. year format when exporting in Thai. The years are now strictly normalized based on the active language.
+- **Complete Internationalization**: Fixed various input placeholders and HTML elements that were previously hardcoded in Thai, ensuring the English Mode UI is 100% translated for international users.
+- **Dark Mode Date Picker**: Fixed a styling issue where the native HTML5 `<input type="date">` calendar icon was invisible on dark backgrounds by utilizing the `color-scheme` CSS rule natively.
 
 
 ## [1.0.0] - 2026-06-29

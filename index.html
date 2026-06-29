@@ -204,7 +204,30 @@
                     </div>
                 </div>
                 <div class="p-5 space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
+                    <!-- Custom Date Range Toggle -->
+                    <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <div>
+                            <span class="block text-sm font-bold text-slate-700 dark:text-slate-200" data-i18n="customDateRangeToggle">ใช้ช่วงวันที่กำหนดเอง / Use Custom Date Range</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chkCustomDateRange" class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Custom Date Range Inputs -->
+                    <div id="customDateRangeContainer" class="hidden grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide" data-i18n="startDateLabel">เริ่ม / Start</label>
+                            <input type="date" id="inputStartDate" lang="en-GB" class="[color-scheme:light] dark:[color-scheme:dark] w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide" data-i18n="endDateLabel">สิ้นสุด / End</label>
+                            <input type="date" id="inputEndDate" lang="en-GB" class="[color-scheme:light] dark:[color-scheme:dark] w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
+                        </div>
+                    </div>
+
+                    <div id="standardMonthYearContainer" class="grid grid-cols-2 gap-4">
                         <div>
                             <label
                                 class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
@@ -229,7 +252,7 @@
                         <div id="doctorTagsContainer"
                             class="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl min-h-[90px] focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 outline-none transition-all cursor-text">
                             <!-- Input element for adding new names -->
-                            <input type="text" id="doctorInput" placeholder="พิมพ์ชื่อแล้วกด Enter หรือจุลภาค (,)"
+                            <input type="text" id="doctorInput" placeholder="พิมพ์ชื่อแล้วกด Enter หรือจุลภาค (,)" data-i18n="docInputPlaceholder"
                                 class="flex-1 bg-transparent border-none outline-none text-sm min-w-[140px] py-0.5 text-slate-800 dark:text-slate-100">
                         </div>
                         <!-- Hidden text field to preserve compatibility with existing parser -->
@@ -258,7 +281,7 @@
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                                     data-i18n="docRolesLabel">บทบาทของแพทย์ (เช่น A:R1, B:R2)</label>
                                 <input type="text" id="inputDoctorRoles" value="A:R1, B:R2, C:R1, D:R2, E:R1, F:R2"
-                                    placeholder="e.g., A:R1, B:R2, C:R1"
+                                    placeholder="e.g., A:R1, B:R2, C:R1" data-i18n="docRolesPlaceholder"
                                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
                                 <p class="text-[10px] text-slate-500 mt-1">Format: Name:Role, Name:Role</p>
                             </div>
@@ -267,7 +290,7 @@
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                                     data-i18n="defaultRoleSlotsLabel">จำนวนคนแยกตามบทบาท (เช่น R1:1, R2:1)</label>
                                 <input type="text" id="inputDefaultRoleSlots" value="R1:1, R2:1"
-                                    placeholder="เช่น R1:1, R2:1"
+                                    placeholder="เช่น R1:1, R2:1" data-i18n="roleSlotsPlaceholder"
                                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
                             </div>
                             <div>
@@ -275,7 +298,7 @@
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                                     data-i18n="roleQuotasLabel">กำหนดโควตาเวรแบบระบุจำนวน (เช่น R1:12, R2:10)</label>
                                 <input type="text" id="inputRoleQuotas" value=""
-                                    placeholder="เช่น R1:12, R2:10"
+                                    placeholder="เช่น R1:12, R2:10" data-i18n="roleQuotasPlaceholder"
                                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
                             </div>
                         </div>
@@ -285,7 +308,7 @@
                         <label
                             class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                             data-i18n="specialHolsLabel">วันหยุดพิเศษ (คั่นด้วย ,)</label>
-                        <input type="text" id="inputSpecialHols" placeholder="เช่น 13, 14, 15"
+                        <input type="text" id="inputSpecialHols" placeholder="เช่น 13, 14, 15" data-i18n="csvPlaceholder1"
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
                     </div>
                     <div
@@ -295,7 +318,7 @@
                             <i data-lucide="coffee" class="w-4 h-4 text-slate-400"></i>
                             <span data-i18n="noDutyLabel">วันที่งดเวร (ไม่ต้องมีคนอยู่)</span>
                         </label>
-                        <input type="text" id="inputNoDuty" placeholder="เช่น 15, 16"
+                        <input type="text" id="inputNoDuty" placeholder="เช่น 15, 16" data-i18n="csvPlaceholder2"
                             class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
                     </div>
                 </div>
@@ -350,6 +373,9 @@
                     </button>
                 </div>
                 <div id="offRequestsList" class="p-4 space-y-2.5"></div>
+                <div id="offRequestCustomNote" class="hidden px-4 pb-4 text-[11px] text-orange-600 dark:text-orange-400" data-i18n="offRequestCustomNoteText">
+                    ในโหมดช่วงวันที่กำหนดเอง กรุณาระบุวันในรูปแบบ DD/MM/YYYY เช่น 20/05/2026 (หรือ ค.ศ.)
+                </div>
             </div>
 
             <!-- Advanced Settings -->

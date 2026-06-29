@@ -60,6 +60,12 @@ function resetMocks() {
     mockDOM['inputDefaultRoleSlots'] = { value: '' };
     mockDOM['inputRoleQuotas'] = { value: '' };
     mockDOM['inputConflicts'] = { value: '' };
+    
+    global.isCustomDateRange = false;
+    global.scheduleDates = [];
+    for (let i = 1; i <= 31; i++) {
+        global.scheduleDates.push(new Date(2026, 0, i)); // Jan 2026 has 31 days
+    }
 }
 
 // Load app.js code
