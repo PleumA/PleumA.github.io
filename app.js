@@ -1639,6 +1639,7 @@ function applyManualOverrides(config = null) {
 
 // Toggle clear overrides
 window.clearManualOverrides = function () {
+    pushToUndoStack();
     manualOverrides = {};
     generateSchedule();
     showToast(currentLang === 'th' ? "คืนค่าเริ่มต้นจากระบบคำนวณทั้งหมดแล้ว" : "All manual overrides reset to auto");
@@ -1913,6 +1914,10 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
     }
     if (!newDoctor) return;
 
+    // We only push to stack if this was not part of an internal bulk operation like drag-and-drop
+    // Drag-and-drop handles its own stack pushing.
+    if (!window.isDragAndDropOperation) pushToUndoStack();
+
     // Save to overrides tracker
     if (!manualOverrides[day]) manualOverrides[day] = {};
     manualOverrides[day][slotIndex] = newDoctor;
@@ -1934,6 +1939,7 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
 
 // Reset overridden cell back to algorithm calculated value
 window.resetSlotToAuto = function (day, slotIndex) {
+    pushToUndoStack();
     if (manualOverrides[day]) {
         delete manualOverrides[day][slotIndex];
         if (Object.keys(manualOverrides[day]).length === 0) {
@@ -2210,7 +2216,7 @@ function renderCalendarView(config) {
     // Empty placeholder boxes for alignment offset
     for (let i = 0; i < startDayOfWeek; i++) {
         const emptyCell = document.createElement('div');
-        emptyCell.className = "bg-slate-100/40 dark:bg-slate-850/20 border border-slate-200/40 dark:border-slate-800 rounded-2xl min-h-[105px] opacity-40";
+        emptyCell.className = "hidden md:block bg-slate-100/40 dark:bg-slate-850/20 border border-slate-200/40 dark:border-slate-800 rounded-2xl min-h-[105px] opacity-40";
         grid.appendChild(emptyCell);
     }
 
@@ -2280,7 +2286,9 @@ function renderCalendarView(config) {
 
                 docsHtml += `
                     <div class="relative group/cell">
-                        <button id="btn-cal-day-${dayRow.day}-slot-${i}" aria-label="Day ${dayRow.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." onclick="openCellDropdown(event, 'celldropdown-${dayRow.day}-${i}')" class="w-full text-left text-[11px] px-2 py-1 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm">
+                        <button id="btn-cal-day-${dayRow.day}-slot-${i}" aria-label="Day ${dayRow.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." 
+                            draggable="true" ondragstart="handleDragStart(event, ${dayRow.day}, ${i}, '${doc}')" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${dayRow.day}, ${i}, '${doc}')"
+                            onclick="openCellDropdown(event, 'celldropdown-${dayRow.day}-${i}')" class="w-full text-left text-[11px] px-2 py-1 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing">
                             <span class="truncate" aria-hidden="true">${displayDoc}</span>
                             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5 opacity-0 group-hover/cell:opacity-60 transition-opacity"><path d="m6 9 6 6 6-6"/></svg>
                         </button>
@@ -2677,4 +2685,79 @@ window.importConfigJSON = function (event) {
         }
     };
     reader.readAsText(file);
+};
+
+// --- UI Utility: Drag and Drop & Undo Stack ---
+const undoStack = [];
+
+window.pushToUndoStack = function() {
+    undoStack.push(JSON.parse(JSON.stringify(manualOverrides)));
+    if (undoStack.length > 20) undoStack.shift();
+};
+
+window.undoLastAction = function() {
+    if (undoStack.length > 0) {
+        manualOverrides = undoStack.pop();
+        applyManualOverrides();
+        renderTableView();
+        renderCalendarView();
+        recalculateCounts();
+        updateStatsDashboard();
+        showToast(currentLang === 'th' ? "เลิกทำ (Undo) สำเร็จ" : "Undo successful");
+    } else {
+        showToast(currentLang === 'th' ? "ไม่มีการกระทำที่สามารถเลิกทำได้" : "Nothing to undo", true);
+    }
+};
+
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        window.undoLastAction();
+    }
+});
+
+window.handleDragStart = function(e, day, slotIndex, docName) {
+    if (docName === SHORTAGE_MARKER || docName === '-' || docName === '') return;
+    e.dataTransfer.setData('text/plain', JSON.stringify({ day, slotIndex, docName }));
+    e.dataTransfer.effectAllowed = 'move';
+};
+
+window.handleDragOver = function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+};
+
+window.handleDrop = function(e, targetDay, targetSlotIndex, targetDocName) {
+    e.preventDefault();
+    try {
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (!data) return;
+        const srcDay = data.day;
+        const srcSlot = data.slotIndex;
+        const srcDoc = data.docName;
+        
+        if (srcDay === targetDay && srcSlot === targetSlotIndex) return;
+
+        window.pushToUndoStack();
+        window.isDragAndDropOperation = true;
+
+        const srcDocIdx = doctors.indexOf(srcDoc);
+        let targetDocIdx = -2;
+        if (targetDocName === SHORTAGE_MARKER) targetDocIdx = -1;
+        else if (doctors.includes(targetDocName)) targetDocIdx = doctors.indexOf(targetDocName);
+
+        // Execute swap manually 
+        window.updateDoctorAssignment(srcDay, srcSlot, targetDocIdx);
+        window.updateDoctorAssignment(targetDay, targetSlotIndex, srcDocIdx);
+        
+        window.isDragAndDropOperation = false;
+        
+        // Final refresh to ensure counts are fully up to date
+        renderTableView();
+        renderCalendarView();
+        
+        showToast(currentLang === 'th' ? 'สลับเวรด้วยการลากวางสำเร็จ' : 'Drag & Drop swap successful');
+    } catch (err) {
+        console.error("Drag and drop failed:", err);
+    }
 };

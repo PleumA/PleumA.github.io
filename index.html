@@ -665,8 +665,8 @@
                     <!-- View Container: Calendar Mode -->
                     <div id="calendarViewContainer"
                         class="hidden mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 p-4 bg-slate-50/40 dark:bg-slate-950/20 max-h-[600px] custom-scrollbar -webkit-overflow-scrolling-touch">
-                        <div class="min-w-[700px]">
-                            <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 mb-2"
+                        <div class="w-full md:min-w-[700px]">
+                            <div class="hidden md:grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 mb-2"
                                 id="calendarHeaderDays">
                                 <div class="text-rose-500 py-1 uppercase tracking-wider" data-i18n="daySun">อา.</div>
                                 <div class="py-1 uppercase tracking-wider" data-i18n="dayMon">จ.</div>
@@ -676,7 +676,7 @@
                                 <div class="py-1 uppercase tracking-wider" data-i18n="dayFri">ศ.</div>
                                 <div class="text-rose-500 py-1 uppercase tracking-wider" data-i18n="daySat">ส.</div>
                             </div>
-                            <div id="calendarGrid" class="grid grid-cols-7 gap-2.5 min-h-[400px]">
+                            <div id="calendarGrid" class="grid grid-cols-1 md:grid-cols-7 gap-2.5 min-h-[400px]">
                                 <!-- Days injected via JS -->
                             </div>
                         </div>
