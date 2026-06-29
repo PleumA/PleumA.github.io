@@ -102,11 +102,11 @@ const translations = {
         manualTitle: "คู่มือการใช้งานระบบจัดตารางเวร",
         manualIntro: "ระบบจัดตารางเวรนี้ คำนวณด้วยอัลกอริทึม Smart Solver (Monte Carlo Simulation) 300 รอบ เพื่อหาการกระจายเวรที่ดีที่สุด พร้อมทั้งรองรับเงื่อนไขหลากหลายรูปแบบดังนี้:",
         manualSection1Title: "1. การจัดการแพทย์และบทบาท (Roles)",
-        manualSection1Body: "ระบุรายชื่อแพทย์ในรูปแบบ Tag และกำหนดบทบาทในกล่องข้อความ (เช่น A:R1, B:R2) ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน (หากต้องการกำหนดโควตาที่จำนวนไม่พอดีกับช่องเวร โปรดเปิดใช้งาน Allow Blank Days)",
+        manualSection1Body: "ระบุรายชื่อแพทย์ในรูปแบบ Tag และกำหนดบทบาทในกล่องข้อความ (เช่น <code>A:R1, B:R2</code>) ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน (หากต้องการกำหนดโควตาที่จำนวนไม่พอดีกับช่องเวร โปรดเปิดใช้งาน Allow Blank Days)",
         manualSection2Title: "2. จำนวนเวรตามบทบาท (Slots)",
-        manualSection2Body: "กำหนดจำนวนผู้ปฏิบัติงานต่อวัน เช่น R1:1, R2:1 (หมายถึงต้องการ R1 1 คน และ R2 1 คน) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'",
+        manualSection2Body: "กำหนดจำนวนผู้ปฏิบัติงานต่อวัน เช่น <code>R1:1, R2:1</code> (หมายถึงต้องการ R1 1 คน และ R2 1 คน) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'",
         manualSection3Title: "3. แพทย์ที่ขัดแย้งกัน (Conflict List)",
-        manualSection3Body: "ระบุแพทย์ที่ไม่สามารถอยู่เวรร่วมกันในวันเดียวกันได้ เช่น A:B หรือ C conflicts with D อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ",
+        manualSection3Body: "ระบุแพทย์ที่ไม่สามารถอยู่เวรร่วมกันในวันเดียวกันได้ เช่น <code>A:B</code> หรือ <code>C conflicts with D</code> อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ",
         manualSection4Title: "4. วันหยุดและวันพัก (Off Requests)",
         manualSection4Body: "ระบบห้ามจัดเวรซ้อนทับวัน Off หรือก่อนหน้าวัน Off 1 วัน และห้ามอยู่เวรวันหยุด (ส.-อา. + นักขัตฤกษ์) ติดกันเด็ดขาด",
         manualSection5Title: "5. การแก้ไขและตรวจสอบตาราง",
@@ -201,11 +201,11 @@ const translations = {
         manualTitle: "User Manual & Guide",
         manualIntro: "This scheduler uses a Smart Solver algorithm (Monte Carlo Simulation) running 300 iterations to find the fairest workload distribution, satisfying these criteria:",
         manualSection1Title: "1. Doctors & Roles Setup",
-        manualSection1Body: "Add doctors as tags, then map them to roles (e.g., A:R1, B:R2). The system allocates duties within each role pool independently. (If you want to use unbalanced exact quotas, please turn on Allow Blank Days).",
+        manualSection1Body: "Add doctors as tags, then map them to roles (e.g., <code>A:R1, B:R2</code>). The system allocates duties within each role pool independently. (If you want to use unbalanced exact quotas, please turn on Allow Blank Days).",
         manualSection2Title: "2. Slots & Daily Demands",
-        manualSection2Body: "Set daily needs like R1:1, R2:1 (requiring 1 R1 and 1 R2). Define date-specific overrides in 'Custom Daily Slots'.",
+        manualSection2Body: "Set daily needs like <code>R1:1, R2:1</code> (requiring 1 R1 and 1 R2). Define date-specific overrides in 'Custom Daily Slots'.",
         manualSection3Title: "3. Conflict / Hate List",
-        manualSection3Body: "Define doctors who cannot work on the same shift (e.g., A:B or C conflicts with D). The solver automatically excludes them from matching pools.",
+        manualSection3Body: "Define doctors who cannot work on the same shift (e.g., <code>A:B</code> or <code>C conflicts with D</code>). The solver automatically excludes them from matching pools.",
         manualSection4Title: "4. Holidays & Off Requests",
         manualSection4Body: "The scheduler enforces strict rules: no shifts on Off days or the day prior, and no consecutive holiday/weekend duties.",
         manualSection5Title: "5. Manual Overrides & Warnings",
@@ -444,6 +444,15 @@ function applyTranslations() {
                     el.innerText = translations[lang][key];
                 }
             }
+        }
+    });
+
+    // Update HTML elements (preserves rich formatting like <code> tags)
+    const htmlElements = document.querySelectorAll('[data-i18n-html]');
+    htmlElements.forEach(el => {
+        const key = el.getAttribute('data-i18n-html');
+        if (translations[lang][key]) {
+            el.innerHTML = translations[lang][key];
         }
     });
 
