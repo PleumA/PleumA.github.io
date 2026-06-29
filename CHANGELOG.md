@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - **Manual Translation Rendering**: Fixed a bug where English translations of the User Manual stripped out embedded `<code>` tags, causing the remainder of paragraphs to fall back to Thai.
 - **View Container Layout**: Fixed a DOM nesting issue in `calendarViewContainer` that caused the Person-Centric View to render far below the tabs instead of right beneath them.
+- **Export Year Normalization**: Fixed a bug where the exported file name and date columns could incorrectly use the Buddhist Era (BE) year format when exporting in English, or the A.D. year format when exporting in Thai. The years are now strictly normalized based on the active language.
+
 
 ## [1.0.0] - 2026-06-29
 ### Added
