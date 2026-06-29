@@ -91,6 +91,7 @@ Before any scheduling runs, this function translates human input fields from the
 4.  **Role Quotas**: Parses exact monthly limits like `R1:12, R2:10` into a dictionary: `{ "R1": 12, "R2": 10 }`.
 5.  **Conflict Lists**: Parses items like `A:B` into bidirectional sets: `{ "A": Set("B"), "B": Set("A") }`.
 6.  **Locked Special Rules**: Extracts locked doctor arrays for specific early days of the month.
+7.  **Custom Date Range Logic**: If `isCustomDateRange` is active, computes an exact timeline array (`scheduleDates`) of `Date` objects from the start to end date (up to 90 days), and normalizes the `totalDaysInMonth` loop boundary.
 
 ### 2. Pre-flight Quota Calculation
 If **Role-Based Mode** is active, the algorithm runs a check:
@@ -109,9 +110,10 @@ This function runs inside a loop (300 iterations). It attempts to assign doctors
 
 ```text
 FOR day = 1 TO totalDaysInMonth:
-    1. Read slot configuration for this day (defaults or custom override).
-    2. Determine if it is a holiday/weekend.
-    3. Loop through each slot index:
+    1. Resolve real calendar date (`Date` object via Month/Year or `scheduleDates` array if custom range).
+    2. Read slot configuration for this day (defaults or custom override).
+    3. Determine if it is a holiday/weekend using the resolved `Date`.
+    4. Loop through each slot index:
         a. Apply Filter Rules to eliminate ineligible doctors.
         b. If no doctors remain, trigger the Must-Fill Cascade.
         c. Randomly select one doctor from the remaining pool.
