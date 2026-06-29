@@ -31,7 +31,8 @@
 - **Queue Locking**: Supports locking a specific group of doctors to cover special slots during the first $N$ days of the month.
 
 ### 3. Interactive UI & Customization
-- **Table & Calendar View Modes**: View duties in a clean list format or an interactive month calendar.
+- **Table, Calendar, & Person Views**: View duties in a clean date-list format, an interactive month calendar, or a pivoted person-centric grid.
+- **Inline Constraint Explainer**: Manual schedule overrides are proactively validated against active rules. If an administrator assigns a shift that breaks constraints (e.g. consecutive days or off requests), an exact explanation is proactively displayed.
 - **Manual Overrides & Drag-and-Drop**: Easily correct schedules manually. Instead of rigid dropdown menus, you can natively **drag and drop** a doctor's name from one slot to another in the calendar to effortlessly execute 2-way shift swaps.
 - **Undo / History Stack**: Safely navigate manual corrections. The app tracks a 20-step deep memory stack allowing you to press `Ctrl+Z` to seamlessly revert accidental cell edits and resets.
 - **Targeted DOM Updates & Deferred Sync**: The core rendering engine is optimized so that manual interactions do not repaint the surrounding grid. The global Stats Dashboard and Summary Table updates are deferred until the user explicitly clicks the "Confirm Changes" button, keeping interactions buttery smooth.

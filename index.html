@@ -615,14 +615,16 @@
                             <div
                                 class="flex items-center gap-1 bg-slate-200/60 dark:bg-slate-950/80 p-1 rounded-xl self-start font-sans">
                                 <button id="btnTableView" onclick="setViewMode('table')"
-                                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm">
-                                    <i data-lucide="list" class="w-3.5 h-3.5"></i> <span
-                                        data-i18n="tabTable">รายการ</span>
+                                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700">
+                                    <i data-lucide="list" class="w-3.5 h-3.5"></i> <span data-i18n="tabTable">รายการ</span>
                                 </button>
                                 <button id="btnCalendarView" onclick="setViewMode('calendar')"
-                                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
-                                    <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i> <span
-                                        data-i18n="tabCalendar">ปฏิทิน</span>
+                                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                                    <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i> <span data-i18n="tabCalendar">ปฏิทิน</span>
+                                </button>
+                                <button id="btnPersonView" onclick="setViewMode('person')"
+                                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                                    <i data-lucide="user" class="w-3.5 h-3.5"></i> <span>บุคคล</span>
                                 </button>
                             </div>
                         </div>
@@ -679,6 +681,22 @@
                             <div id="calendarGrid" class="grid grid-cols-1 md:grid-cols-7 gap-2.5 min-h-[400px]">
                                 <!-- Days injected via JS -->
                             </div>
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- View Container: Person Mode -->
+                    <div id="personViewContainer"
+                        class="hidden mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 p-4 bg-white/50 dark:bg-slate-950/20 max-h-[600px] custom-scrollbar -webkit-overflow-scrolling-touch">
+                        <div class="min-w-[700px]">
+                            <table class="w-full text-sm text-left">
+                                <thead id="personViewHeader">
+                                    <!-- Injected via JS -->
+                                </thead>
+                                <tbody id="personViewBody">
+                                    <!-- Injected via JS -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

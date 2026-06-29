@@ -901,22 +901,33 @@ window.setViewMode = function (mode) {
 
     const btnTable = document.getElementById('btnTableView');
     const btnCal = document.getElementById('btnCalendarView');
+    const btnPerson = document.getElementById('btnPersonView');
 
     const tableContainer = document.getElementById('tableViewContainer');
     const calendarContainer = document.getElementById('calendarViewContainer');
+    const personContainer = document.getElementById('personViewContainer');
+
+    // Reset styles
+    [btnTable, btnCal, btnPerson].forEach(btn => {
+        if (btn) btn.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
+    });
+
+    // Hide all
+    if (tableContainer) tableContainer.classList.add('hidden');
+    if (calendarContainer) calendarContainer.classList.add('hidden');
+    if (personContainer) personContainer.classList.add('hidden');
+
+    const activeClass = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700";
 
     if (mode === 'table') {
-        btnTable.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700";
-        btnCal.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
-
-        tableContainer.classList.remove('hidden');
-        calendarContainer.classList.add('hidden');
-    } else {
-        btnCal.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700";
-        btnTable.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
-
-        calendarContainer.classList.remove('hidden');
-        tableContainer.classList.add('hidden');
+        if (btnTable) btnTable.className = activeClass;
+        if (tableContainer) tableContainer.classList.remove('hidden');
+    } else if (mode === 'calendar') {
+        if (btnCal) btnCal.className = activeClass;
+        if (calendarContainer) calendarContainer.classList.remove('hidden');
+    } else if (mode === 'person') {
+        if (btnPerson) btnPerson.className = activeClass;
+        if (personContainer) personContainer.classList.remove('hidden');
     }
 
     renderResults();
@@ -1935,6 +1946,42 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
     if (btnConfirm) btnConfirm.classList.remove('hidden');
 
     showToast(currentLang === 'th' ? `อัปเดตเวรวันที่ ${day} สำเร็จ!` : `Day ${day} duty updated successfully!`);
+    
+    const config = parseUIConfig();
+    explainSlotFailure(day, newDoctor, config);
+};
+
+// Explain why a manual swap might violate a constraint
+window.explainSlotFailure = function(day, doc, config) {
+    if(!doc || doc === SHORTAGE_MARKER || doc === '-' || !config) return;
+    const { preventConsecutiveAll, offMap } = config;
+    let reasons = [];
+    
+    if (offMap.has(`${doc}_${day}`)) {
+        reasons.push(currentLang === 'th' ? `ขอพัก/ลาในวันนี้` : `requested off today`);
+    }
+    
+    if (preventConsecutiveAll) {
+        const yesterday = globalResult.schedule[day - 2];
+        if (yesterday && yesterday.selectedDocs.some(s => s && s.name === doc)) {
+            reasons.push(currentLang === 'th' ? `อยู่เวรติดกัน (เมื่อวาน)` : `worked yesterday`);
+        }
+        const tomorrow = globalResult.schedule[day];
+        if (tomorrow && tomorrow.selectedDocs.some(s => s && s.name === doc)) {
+            reasons.push(currentLang === 'th' ? `อยู่เวรติดกัน (พรุ่งนี้)` : `working tomorrow`);
+        }
+    }
+    
+    const dayRow = globalResult.schedule[day - 1];
+    let slotsInDay = 0;
+    if (dayRow) {
+        dayRow.selectedDocs.forEach(s => { if (s && s.name === doc) slotsInDay++; });
+        if (slotsInDay > 1) reasons.push(currentLang === 'th' ? `ถูกจัดเวรซ้ำซ้อนในวันนี้` : `assigned multiple times today`);
+    }
+
+    if (reasons.length > 0) {
+        showToast(`⚠️ ${currentLang === 'th' ? 'ข้อควรระวัง: ' : 'Warning: '}${doc} ${reasons.join(', ')}`, true);
+    }
 };
 
 // Reset overridden cell back to algorithm calculated value
@@ -2089,8 +2136,10 @@ function renderResults() {
 
     if (viewMode === 'table') {
         renderTableView(config);
-    } else {
+    } else if (viewMode === 'calendar') {
         renderCalendarView(config);
+    } else if (viewMode === 'person') {
+        renderPersonCentricView(config);
     }
 }
 
@@ -2701,6 +2750,12 @@ window.undoLastAction = function() {
         applyManualOverrides();
         renderTableView();
         renderCalendarView();
+        
+        if (typeof renderPersonCentricView === 'function') {
+            const config = parseUIConfig();
+            renderPersonCentricView(config);
+        }
+
         recalculateCounts();
         updateStatsDashboard();
         showToast(currentLang === 'th' ? "เลิกทำ (Undo) สำเร็จ" : "Undo successful");
@@ -2761,3 +2816,74 @@ window.handleDrop = function(e, targetDay, targetSlotIndex, targetDocName) {
         console.error("Drag and drop failed:", err);
     }
 };
+
+// Render Person-Centric View
+function renderPersonCentricView(config) {
+    const head = document.getElementById('personViewHeader');
+    const body = document.getElementById('personViewBody');
+    if (!head || !body) return;
+
+    let headHtml = `<tr class="text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider"><th class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[120px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${translations[currentLang].doctor || "Doctor"}</th>`;
+    for(let d=1; d<=config.numDays; d++) {
+        const dayRow = globalResult.schedule[d-1];
+        const dayName = dayRow ? dayRow.dayName.substring(0,2) : '';
+        const isHol = dayRow ? dayRow.isHoliday : false;
+        let dayClass = isHol ? "text-rose-500 font-bold" : "text-slate-500 dark:text-slate-400";
+        headHtml += `<th class="py-2 px-1 border-b border-slate-200 dark:border-slate-800 text-center w-8 min-w-[32px] ${dayClass}"><div class="text-[10px] font-bold">${dayName}</div><div class="text-xs font-black">${d}</div></th>`;
+    }
+    headHtml += `</tr>`;
+    head.innerHTML = headHtml;
+
+    let bodyHtml = '';
+    
+    const displayDocs = [...doctors];
+    if (globalResult.schedule.some(d => d.selectedDocs.some(s => s && s.name === SHORTAGE_MARKER))) {
+        displayDocs.push(SHORTAGE_MARKER);
+    }
+    
+    displayDocs.forEach((doc, idx) => {
+        let isShortage = doc === SHORTAGE_MARKER;
+        let docName = isShortage ? (translations[currentLang].shortageSlot || "Shortage") : doc;
+        
+        let rowClass = idx % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-50/50 dark:bg-slate-800/20";
+        bodyHtml += `<tr class="${rowClass} hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">`;
+        bodyHtml += `<td class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 z-10 min-w-[120px] ${rowClass} ${isShortage ? 'text-red-500' : 'text-slate-800 dark:text-slate-200'} shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${esc(docName)}</td>`;
+        
+        for(let d=1; d<=config.numDays; d++) {
+            const dayRow = globalResult.schedule[d-1];
+            if (!dayRow || dayRow.isNoDuty) {
+                bodyHtml += `<td class="border-b border-slate-200 dark:border-slate-800 bg-slate-200/50 dark:bg-slate-800/40"></td>`;
+                continue;
+            }
+            
+            let slotIndices = [];
+            dayRow.selectedDocs.forEach((sd, sIdx) => {
+                if (sd && sd.name === doc) slotIndices.push(sIdx + 1);
+            });
+            
+            if (slotIndices.length > 0) {
+                let bgClass = "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400";
+                if (isShortage) {
+                    bgClass = "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400";
+                } else {
+                    const colors = [
+                        "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400",
+                        "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
+                        "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400",
+                        "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400",
+                        "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
+                        "bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-400",
+                        "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400"
+                    ];
+                    bgClass = colors[doctors.indexOf(doc) % colors.length];
+                }
+                
+                bodyHtml += `<td class="border-b border-slate-200 dark:border-slate-800 p-0.5 text-center"><div class="rounded w-full h-full text-[10px] font-bold flex items-center justify-center py-1 ${bgClass}">${slotIndices.join(',')}</div></td>`;
+            } else {
+                bodyHtml += `<td class="border-b border-slate-200 dark:border-slate-800"></td>`;
+            }
+        }
+        bodyHtml += `</tr>`;
+    });
+    body.innerHTML = bodyHtml;
+}
