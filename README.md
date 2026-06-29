@@ -32,8 +32,9 @@
 
 ### 3. Interactive UI & Customization
 - **Table & Calendar View Modes**: View duties in a clean list format or an interactive month calendar.
-- **Manual Overrides & Deferred Sync**: Click any doctor's name directly in the table or calendar to manually swap them. To ensure the UI never freezes, changing a cell updates only that specific DOM element instantly. The global Stats Dashboard and Summary Table updates are deferred until the user explicitly clicks the "Confirm Changes" button, keeping interactions buttery smooth.
-- **Targeted DOM Updates**: The core rendering engine is optimized so that manual interactions do not repaint the surrounding grid.
+- **Manual Overrides & Drag-and-Drop**: Easily correct schedules manually. Instead of rigid dropdown menus, you can natively **drag and drop** a doctor's name from one slot to another in the calendar to effortlessly execute 2-way shift swaps.
+- **Undo / History Stack**: Safely navigate manual corrections. The app tracks a 20-step deep memory stack allowing you to press `Ctrl+Z` to seamlessly revert accidental cell edits and resets.
+- **Targeted DOM Updates & Deferred Sync**: The core rendering engine is optimized so that manual interactions do not repaint the surrounding grid. The global Stats Dashboard and Summary Table updates are deferred until the user explicitly clicks the "Confirm Changes" button, keeping interactions buttery smooth.
 - **Real-Time Recalculation**: Schedule configurations (e.g., month, year, doctors per day, constraints) immediately trigger the smart solver to re-calculate the ideal schedule without needing manual confirmations.
 - **Save/Load Configuration**: Export all application settings, quotas, constraints, and **manual cell overrides** into a `.json` backup file, and instantly import them later to restore your precise environment without re-typing.
 - **Excel Export**: Quick copy or `.xlsx` download support (via SheetJS).
@@ -58,6 +59,7 @@ Designed with mobile first-class support in mind to ensure zero stutters on phon
 7. **Touch-Scrolling**: Containers support horizontal swiping with `-webkit-overflow-scrolling: touch` and minimum viewport widths to prevent layout squishing on mobile portrait screens.
 8. **Deterministic & Stable Sorting**: The doctor sorting algorithm assigns a pre-calculated, fixed random noise value to each doctor at the start of a sort operation. This ensures transitive and deterministic sort comparisons (avoiding unstable inline `Math.random()` tie-breakers in the `.sort()` callback), which prevents infinite loops or crashes in modern browser sorting engines.
 9. **Touch-Optimized Bottom Sheet (Viewport `< 768px`)**: Replaces cramped inline absolute cell dropdowns on mobile screens with a full-screen blurred Bottom Sheet. Doctor selection elements inside are scaled to a minimum of 48px height with generous touch padding for error-free mobile interaction.
+10. **Mobile-First Responsive Calendar**: The 7-column Calendar View dynamically collapses into a highly readable, vertical daily-scroll list layout on narrow mobile viewports, entirely eliminating horizontal overflow zooming.
 
 ---
 

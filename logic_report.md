@@ -305,6 +305,23 @@ Here is a detailed breakdown of the functions in `app.js`:
 
 ---
 
+## 📝 Manual Override Pipeline & State Tracking
+
+The application permits administrators to manually correct the generated schedule by mapping doctor index targets in `manualOverrides[day][slotIndex]`. 
+
+### 1. Drag-and-Drop Cell Swap
+Instead of relying purely on dropdowns, the layout leverages HTML5 DataTransfer events (`ondragstart`, `ondragover`, `ondrop`). 
+- When dropped onto a new cell, the system intercepts the coordinate payload and executes two parallel `updateDoctorAssignment()` calls natively.
+- This creates a fluid two-way index swap between arrays while completely bypassing the UI dropdown render loop.
+
+### 2. History State Stack (Undo)
+Because clicking and dragging can occasionally result in accidental mistakes, the engine wraps manual mutations inside a tracker:
+- Before any change to `manualOverrides` (e.g. `updateDoctorAssignment`, `resetSlotToAuto`), `pushToUndoStack()` executes.
+- `pushToUndoStack()` deeply clones (`JSON.parse(JSON.stringify(...))`) the current state tree into an array capped at a depth of 20.
+- When `undoLastAction()` fires via `Ctrl+Z`, the engine pops the tail state, overwrites the active reference, and instantly repaints the dependent UI elements (`renderTableView`, `recalculateCounts`).
+
+---
+
 ## 📱 Mobile Layout Responsive Mechanics
 
 To provide a smooth experience on mobile devices, the interface adapts based on screen size:
