@@ -207,7 +207,146 @@ async function runTests() {
         console.error("❌ TEST 5 FAILED:", e.message);
     }
 
-    console.log(`\ncascade: PASSED: ${passed}, FAILED: ${5 - passed}\n`);
+    // TEST 6: LEVEL 3 FALLBACK — DAY-BEFORE-OFF RULE DISABLED
+    try {
+        resetMocks();
+        doctors = ["A", "B"];
+        mockDOM['inputDefaultSlots'].value = "1";
+        mockDOM['chkAllowBlankDays'].checked = false;
+        mockDOM['chkRoleBased'].checked = true;
+        mockDOM['inputDoctorRoles'].value = "A:R1, B:R1";
+        mockDOM['inputDefaultRoleSlots'].value = "R1:1";
+        mockDOM['inputRoleQuotas'].value = "A:15, B:16";
+        // A has off on day 3. B's quota is exhausted by making it tiny — 
+        // actually simpler: just use 2 docs, B requests off day 2. A requests off day 3.
+        // Day 2: B is off. A has off day 3 so day-before rule blocks A on day 2.
+        // Cascade level 3 should relax day-before-off and allow A on day 2.
+        mockDOM['chkRoleBased'].checked = false;
+        mockDOM['inputDoctorRoles'].value = "";
+        mockDOM['inputDefaultRoleSlots'].value = "";
+        mockDOM['inputRoleQuotas'].value = "";
+        
+        offData = [
+            { id: 1, date: 3, names: "A" },
+            { id: 2, date: 2, names: "B" }
+        ];
+        
+        await window.generateSchedule();
+        
+        assert.notStrictEqual(globalResult, null);
+        let day2 = globalResult.schedule[1].selectedDocs.map(d => d.name);
+        assert.strictEqual(day2.includes("A"), true, "A must be assigned to day 2 via Level 3 cascade (day-before-off relaxed)");
+        
+        let day3 = globalResult.schedule[2].selectedDocs.map(d => d.name);
+        assert.strictEqual(day3.includes("A"), false, "A must NOT appear on day 3 (hard off-day never relaxed)");
+        
+        console.log("✅ TEST 6 PASSED: LEVEL 3 FALLBACK — DAY-BEFORE-OFF RULE DISABLED");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 6 FAILED:", e.message);
+    }
+
+    // TEST 7: ABSOLUTE SAFEGUARD — QUOTA NEVER BROKEN AT CASCADE 5
+    try {
+        resetMocks();
+        offData = [];
+        doctors = ["A", "B"];
+        mockDOM['inputDefaultSlots'].value = "1";
+        mockDOM['chkRoleBased'].checked = true;
+        mockDOM['inputDoctorRoles'].value = "A:R1, B:R1";
+        mockDOM['inputDefaultRoleSlots'].value = "R1:1";
+        mockDOM['inputRoleQuotas'].value = "R1:1";
+        // R1 quota = 1 per doctor. 2 docs * 1 = 2 shifts total vs 31 slots.
+        // allowBlankDays=true so quota validation passes.
+        mockDOM['chkAllowBlankDays'].checked = true;
+        
+        await window.generateSchedule();
+        
+        assert.notStrictEqual(globalResult, null);
+        let aCount = 0;
+        let bCount = 0;
+        globalResult.schedule.forEach(day => {
+            day.selectedDocs.forEach(d => {
+                if (d.name === "A") aCount++;
+                if (d.name === "B") bCount++;
+            });
+        });
+        
+        assert.strictEqual(aCount <= 1, true, "Doctor A must not exceed quota of 1");
+        assert.strictEqual(bCount <= 1, true, "Doctor B must not exceed quota of 1");
+        console.log("✅ TEST 7 PASSED: ABSOLUTE SAFEGUARD — QUOTA NEVER BROKEN AT CASCADE 5");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 7 FAILED:", e.message);
+    }
+
+    // TEST 8: ABSOLUTE SAFEGUARD — ROLE ISOLATION NEVER BROKEN
+    try {
+        resetMocks();
+        offData = [];
+        doctors = ["A", "B"];
+        mockDOM['chkRoleBased'].checked = true;
+        mockDOM['inputDoctorRoles'].value = "A:R2, B:R2";
+        mockDOM['inputDefaultRoleSlots'].value = "R1:1";
+        mockDOM['chkAllowBlankDays'].checked = true; // Must allow blank since no R1 doctors exist
+
+        await window.generateSchedule();
+        
+        // The solver should either:
+        // a) Return null (all-shortage fail-safe triggers "impossible constraints") OR
+        // b) Return a schedule where all slots are shortage markers
+        if (globalResult === null) {
+            // Verify failure toast was shown
+            let hasFailToast = toastMessages.some(t => t.isError && t.msg.includes("impossible"));
+            assert.strictEqual(hasFailToast, true, "Should show impossible constraints toast");
+        } else {
+            // Verify no R2 doctor was assigned to an R1 slot
+            let r2InR1Slot = false;
+            globalResult.schedule.forEach(day => {
+                day.selectedDocs.forEach(d => {
+                    if (d.name === "A" || d.name === "B") r2InR1Slot = true;
+                });
+            });
+            assert.strictEqual(r2InR1Slot, false, "No R2 doctor should be assigned to an R1 slot");
+        }
+        console.log("✅ TEST 8 PASSED: ABSOLUTE SAFEGUARD — ROLE ISOLATION NEVER BROKEN");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 8 FAILED:", e.message);
+    }
+
+    // TEST 9: ABSOLUTE SAFEGUARD — NO DOUBLE SHIFT SAME DAY
+    try {
+        resetMocks();
+        offData = [];
+        // Only 1 doctor but need minimum 2 to not early-return
+        doctors = ["A", "B"];
+        mockDOM['inputDefaultSlots'].value = "2";
+        mockDOM['chkAllowBlankDays'].checked = false;
+        // Make B ineligible for every day via off requests so only A is available
+        offData = [];
+        for (let d = 1; d <= 31; d++) {
+            offData.push({ id: d, date: d, names: "B" });
+        }
+        
+        await window.generateSchedule();
+        
+        assert.notStrictEqual(globalResult, null);
+        let day1 = globalResult.schedule[0];
+        let names = day1.selectedDocs.map(d => d.name);
+        
+        // A can only fill 1 slot. The other must be shortage.
+        let aCountD1 = names.filter(n => n === "A").length;
+        assert.strictEqual(aCountD1, 1, "Doctor A should fill exactly 1 slot");
+        assert.strictEqual(names.includes("__SHORTAGE__"), true, "Second slot must be shortage");
+        console.log("✅ TEST 9 PASSED: ABSOLUTE SAFEGUARD — NO DOUBLE SHIFT SAME DAY");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 9 FAILED:", e.message);
+    }
+
+    const totalTests = 9;
+    console.log(`\ncascade: PASSED: ${passed}, FAILED: ${totalTests - passed}\n`);
 }
 
 runTests();

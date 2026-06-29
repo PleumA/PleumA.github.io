@@ -1410,6 +1410,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                         // Cascade Level 4: Relax Off Requests
                         availableDocs = roleDocs.filter(doc => {
                             if (chosenToday.includes(doc)) return false;
+                            if (offToday.has(doc)) return false;
                             if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial) return false;
                             return true;
                         });
@@ -1417,7 +1418,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
 
                     if (availableDocs.length === 0 && !allowBlankDays) {
                         // Cascade Level 5: Absolute fallback (Any doctor with matching role, but not already working today)
-                        availableDocs = roleDocs.filter(doc => !chosenToday.includes(doc));
+                        availableDocs = roleDocs.filter(doc => !chosenToday.includes(doc) && !offToday.has(doc));
                     }
 
                     // Final assignment
@@ -1587,7 +1588,7 @@ window.generateSchedule = async function () {
             }
             const sd = new Date(startStr);
             const ed = new Date(endStr);
-            if (sd >= ed && sd.getTime() !== ed.getTime()) {
+            if (sd >= ed) {
                 if (btn) btn.innerHTML = originalHtml;
                 isCalculating = false;
                 showToast(currentLang === 'th' ? "วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด" : "Start date must be before end date", true);
@@ -2471,18 +2472,21 @@ function renderCalendarView(config) {
 
                 let displayDoc = doc;
                 const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
+                let docIndexToPass = -2;
                 if (doc === SHORTAGE_MARKER) {
                     displayDoc = translations[currentLang].shortageSlot;
+                    docIndexToPass = -1;
                 } else if (doc === "-" || doc === "") {
                     displayDoc = translations[currentLang].emptySlot;
                 } else if (doctors.includes(doc)) {
                     displayDoc = (isRoleBasedEnabled && dRole !== 'Default') ? `${esc(doc)} (${esc(dRole)})` : esc(doc);
+                    docIndexToPass = doctors.indexOf(doc);
                 }
 
                 docsHtml += `
                     <div class="relative group/cell">
                         <button id="btn-cal-day-${dayRow.day}-slot-${i}" aria-label="Day ${dayRow.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." 
-                            draggable="true" ondragstart="handleDragStart(event, ${dayRow.day}, ${i}, '${doc}')" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${dayRow.day}, ${i}, '${doc}')"
+                            draggable="true" ondragstart="handleDragStart(event, ${dayRow.day}, ${i}, ${docIndexToPass})" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${dayRow.day}, ${i}, ${docIndexToPass})"
                             onclick="openCellDropdown(event, 'celldropdown-${dayRow.day}-${i}')" class="w-full text-left text-[11px] px-2 py-1 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing">
                             <span class="truncate" aria-hidden="true">${displayDoc}</span>
                             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5 opacity-0 group-hover/cell:opacity-60 transition-opacity"><path d="m6 9 6 6 6-6"/></svg>
@@ -2964,8 +2968,10 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-window.handleDragStart = function(e, day, slotIndex, docName) {
-    if (docName === SHORTAGE_MARKER || docName === '-' || docName === '') return;
+window.handleDragStart = function(e, day, slotIndex, docIndex) {
+    if (docIndex < 0) return;
+    const docName = doctors[docIndex];
+    if (!docName) return;
     e.dataTransfer.setData('text/plain', JSON.stringify({ day, slotIndex, docName }));
     e.dataTransfer.effectAllowed = 'move';
 };
@@ -2975,7 +2981,7 @@ window.handleDragOver = function(e) {
     e.dataTransfer.dropEffect = 'move';
 };
 
-window.handleDrop = function(e, targetDay, targetSlotIndex, targetDocName) {
+window.handleDrop = function(e, targetDay, targetSlotIndex, targetDocIndex) {
     e.preventDefault();
     try {
         const data = JSON.parse(e.dataTransfer.getData('text/plain'));
@@ -2990,9 +2996,7 @@ window.handleDrop = function(e, targetDay, targetSlotIndex, targetDocName) {
         window.isDragAndDropOperation = true;
 
         const srcDocIdx = doctors.indexOf(srcDoc);
-        let targetDocIdx = -2;
-        if (targetDocName === SHORTAGE_MARKER) targetDocIdx = -1;
-        else if (doctors.includes(targetDocName)) targetDocIdx = doctors.indexOf(targetDocName);
+        let targetDocIdx = targetDocIndex;
 
         // Execute swap manually 
         window.updateDoctorAssignment(srcDay, srcSlot, targetDocIdx);

@@ -178,12 +178,10 @@ async function runTests() {
         await window.generateSchedule();
         
         let hasError = toastMessages.some(t => t.isError && t.msg.includes("Start date must be before end date"));
-        if (!hasError && scheduleDates.length === 1) {
-            console.warn("⚠️ KNOWN BUG IN app.js: Function allowed start === end without error because sd.getTime() !== ed.getTime() is false. Flagging this bug but marking test as passed for suite execution.");
-        } else if (!hasError) {
+        if (!hasError) {
             assert.fail("Function allowed start === end without error");
         }
-        console.log("✅ TEST 3 PASSED (WITH KNOWN BUG): SINGLE DAY RANGE");
+        console.log("✅ TEST 3 PASSED: SINGLE DAY RANGE");
         passed++;
     } catch (e) {
         console.error("❌ TEST 3 FAILED:", e.message);

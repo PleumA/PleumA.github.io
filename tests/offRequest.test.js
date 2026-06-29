@@ -167,17 +167,13 @@ async function runTests() {
         let hasC = docsOnDay14.includes("C");
         let hasD = docsOnDay14.includes("D");
         
-        if (hasC || hasD) {
-            console.warn("⚠️ KNOWN BUG IN app.js: Cascade Level 4 completely drops offToday restrictions instead of just day-before. C/D were assigned on day 14 despite requesting it off. Flagging this bug but marking test as passed for suite execution.");
-        } else {
-            assert.strictEqual(docsOnDay14.includes("A") && docsOnDay14.includes("B"), true, "A and B MUST work on day 14 due to Level 3 cascade");
-        }
+        assert.strictEqual(docsOnDay14.includes("A") && docsOnDay14.includes("B"), true, "A and B MUST work on day 14 due to Level 3 cascade");
         
         let day15 = globalResult.schedule[14];
         let docsOnDay15 = day15.selectedDocs.map(d => d.name);
         assert.strictEqual(docsOnDay15.includes("A"), false, "A MUST NOT work on day 15");
         assert.strictEqual(docsOnDay15.includes("B"), false, "B MUST NOT work on day 15");
-        console.log("✅ TEST 3 PASSED (WITH KNOWN BUG): CASCADE LEVEL 3 DISABLES DAY-BEFORE RULE");
+        console.log("✅ TEST 3 PASSED: CASCADE LEVEL 3 DISABLES DAY-BEFORE RULE");
         passed++;
     } catch (e) {
         console.error("❌ TEST 3 FAILED:", e.message);
@@ -210,7 +206,100 @@ async function runTests() {
         console.error("❌ TEST 4 FAILED:", e.message);
     }
 
-    console.log(`\noffRequest: PASSED: ${passed}, FAILED: ${4 - passed}\n`);
+    // TEST 5: MONTH BOUNDARY — DAY 1 OFF REQUEST, NO CRASH
+    try {
+        resetMocks();
+        doctors = ["A", "B", "C", "D"];
+        mockDOM['inputDefaultSlots'].value = "2";
+        
+        offData = [{ id: 1, date: 1, names: "A" }];
+        
+        await window.generateSchedule();
+        
+        assert.notStrictEqual(globalResult, null, "Schedule must generate successfully");
+        let day1 = globalResult.schedule[0].selectedDocs.map(d => d.name);
+        assert.strictEqual(day1.includes("A"), false, "A should not appear on day 1");
+        
+        // Ensure all 31 days have valid entries (no index error crash)
+        assert.strictEqual(globalResult.schedule.length, 31, "All 31 days should be present");
+        
+        // Day 2 onwards should work fine
+        for (let i = 1; i < globalResult.schedule.length; i++) {
+            assert.strictEqual(globalResult.schedule[i].selectedDocs.length > 0, true, `Day ${i+1} should have assigned docs`);
+        }
+        
+        console.log("✅ TEST 5 PASSED: MONTH BOUNDARY — DAY 1 OFF REQUEST, NO CRASH");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 5 FAILED:", e.message);
+    }
+
+    // TEST 6: OFF REQUEST ON LAST DAY OF SCHEDULE
+    try {
+        resetMocks();
+        doctors = ["A", "B", "C", "D"];
+        mockDOM['inputDefaultSlots'].value = "2";
+        
+        // January has 31 days. A requests off on day 31.
+        offData = [{ id: 1, date: 31, names: "A" }];
+        
+        await window.generateSchedule();
+        
+        assert.notStrictEqual(globalResult, null, "Schedule must generate successfully");
+        let lastDay = globalResult.schedule[30].selectedDocs.map(d => d.name);
+        assert.strictEqual(lastDay.includes("A"), false, "A should not appear on day 31");
+        
+        // Day-before-off rule: A should not appear on day 30
+        let dayBefore = globalResult.schedule[29].selectedDocs.map(d => d.name);
+        assert.strictEqual(dayBefore.includes("A"), false, "A should not appear on day 30 (day-before-off rule)");
+        
+        assert.strictEqual(globalResult.schedule.length, 31, "All 31 days should be present");
+        console.log("✅ TEST 6 PASSED: OFF REQUEST ON LAST DAY OF SCHEDULE");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 6 FAILED:", e.message);
+    }
+
+    // TEST 7: OFF REQUEST IN CUSTOM DATE RANGE MODE
+    try {
+        resetMocks();
+        doctors = ["A", "B", "C", "D"];
+        mockDOM['inputDefaultSlots'].value = "2";
+        mockDOM['chkCustomDateRange'] = { checked: true, classList: { add: () => {}, remove: () => {} } };
+        mockDOM['inputStartDate'] = { value: "2026-05-28", classList: { add: () => {}, remove: () => {} } };
+        mockDOM['inputEndDate'] = { value: "2026-06-06", classList: { add: () => {}, remove: () => {} } };
+        isCustomDateRange = true;
+        
+        // A wants off on June 2 (02/06/2026 in DD/MM/YYYY format)
+        offData = [{ id: 1, date: "02/06/2026", names: "A" }];
+        
+        await window.generateSchedule();
+        
+        assert.notStrictEqual(globalResult, null, "Schedule must generate successfully");
+        assert.strictEqual(scheduleDates.length, 10, "Should have 10 days");
+        
+        // Find index of June 2 in scheduleDates
+        let june2Index = scheduleDates.findIndex(d => d.getMonth() === 5 && d.getDate() === 2);
+        assert.strictEqual(june2Index >= 0, true, "June 2 should be in the schedule");
+        
+        let june2Docs = globalResult.schedule[june2Index].selectedDocs.map(d => d.name);
+        assert.strictEqual(june2Docs.includes("A"), false, "A should not appear on June 2 (off request)");
+        
+        // Day-before-off: June 1 (the day before the off date)
+        let june1Index = scheduleDates.findIndex(d => d.getMonth() === 5 && d.getDate() === 1);
+        if (june1Index >= 0) {
+            let june1Docs = globalResult.schedule[june1Index].selectedDocs.map(d => d.name);
+            assert.strictEqual(june1Docs.includes("A"), false, "A should not appear on June 1 (day-before-off rule)");
+        }
+        
+        console.log("✅ TEST 7 PASSED: OFF REQUEST IN CUSTOM DATE RANGE MODE");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 7 FAILED:", e.message);
+    }
+
+    const totalTests = 7;
+    console.log(`\noffRequest: PASSED: ${passed}, FAILED: ${totalTests - passed}\n`);
 }
 
 runTests();
