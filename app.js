@@ -73,6 +73,7 @@ const translations = {
         scheduleTitle: "ตารางเวรปฏิบัติงานจริง",
         tabTable: "รายการ",
         tabCalendar: "ปฏิทิน",
+        tabPerson: "บุคคล",
         resetAllBtn: "คืนค่าระบบคำนวณทั้งหมด",
         copyExcelBtn: "คัดลอกตาราง (Excel)",
         exportExcelBtn: "โหลด .xlsx",
@@ -171,6 +172,7 @@ const translations = {
         scheduleTitle: "Official Duty Schedule",
         tabTable: "List",
         tabCalendar: "Calendar",
+        tabPerson: "Person",
         resetAllBtn: "Reset All Overrides",
         copyExcelBtn: "Copy Schedule (Excel)",
         exportExcelBtn: "Export .xlsx",
@@ -2823,7 +2825,7 @@ function renderPersonCentricView(config) {
     const body = document.getElementById('personViewBody');
     if (!head || !body) return;
 
-    let headHtml = `<tr class="text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider"><th class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[120px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${translations[currentLang].doctor || "Doctor"}</th>`;
+    let headHtml = `<tr class="text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider"><th class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[120px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${translations[currentLang].tableHeaderDoctors || "Doctor"}</th>`;
     for(let d=1; d<=config.numDays; d++) {
         const dayRow = globalResult.schedule[d-1];
         const dayName = dayRow ? dayRow.dayName.substring(0,2) : '';
