@@ -2511,7 +2511,15 @@ function formatShortDate(day, month, year, lang) {
     const monthNamesTh = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
     const mIndex = parseInt(month) - 1;
     const mName = lang === 'th' ? monthNamesTh[mIndex] : monthNamesEn[mIndex];
-    const yShort = year.toString().slice(-2);
+    
+    let y = parseInt(year);
+    if (lang === 'th') {
+        if (y < 2500) y += 543;
+    } else {
+        if (y > 2500) y -= 543;
+    }
+    const yShort = y.toString().slice(-2);
+    
     return `${day} ${mName} ${yShort}`;
 }
 
@@ -2621,7 +2629,11 @@ window.exportToExcel = function () {
         const summaryWs = window.XLSX.utils.aoa_to_sheet(summaryData);
         window.XLSX.utils.book_append_sheet(wb, summaryWs, currentLang === 'th' ? "สรุปจำนวนเวร" : "Summary");
 
-        window.XLSX.writeFile(wb, `OnCall_Month_${globalResult.month}_Year_${globalResult.year}.xlsx`);
+        let displayYear = parseInt(globalResult.year);
+        if (currentLang === 'th' && displayYear < 2500) displayYear += 543;
+        if (currentLang === 'en' && displayYear > 2500) displayYear -= 543;
+
+        window.XLSX.writeFile(wb, `OnCall_Month_${globalResult.month}_Year_${displayYear}.xlsx`);
         showToast(currentLang === 'th' ? "ดาวน์โหลดไฟล์ Excel สำเร็จ!" : "Excel file downloaded successfully!");
     } catch (e) {
         console.error(e);
