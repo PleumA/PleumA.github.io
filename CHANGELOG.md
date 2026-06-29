@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 - **Accessibility**: Added descriptive `aria-label` and `aria-hidden` attributes to dynamic schedule slot buttons to support screen readers, making the click-to-swap interface fully accessible to visually impaired users.
 - **Offline Reliability (PWA)**: Implemented Progressive Web App configurations via `manifest.json` and a Service Worker (`sw.js`). The app caches layout resources and CDN files, ensuring it functions seamlessly on hospital wards with unstable Wi-Fi.
-- **Test Suite**: Introduced a standalone Node.js test runner (`tests/solver.test.js`) to prevent regressions in boundary cases (e.g., handling circular conflict chains, identifying impossible configurations).
+- **Test Suite**: Significantly expanded the standalone Node.js test runner with comprehensive test suites (54 tests across 8 files) covering edge cases for cascade fallback logic, configuration JSON round-trips, undo stack limits, off-request boundaries, and XSS sanitization.
 - **Person-Centric View**: Added a new data view mode that pivots the schedule into a person-centric grid (rows representing doctors, columns representing days), making it effortless for individuals to visually track their exact working days across the month.
 - **Inline Constraint Explainer**: Manual schedule overrides are now actively validated. If an administrator assigns a shift that breaks constraints (e.g. consecutive days, requested off days, double-booking), a proactive toast notification precisely explains why the assignment is flagged.
 - **Undo / History Stack**: Added a 20-step memory stack allowing users to safely undo manual cell swaps or resets by pressing `Ctrl+Z` (or `Cmd+Z`), preventing accidental schedule corruption.
@@ -27,6 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Export Year Normalization**: Fixed a bug where the exported file name and date columns could incorrectly use the Buddhist Era (BE) year format when exporting in English, or the A.D. year format when exporting in Thai. The years are now strictly normalized based on the active language.
 - **Complete Internationalization**: Fixed various input placeholders and HTML elements that were previously hardcoded in Thai, ensuring the English Mode UI is 100% translated for international users.
 - **Dark Mode Date Picker**: Fixed a styling issue where the native HTML5 `<input type="date">` calendar icon was invisible on dark backgrounds by utilizing the `color-scheme` CSS rule natively.
+- **Date Validation**: Fixed an issue where the custom date range erroneously permitted identical start and end dates.
+- **Cascade Fallback Logic**: Fixed a bug where Cascade Level 4 incorrectly dropped hard off-day rules.
+- **XSS Vulnerability**: Neutralized a security vulnerability by passing array indices rather than raw doctor names into HTML attributes for drag-and-drop functionality, preventing arbitrary script execution.
 
 
 ## [1.0.0] - 2026-06-29
