@@ -428,9 +428,12 @@ The system employs a comprehensive, zero-dependency Node.js test suite (`tests/*
 5. **State Management (`manualOverrides.test.js`, `jsonRoundTrip.test.js`)**: Verifies the internal mapping logic, undo stack (LIFO behavior), and the robust serialization/deserialization of UI state to JSON.
 6. **Security (`xss.test.js`)**: Asserts that untrusted strings are properly escaped to prevent Cross-Site Scripting via the `esc()` sanitization function.
 
-### Documented Logic Anomalies (Known Bugs)
-During test coverage expansion, the following minor architectural discrepancies were uncovered and intentionally logged in the test assertions to ensure developer awareness:
-- **Cascade Bypassing Constraints**: Cascade Level 4 (the final relaxation before marking a slot as missing) inadvertently drops the `offToday` tracking restriction completely, which theoretically allows a doctor to be assigned on a requested day off in extreme shortage scenarios.
-- **Reference-Based Date Comparison**: Single-day date range validation fails because it relies on standard strict reference equality (`sd.getTime() !== ed.getTime()`) which allows functionally identical day boundaries when they are different `Date` instances.
-- **XSS in Calendar Component**: While the primary tabular view and string logic heavily use `esc()` for output, the `renderCalendarView` injects unescaped raw string literals directly into the `ondragstart` and `ondrop` HTML attributes in the browser.
-- **Type mismatch for `offMap`**: The manual override verification (`explainSlotFailure`) mistakenly interacts with `offMap` as a `Set` (calling `.has()`), although `parseUIConfig` builds `offMap` as a standard `Object` keyed by integers. This causes a silent throw when evaluating override validity.
+### Resolved Logic Anomalies
+During the recent test suite expansion and auditing phase, several significant logic flaws were discovered and successfully resolved:
+- **Cascade Bypassing Constraints**: Previously, Cascade Level 4 inadvertently dropped the hard `offToday` tracking restriction. This was patched so that even under extreme shortages, the solver will never assign a doctor to a day they requested off.
+- **Reference-Based Date Comparison**: Single-day custom date ranges incorrectly passed validation due to strict object reference comparisons (`sd !== ed`). The validation logic was refactored to correctly compare the underlying time values (`sd.getTime() >= ed.getTime()`).
+- **XSS in Calendar Component**: Drag-and-drop HTML attributes in `renderCalendarView` previously received raw, unescaped doctor names. The architecture was permanently shifted to pass safe array integer indices rather than string literals, eliminating the XSS vector.
+
+### Remaining Logic Anomalies (Known Bugs)
+- **Type mismatch for `offMap`**: The manual override verification (`explainSlotFailure` and `updateDayNote`) mistakenly interacts with `offMap` / `offToday` dynamically, sometimes resulting in a `TypeError: offMap.has is not a function` when evaluating override validity.
+

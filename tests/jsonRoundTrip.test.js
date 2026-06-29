@@ -185,7 +185,10 @@ function runTest3() {
         global.FileReader = class {
             readAsText() {
                 setTimeout(() => {
+                    const originalConsoleError = console.error;
+                    console.error = () => {};
                     this.onload({ target: { result: "INVALID JSON DATA" } });
+                    console.error = originalConsoleError;
                     
                     try {
                         let hasErrorToast = toastMessages.some(t => t.isError && t.msg.includes("Error reading JSON file"));

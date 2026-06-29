@@ -170,7 +170,10 @@ async function runTests() {
         mockDOM['chkAllowBlankDays'].checked = false; 
         
         // This will be caught inside generateSchedule and show a toast, returning early.
+        const originalConsoleError = console.error;
+        console.error = () => {};
         await window.generateSchedule();
+        console.error = originalConsoleError;
         
         let hasError = toastMessages.some(t => t.isError && t.msg.includes("Critical Coverage Error"));
         assert.strictEqual(hasError, true, "Should show critical coverage error toast");
