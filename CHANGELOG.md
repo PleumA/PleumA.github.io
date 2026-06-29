@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 - **Error Diagnostics**: Replaced the generic "Constraint conflict" quota error toast with a prescriptive, mathematically exact message (e.g., "Quotas sum to 120 but there are 62 slots — remove 58 shifts").
+- **Data Export**: Upgraded the `Copy Schedule` and `Export .xlsx` features. The Date column now natively formats as a short-date (e.g. `1 ก.ค. 69` or `1 Jul 26`) instead of a single day number for better calendar clarity.
 
 ### Fixed
 - **Manual Translation Rendering**: Fixed a bug where English translations of the User Manual stripped out embedded `<code>` tags, causing the remainder of paragraphs to fall back to Thai.
@@ -24,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [1.0.0] - 2026-06-29
 ### Added
+- **Multi-Sheet Export**: The Excel Export `.xlsx` file now automatically generates a second worksheet named `Summary` (`สรุปจำนวนเวร`), embedding the Individual Duty Summary right alongside the primary schedule table.
 - **Mobile Bottom Sheet**: Implemented a full-screen, blurred modal container (`#mobileDoctorSheet`) that replaces cramped inline dropdown menus on viewports `< 768px`, dramatically improving touch-target precision for mobile users.
 - **Input Helpers**: Added inline syntax examples (e.g., `A:R1, B:R2`) and dynamic placeholder text directly below the Role and Conflict configuration input textareas to prevent formatting typos.
 - **Auditing Documentation**: Authored `logic_report.md`, a deep-dive technical reference on the Monte Carlo solver engine, constraint cascades, and scoring metrics for administrative and developer auditing.

@@ -2506,6 +2506,15 @@ window.openCellDropdown = function (event, dropdownId) {
 };
 
 // Clipboard Copy functions
+function formatShortDate(day, month, year, lang) {
+    const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNamesTh = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    const mIndex = parseInt(month) - 1;
+    const mName = lang === 'th' ? monthNamesTh[mIndex] : monthNamesEn[mIndex];
+    const yShort = year.toString().slice(-2);
+    return `${day} ${mName} ${yShort}`;
+}
+
 window.copyScheduleForExcel = function () {
     if (!globalResult || globalResult.schedule.length === 0) {
         showToast(currentLang === 'th' ? "ยังไม่มีข้อมูลตารางเวร" : "No schedule data available", true);
@@ -2519,7 +2528,8 @@ window.copyScheduleForExcel = function () {
     tsvData += (currentLang === 'th' ? "หมายเหตุ\n" : "Notes\n");
 
     globalResult.schedule.forEach(row => {
-        tsvData += `${row.day}\t${row.dayName}\t`;
+        const shortDate = formatShortDate(row.day, globalResult.month, globalResult.year, currentLang);
+        tsvData += `${shortDate}\t${row.dayName}\t`;
         for (let i = 0; i < globalResult.maxSlots; i++) {
             let docObj = row.selectedDocs[i];
             let doc = docObj ? docObj.name : "";
@@ -2577,7 +2587,8 @@ window.exportToExcel = function () {
 
         const data = [headers];
         globalResult.schedule.forEach(r => {
-            let rowData = [r.day, r.dayName];
+            const shortDate = formatShortDate(r.day, globalResult.month, globalResult.year, currentLang);
+            let rowData = [shortDate, r.dayName];
             for (let i = 0; i < globalResult.maxSlots; i++) {
                 let docObj = r.selectedDocs[i];
                 let doc = docObj ? docObj.name : "";
@@ -2598,6 +2609,18 @@ window.exportToExcel = function () {
         const ws = window.XLSX.utils.aoa_to_sheet(data);
         const wb = window.XLSX.utils.book_new();
         window.XLSX.utils.book_append_sheet(wb, ws, `Schedule Month ${globalResult.month}`);
+
+        // Add Individual Duty Summary to a second sheet
+        const summaryHeaders = currentLang === 'th' ? 
+            ["ชื่อแพทย์", "เวรวันทำการ (จ-ศ)", "เวรวันหยุด (ส-อา, พิเศษ)", "รวมทั้งหมด"] : 
+            ["Doctor Name", "Weekdays (Mon-Fri)", "Holidays (Sat-Sun, Special)", "Total Shifts"];
+        const summaryData = [summaryHeaders];
+        globalResult.summary.forEach(s => {
+            summaryData.push([s.name, s.workdays, s.holidays, s.total]);
+        });
+        const summaryWs = window.XLSX.utils.aoa_to_sheet(summaryData);
+        window.XLSX.utils.book_append_sheet(wb, summaryWs, currentLang === 'th' ? "สรุปจำนวนเวร" : "Summary");
+
         window.XLSX.writeFile(wb, `OnCall_Month_${globalResult.month}_Year_${globalResult.year}.xlsx`);
         showToast(currentLang === 'th' ? "ดาวน์โหลดไฟล์ Excel สำเร็จ!" : "Excel file downloaded successfully!");
     } catch (e) {
