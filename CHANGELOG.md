@@ -4,9 +4,10 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.1] - 2026-07-29
+## [1.0.2] - 2026-07-30
 ### Added
 - **Accessibility**: Added descriptive `aria-label` and `aria-hidden` attributes to dynamic schedule slot buttons to support screen readers, making the click-to-swap interface fully accessible to visually impaired users.
+- **Language Auto-Detection**: Automatically detects browser/system language on initial load (defaulting to Thai if Thai-based language is set, otherwise English). Persists the detected value or manual overrides in `localStorage` to ensure auto-detection never overwrites user preferences.
 - **Offline Reliability (PWA)**: Implemented Progressive Web App configurations via `manifest.json` and a Service Worker (`sw.js`). The app caches layout resources and CDN files, ensuring it functions seamlessly on hospital wards with unstable Wi-Fi.
 - **Test Suite**: Significantly expanded the standalone Node.js test runner with comprehensive test suites (54 tests across 8 files) covering edge cases for cascade fallback logic, configuration JSON round-trips, undo stack limits, off-request boundaries, and XSS sanitization.
 - **Person-Centric View**: Added a new data view mode that pivots the schedule into a person-centric grid (rows representing doctors, columns representing days), making it effortless for individuals to visually track their exact working days across the month.

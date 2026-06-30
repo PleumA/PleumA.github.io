@@ -1,7 +1,18 @@
 // Multi-language translation dictionaries
-let currentLang = localStorage.getItem('schedule_lang') || 'th';
-const SHORTAGE_MARKER = "__SHORTAGE__";
+let currentLang = 'th';
+try {
+    currentLang = localStorage.getItem('schedule_lang');
+    if (!currentLang || (currentLang !== 'th' && currentLang !== 'en')) {
+        const nav = typeof window !== 'undefined' ? window.navigator : (typeof navigator !== 'undefined' ? navigator : null);
+        const navLang = nav ? (nav.language || (nav.languages && nav.languages[0]) || '') : '';
+        currentLang = navLang.toLowerCase().startsWith('th') ? 'th' : 'en';
+        localStorage.setItem('schedule_lang', currentLang);
+    }
+} catch (e) {
+    currentLang = 'en'; // Safe fallback if localStorage is disabled
+}
 
+const SHORTAGE_MARKER = "__SHORTAGE__";
 const esc = (str) => {
     if (typeof str !== 'string') return str;
     return str.replace(/[&<>"']/g, function(m) {
@@ -297,13 +308,17 @@ document.addEventListener('DOMContentLoaded', () => {
     applyDarkMode();
 
     // Show manual automatically on first visit
-    if (!localStorage.getItem('hasSeenManual')) {
-        setTimeout(() => {
-            if (typeof window.openManualModal === 'function') {
-                window.openManualModal();
-            }
-        }, 800);
-        localStorage.setItem('hasSeenManual', 'true');
+    try {
+        if (!localStorage.getItem('hasSeenManual')) {
+            setTimeout(() => {
+                if (typeof window.openManualModal === 'function') {
+                    window.openManualModal();
+                }
+            }, 800);
+            localStorage.setItem('hasSeenManual', 'true');
+        }
+    } catch (e) {
+        // Ignored if localStorage is unavailable
     }
 
     // Set up listeners for the tag input text box
