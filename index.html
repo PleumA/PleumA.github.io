@@ -9,7 +9,8 @@
     <!-- PWA Setup -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0D9488">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230D9488' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E">
+    <link rel="apple-touch-icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230D9488' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E">
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -187,43 +188,57 @@
             <!-- Basic Config -->
             <div
                 class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
-                <div class="bg-slate-50/50 dark:bg-slate-800/40 px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div
+                    class="bg-slate-50/50 dark:bg-slate-800/40 px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <i data-lucide="settings" class="w-5 h-5 text-slate-500 dark:text-slate-400"></i>
                         <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200" data-i18n="basicSettings">
                             ตั้งค่าพื้นฐาน</h2>
                     </div>
                     <div class="flex items-center gap-1.5">
-                        <button onclick="exportConfigJSON()" title="Export Config" class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
+                        <button onclick="exportConfigJSON()" title="Export Config"
+                            class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
                             <i data-lucide="download" class="w-4 h-4"></i>
                         </button>
-                        <button onclick="document.getElementById('importConfigFile').click()" title="Import Config" class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
+                        <button onclick="document.getElementById('importConfigFile').click()" title="Import Config"
+                            class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
                             <i data-lucide="upload" class="w-4 h-4"></i>
                         </button>
-                        <input type="file" id="importConfigFile" accept=".json" class="hidden" onchange="importConfigJSON(event)">
+                        <input type="file" id="importConfigFile" accept=".json" class="hidden"
+                            onchange="importConfigJSON(event)">
                     </div>
                 </div>
                 <div class="p-5 space-y-4">
                     <!-- Custom Date Range Toggle -->
-                    <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div
+                        class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                         <div>
-                            <span class="block text-sm font-bold text-slate-700 dark:text-slate-200" data-i18n="customDateRangeToggle">ใช้ช่วงวันที่กำหนดเอง / Use Custom Date Range</span>
+                            <span class="block text-sm font-bold text-slate-700 dark:text-slate-200"
+                                data-i18n="customDateRangeToggle">ใช้ช่วงวันที่กำหนดเอง / Use Custom Date Range</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="chkCustomDateRange" class="sr-only peer">
-                            <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                            <div
+                                class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500">
+                            </div>
                         </label>
                     </div>
 
                     <!-- Custom Date Range Inputs -->
                     <div id="customDateRangeContainer" class="hidden grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide" data-i18n="startDateLabel">เริ่ม / Start</label>
-                            <input type="date" id="inputStartDate" lang="en-GB" class="[color-scheme:light] dark:[color-scheme:dark] w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
+                            <label
+                                class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                                data-i18n="startDateLabel">เริ่ม / Start</label>
+                            <input type="date" id="inputStartDate" lang="en-GB"
+                                class="[color-scheme:light] dark:[color-scheme:dark] w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide" data-i18n="endDateLabel">สิ้นสุด / End</label>
-                            <input type="date" id="inputEndDate" lang="en-GB" class="[color-scheme:light] dark:[color-scheme:dark] w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
+                            <label
+                                class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                                data-i18n="endDateLabel">สิ้นสุด / End</label>
+                            <input type="date" id="inputEndDate" lang="en-GB"
+                                class="[color-scheme:light] dark:[color-scheme:dark] w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
                         </div>
                     </div>
 
@@ -252,7 +267,8 @@
                         <div id="doctorTagsContainer"
                             class="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl min-h-[90px] focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 outline-none transition-all cursor-text">
                             <!-- Input element for adding new names -->
-                            <input type="text" id="doctorInput" placeholder="พิมพ์ชื่อแล้วกด Enter หรือจุลภาค (,)" data-i18n="docInputPlaceholder"
+                            <input type="text" id="doctorInput" placeholder="พิมพ์ชื่อแล้วกด Enter หรือจุลภาค (,)"
+                                data-i18n="docInputPlaceholder"
                                 class="flex-1 bg-transparent border-none outline-none text-sm min-w-[140px] py-0.5 text-slate-800 dark:text-slate-100">
                         </div>
                         <!-- Hidden text field to preserve compatibility with existing parser -->
@@ -260,7 +276,8 @@
                     </div>
 
                     <!-- Doctor Roles Mode Toggle -->
-                    <div class="bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                         <div class="flex items-center justify-between px-4 py-3">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="badge-check" class="w-4 h-4 text-violet-500"></i>
@@ -275,7 +292,8 @@
                                     class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
                             </div>
                         </div>
-                        <div id="roleBasedSettings" class="px-4 pb-4 space-y-3 border-t border-slate-200 dark:border-slate-800">
+                        <div id="roleBasedSettings"
+                            class="px-4 pb-4 space-y-3 border-t border-slate-200 dark:border-slate-800">
                             <div class="pt-3">
                                 <label
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
@@ -297,8 +315,8 @@
                                 <label
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                                     data-i18n="roleQuotasLabel">กำหนดโควตาเวรแบบระบุจำนวน (เช่น R1:12, R2:10)</label>
-                                <input type="text" id="inputRoleQuotas" value=""
-                                    placeholder="เช่น R1:12, R2:10" data-i18n="roleQuotasPlaceholder"
+                                <input type="text" id="inputRoleQuotas" value="" placeholder="เช่น R1:12, R2:10"
+                                    data-i18n="roleQuotasPlaceholder"
                                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
                             </div>
                         </div>
@@ -308,7 +326,8 @@
                         <label
                             class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                             data-i18n="specialHolsLabel">วันหยุดพิเศษ (คั่นด้วย ,)</label>
-                        <input type="text" id="inputSpecialHols" placeholder="เช่น 13, 14, 15" data-i18n="csvPlaceholder1"
+                        <input type="text" id="inputSpecialHols" placeholder="เช่น 13, 14, 15"
+                            data-i18n="csvPlaceholder1"
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
                     </div>
                     <div
@@ -373,7 +392,8 @@
                     </button>
                 </div>
                 <div id="offRequestsList" class="p-4 space-y-2.5"></div>
-                <div id="offRequestCustomNote" class="hidden px-4 pb-4 text-[11px] text-orange-600 dark:text-orange-400" data-i18n="offRequestCustomNoteText">
+                <div id="offRequestCustomNote" class="hidden px-4 pb-4 text-[11px] text-orange-600 dark:text-orange-400"
+                    data-i18n="offRequestCustomNoteText">
                     ในโหมดช่วงวันที่กำหนดเอง กรุณาระบุวันในรูปแบบ DD/MM/YYYY เช่น 20/05/2026 (หรือ ค.ศ.)
                 </div>
             </div>
@@ -436,7 +456,8 @@
                         <div>
                             <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleBlankDays">
                                 อนุญาตให้เว้นว่าง (Allow Blank Days)</h4>
-                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1" data-i18n="ruleBlankDaysDesc">
+                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
+                                data-i18n="ruleBlankDaysDesc">
                                 หากไม่มีแพทย์เพียงพอตามเงื่อนไข ระบบจะปล่อยวันนั้นว่างแทนที่จะบังคับลง</p>
                         </div>
                         <div
@@ -450,11 +471,13 @@
                     <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
                         <label
                             class="block text-xs font-bold text-slate-650 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                            data-i18n="conflictListLabel">รายชื่อแพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict List)</label>
+                            data-i18n="conflictListLabel">รายชื่อแพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict
+                            List)</label>
                         <textarea id="inputConflicts" rows="2" placeholder="e.g., A:B, C:D"
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100"></textarea>
                         <p class="text-[10px] text-slate-500 mt-1">Format: Name:Name, Name:Name</p>
-                        <p class="text-[11px] text-slate-400 dark:text-slate-550 mt-1.5 leading-relaxed" data-i18n="conflictDesc">
+                        <p class="text-[11px] text-slate-400 dark:text-slate-550 mt-1.5 leading-relaxed"
+                            data-i18n="conflictDesc">
                             *ระบุคู่ที่ขัดแย้งกัน เช่น A:B, C:D หรือ A conflicts with B</p>
                     </div>
                 </div>
@@ -642,15 +665,18 @@
                                 class="flex items-center gap-1 bg-slate-200/60 dark:bg-slate-950/80 p-1 rounded-xl self-start font-sans">
                                 <button id="btnTableView" onclick="setViewMode('table')"
                                     class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700">
-                                    <i data-lucide="list" class="w-3.5 h-3.5"></i> <span data-i18n="tabTable">รายการ</span>
+                                    <i data-lucide="list" class="w-3.5 h-3.5"></i> <span
+                                        data-i18n="tabTable">รายการ</span>
                                 </button>
                                 <button id="btnCalendarView" onclick="setViewMode('calendar')"
                                     class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
-                                    <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i> <span data-i18n="tabCalendar">ปฏิทิน</span>
+                                    <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i> <span
+                                        data-i18n="tabCalendar">ปฏิทิน</span>
                                 </button>
                                 <button id="btnPersonView" onclick="setViewMode('person')"
                                     class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
-                                    <i data-lucide="user" class="w-3.5 h-3.5"></i> <span data-i18n="tabPerson">บุคคล</span>
+                                    <i data-lucide="user" class="w-3.5 h-3.5"></i> <span
+                                        data-i18n="tabPerson">บุคคล</span>
                                 </button>
                             </div>
                         </div>
@@ -677,7 +703,8 @@
                     </div>
 
                     <!-- View Container: Table Mode -->
-                    <div id="tableViewContainer" class="mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 max-h-[600px] custom-scrollbar -webkit-overflow-scrolling-touch">
+                    <div id="tableViewContainer"
+                        class="mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 max-h-[600px] custom-scrollbar -webkit-overflow-scrolling-touch">
                         <table class="w-full text-left text-sm border-collapse min-w-[750px]">
                             <thead class="sticky top-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-sm"
                                 id="scheduleTableHeader">
@@ -732,121 +759,151 @@
 
     <!-- Footer -->
     <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6">
-        <div class="max-w-7xl mx-auto px-4 flex justify-center items-center">
-            <p class="text-sm font-medium text-slate-400 dark:text-slate-500">Developed by <a
+        <div class="max-w-7xl mx-auto px-4 flex flex-col justify-center items-center gap-2">
+            <p class="text-sm font-medium text-slate-400 dark:text-slate-500 text-center">Designed by <a
                     class="hover:text-orange-600 dark:hover:text-orange-400 text-orange-400 dark:text-orange-600"
-                    href="https://github.com/PleumA" target="_blank">Arnun Polsuksiri</a> & improved by Antigravity</p>
+                    href="https://th.linkedin.com/in/arnun-polsuksiri" target="_blank">Arnun Polsuksiri</a> & developed
+                by Antigravity</p>
+            <p class="text-sm font-medium text-slate-400 dark:text-slate-500 text-center">GitHub: <a
+                    class="hover:text-orange-600 dark:hover:text-orange-400 text-orange-400 dark:text-orange-600"
+                    href="https://github.com/PleumA/PleumA.github.io" target="_blank">Link</a></p>
         </div>
     </footer>
 
     <!-- Mobile Doctor Bottom Sheet -->
     <div id="mobileDoctorSheet" class="fixed inset-0 bg-black/50 z-50 hidden">
-        <div class="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto shadow-2xl">
+        <div
+            class="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto shadow-2xl">
             <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white">เปลี่ยนแพทย์ / Change Doctor</h3>
             <div id="mobileDoctorList"></div>
-            <button onclick="closeMobileSheet()" class="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl font-bold transition-colors">ยกเลิก / Cancel</button>
+            <button onclick="closeMobileSheet()"
+                class="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl font-bold transition-colors">ยกเลิก
+                / Cancel</button>
         </div>
     </div>
 
     <!-- Manual Modal -->
-    <div id="manualModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div id="manualModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onclick="closeManualModal()"></div>
         <!-- Modal Content Card -->
-        <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col scale-95 transition-transform duration-300">
+        <div
+            class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col scale-95 transition-transform duration-300">
             <!-- Header -->
             <div class="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center gap-2.5">
                     <div class="bg-teal-50 dark:bg-teal-950/50 p-2.5 rounded-xl text-teal-600 dark:text-teal-400">
                         <i data-lucide="help-circle" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-850 dark:text-white" data-i18n="manualTitle">คู่มือการใช้งานระบบจัดตารางเวร</h3>
+                    <h3 class="text-lg font-bold text-slate-850 dark:text-white" data-i18n="manualTitle">
+                        คู่มือการใช้งานระบบจัดตารางเวร</h3>
                 </div>
-                <button onclick="closeManualModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                <button onclick="closeManualModal()"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <!-- Body -->
             <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6 text-sm leading-relaxed">
                 <p class="text-slate-500 dark:text-slate-400 font-medium" data-i18n="manualIntro">
-                    ระบบจัดตารางเวรนี้ คำนวณด้วยอัลกอริทึม Smart Solver (Monte Carlo Simulation) 300 รอบ เพื่อหาการกระจายเวรที่ดีที่สุด พร้อมทั้งรองรับเงื่อนไขหลากหลายรูปแบบดังนี้:
+                    ระบบจัดตารางเวรนี้ คำนวณด้วยอัลกอริทึม Smart Solver (Monte Carlo Simulation) 300 รอบ
+                    เพื่อหาการกระจายเวรที่ดีที่สุด พร้อมทั้งรองรับเงื่อนไขหลากหลายรูปแบบดังนี้:
                 </p>
                 <div class="grid gap-6">
                     <!-- Section 1 -->
-                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-teal-500"></span>
                             <span data-i18n="manualSection1Title">1. การจัดการแพทย์และบทบาท (Roles)</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection1Body">
-                            ระบุรายชื่อแพทย์ในรูปแบบ Tag และกำหนดบทบาทในกล่องข้อความ (เช่น <code>A:R1, B:R2</code>) ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน
+                            ระบุรายชื่อแพทย์ในรูปแบบ Tag และกำหนดบทบาทในกล่องข้อความ (เช่น <code>A:R1, B:R2</code>)
+                            ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน
                         </p>
                     </div>
                     <!-- Section 2 -->
-                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
                             <span data-i18n="manualSection2Title">2. จำนวนเวรตามบทบาท (Slots)</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection2Body">
-                            กำหนดจำนวนผู้ปฏิบัติงานต่อวัน เช่น <code>R1:1, R2:1</code> (หมายถึงต้องการ R1 1 คน และ R2 1 คน) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'
+                            กำหนดจำนวนผู้ปฏิบัติงานต่อวัน เช่น <code>R1:1, R2:1</code> (หมายถึงต้องการ R1 1 คน และ R2 1
+                            คน) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'
                         </p>
                     </div>
                     <!-- Section 3 -->
-                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                             <span data-i18n="manualSection3Title">3. แพทย์ที่ขัดแย้งกัน (Conflict List)</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection3Body">
-                            ระบุแพทย์ที่ไม่สามารถอยู่เวรร่วมกันในวันเดียวกันได้ เช่น <code>A:B</code> หรือ <code>C conflicts with D</code> อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ
+                            ระบุแพทย์ที่ไม่สามารถอยู่เวรร่วมกันในวันเดียวกันได้ เช่น <code>A:B</code> หรือ
+                            <code>C conflicts with D</code> อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ
                         </p>
                     </div>
                     <!-- Section 4 -->
-                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-orange-500"></span>
                             <span data-i18n="manualSection4Title">4. วันหยุดและวันพัก (Off Requests)</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection4Body">
-                            ระบบห้ามจัดเวรซ้อนทับวัน Off หรือก่อนหน้าวัน Off 1 วัน และห้ามอยู่เวรวันหยุด (ส.-อา. + นักขัตฤกษ์) ติดกันเด็ดขาด
+                            ระบบห้ามจัดเวรซ้อนทับวัน Off หรือก่อนหน้าวัน Off 1 วัน และห้ามอยู่เวรวันหยุด (ส.-อา. +
+                            นักขัตฤกษ์) ติดกันเด็ดขาด
                         </p>
                     </div>
                     <!-- Section 5 -->
-                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-violet-500"></span>
                             <span data-i18n="manualSection5Title">5. การแก้ไขและตรวจสอบตาราง</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection5Body">
-                            ท่านสามารถคลิกที่ชื่อแพทย์ในตารางหรือปฏิทินเพื่อเลือกสลับตัวแพทย์ด้วยตนเอง ระบบจะคำนวณสถิติใหม่พร้อมแสดงป้ายเตือนความขัดแย้ง (Conflict) หรือผิดบทบาท (Role Mismatch) ทันที
+                            ท่านสามารถคลิกที่ชื่อแพทย์ในตารางหรือปฏิทินเพื่อเลือกสลับตัวแพทย์ด้วยตนเอง
+                            ระบบจะคำนวณสถิติใหม่พร้อมแสดงป้ายเตือนความขัดแย้ง (Conflict) หรือผิดบทบาท (Role Mismatch)
+                            ทันที
                         </p>
                     </div>
                     <!-- Section 6 -->
-                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
                             <span data-i18n="manualSection6Title">6. การบันทึก/โหลดและอัปเดตสถิติ</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection6Body">
-                            ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ และเมื่อมีการแก้ไขเวรด้วยตนเอง กรุณากดปุ่ม "ยืนยันการเปลี่ยนแปลง" เพื่อเริ่มคำนวณสรุปสถิติใหม่
+                            ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้
+                            และเมื่อมีการแก้ไขเวรด้วยตนเอง กรุณากดปุ่ม "ยืนยันการเปลี่ยนแปลง"
+                            เพื่อเริ่มคำนวณสรุปสถิติใหม่
                         </p>
                     </div>
                     <!-- Section 7 -->
-                    <div class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span data-i18n="manualSection7Title">7. โหมดช่วงวันที่กำหนดเอง (Custom Date Range)</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection7Body">
-                            คุณสามารถสลับเปิด 'ใช้ช่วงวันที่กำหนดเอง' เพื่อจัดเวรตามวันที่ต้องการ (สูงสุด 90 วัน) แทนการจัดเวรตามเดือนปกติ โดยกรอกวันที่ในรูปแบบ DD/MM/YYYY
+                            คุณสามารถสลับเปิด 'ใช้ช่วงวันที่กำหนดเอง' เพื่อจัดเวรตามวันที่ต้องการ (สูงสุด 90 วัน)
+                            แทนการจัดเวรตามเดือนปกติ โดยกรอกวันที่ในรูปแบบ DD/MM/YYYY
                         </p>
                     </div>
                 </div>
             </div>
             <!-- Footer -->
-            <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end">
-                <button onclick="closeManualModal()" class="bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-sm">
+            <div
+                class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end">
+                <button onclick="closeManualModal()"
+                    class="bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-sm">
                     ตกลง / OK
                 </button>
             </div>
