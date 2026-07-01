@@ -66,6 +66,9 @@ const translations = {
         docRolesLabel: "บทบาทของแพทย์ (เช่น A:R1, B:R2)",
         defaultRoleSlotsLabel: "จำนวนคนแยกตามบทบาท (เช่น R1:1, R2:1)",
         roleQuotasLabel: "กำหนดโควตาเวรแบบระบุจำนวน (เช่น R1:12, R2:10)",
+        singlePoolQuotasLabel: "โควต้าต่อแพทย์ (เช่น A:12, B:10)",
+        singlePoolQuotasPlaceholder: "เช่น A:12, B:10",
+        singlePoolQuotasDesc: "ถ้าไม่ระบุ จะไม่มีการจำกัดโควต้า",
         conflictListLabel: "แพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict List)",
         conflictDesc: "*ระบุคู่ที่ขัดแย้งกัน เช่น A:B, C:D หรือ A conflicts with B",
         emptyStateTitle: "พร้อมสำหรับการจัดตาราง",
@@ -184,6 +187,9 @@ const translations = {
         docRolesLabel: "Doctor Roles (e.g. A:R1, B:R2)",
         defaultRoleSlotsLabel: "Slots per Role (e.g. R1:1, R2:1)",
         roleQuotasLabel: "Exact Monthly Quota (e.g. R1:12, R2:10)",
+        singlePoolQuotasLabel: "Exact Quota Per Doctor (e.g. A:12, B:10)",
+        singlePoolQuotasPlaceholder: "e.g. A:12, B:10",
+        singlePoolQuotasDesc: "Leave blank to disable",
         conflictListLabel: "Conflict / Hate List (Cannot be on shift together)",
         conflictDesc: "*Enter pairs e.g. A:B, C:D or A conflicts with B",
         emptyStateTitle: "Ready to Schedule",
@@ -277,6 +283,14 @@ let scheduleDates = [];
 // Manual override object tracking custom cell edits
 // Format: { [day]: { [slotIndex]: docName } }
 let manualOverrides = {};
+let quota = {};
+
+function getQuotaKey(doctor, config) {
+    const isRoleBased = config ? config.roleBased : false;
+    const docName = typeof doctor === 'string' ? doctor : doctor.name;
+    const docRole = typeof doctor === 'object' && doctor.role ? doctor.role : (config && config.doctorRoles ? config.doctorRoles[docName] : 'Default');
+    return isRoleBased ? docRole : docName;
+}
 
 // Dark Mode state
 let darkMode = localStorage.getItem('schedule_dark') !== null
@@ -397,6 +411,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (roleQuotasInput) {
         roleQuotasInput.addEventListener('change', () => generateSchedule());
     }
+    const singlePoolQuotaInput = document.getElementById('inputSinglePoolQuota');
+    if (singlePoolQuotaInput) {
+        singlePoolQuotaInput.addEventListener('change', () => generateSchedule());
+    }
     const conflictsInput = document.getElementById('inputConflicts');
     if (conflictsInput) {
         conflictsInput.addEventListener('change', () => generateSchedule());
@@ -491,6 +509,14 @@ function toggleRoleBasedUI() {
             defaultSlotsContainer.classList.add('hidden');
         } else {
             defaultSlotsContainer.classList.remove('hidden');
+        }
+    }
+    const singlePoolQuotaContainer = document.getElementById('singlePoolQuotaContainer');
+    if (singlePoolQuotaContainer) {
+        if (isOn) {
+            singlePoolQuotaContainer.classList.add('hidden');
+        } else {
+            singlePoolQuotaContainer.classList.remove('hidden');
         }
     }
 }
@@ -1292,7 +1318,7 @@ function parseUIConfig() {
     }
     if (Object.keys(defaultRoleSlots).length === 0) defaultRoleSlots['Default'] = defaultSlots;
 
-    const roleQuotas = {};
+    quota = {};
     if (roleBased) {
         const quotasText = document.getElementById('inputRoleQuotas')?.value || '';
         if (quotasText.trim()) {
@@ -1301,12 +1327,56 @@ function parseUIConfig() {
                 if (pair.length === 2) {
                     const role = pair[0].trim();
                     const count = parseInt(pair[1].trim());
-                    if (role && !isNaN(count) && count > 0) roleQuotas[role] = count;
+                    if (role) {
+                        if (isNaN(count) || count <= 0) {
+                            showToast(currentLang === 'th' ? `ข้อผิดพลาดโควตา: ${role} ต้องมากกว่า 0` : `Quota error: ${role} must be > 0`, true);
+                        } else {
+                            quota[role] = count;
+                        }
+                    }
+                }
+            });
+        }
+    } else {
+        const quotasText = document.getElementById('inputSinglePoolQuota')?.value || '';
+        if (quotasText.trim()) {
+            quotasText.split(/[\n,]+/).forEach(part => {
+                const pair = part.split(':');
+                if (pair.length === 2) {
+                    const doc = pair[0].trim();
+                    const count = parseInt(pair[1].trim());
+                    if (doc) {
+                        if (isNaN(count) || count <= 0) {
+                            showToast(currentLang === 'th' ? `ข้อผิดพลาดโควตา: ${doc} ต้องมากกว่า 0` : `Quota error: ${doc} must be > 0`, true);
+                        } else {
+                            quota[doc] = count;
+                        }
+                    }
                 }
             });
         }
     }
-    const hasRoleQuotas = Object.keys(roleQuotas).length > 0;
+
+    // Filter invalid keys (Step 5: unknown key in quota -> warning toast, skip entry)
+    if (Object.keys(quota).length > 0) {
+        if (roleBased) {
+            const activeRoles = new Set(doctors.map(doc => doctorRoles[doc] || 'Default'));
+            Object.keys(quota).forEach(role => {
+                if (!activeRoles.has(role)) {
+                    showToast(currentLang === 'th' ? `คำเตือนโควตา: ไม่พบกลุ่มเวร "${role}"` : `Quota warning: Role "${role}" not found`, true);
+                    delete quota[role];
+                }
+            });
+        } else {
+            Object.keys(quota).forEach(doc => {
+                if (!doctors.includes(doc)) {
+                    showToast(currentLang === 'th' ? `คำเตือนโควตา: ไม่พบแพทย์ชื่อ "${doc}"` : `Quota warning: Doctor "${doc}" not found`, true);
+                    delete quota[doc];
+                }
+            });
+        }
+    }
+    const hasQuotas = Object.keys(quota).length > 0;
 
     const conflicts = [];
     const conflictsText = document.getElementById('inputConflicts').value || '';
@@ -1372,7 +1442,7 @@ function parseUIConfig() {
     const specialDocs = specialRuleDocsInput.split(',').map(d => d.trim()).filter(d => d);
 
     // Mathematical Validation (Fail-Safe) - only needs to run once per generation cycle
-    if (roleBased && hasRoleQuotas) {
+    if (hasQuotas) {
         let totalSlotsInMonth = 0;
         for (let d = 1; d <= numDays; d++) {
             if (!noDutySet.has(d)) {
@@ -1382,8 +1452,10 @@ function parseUIConfig() {
         }
         let totalRequiredShifts = 0;
         doctors.forEach(doc => {
-            const role = doctorRoles[doc] || 'Default';
-            if (roleQuotas[role]) totalRequiredShifts += roleQuotas[role];
+            const key = getQuotaKey(doc, { roleBased, doctorRoles });
+            if (quota[key] !== undefined) {
+                totalRequiredShifts += quota[key];
+            }
         });
 
         if (!allowBlankDays && totalRequiredShifts !== totalSlotsInMonth) {
@@ -1392,8 +1464,8 @@ function parseUIConfig() {
                 ? `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาเพิ่มอีก ${diff} เวรในโควตา (หรือเปิดอนุญาตเว้นว่าง)`
                 : `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาลดโควตาลง ${diff} เวร`;
             const msgEN = totalRequiredShifts < totalSlotsInMonth
-                ? `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — add ${diff} more shifts to any role.`
-                : `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — remove ${diff} shifts from any role.`;
+                ? `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — add ${diff} more shifts.`
+                : `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — remove ${diff} shifts.`;
             throw new Error(currentLang === 'th' ? msgTH : msgEN);
         } else if (allowBlankDays && totalRequiredShifts > totalSlotsInMonth) {
             const diff = totalRequiredShifts - totalSlotsInMonth;
@@ -1403,7 +1475,7 @@ function parseUIConfig() {
 
     return {
         year, month, numDays, holidaySet, noDutySet, offMap,
-        roleBased, doctorRoles, roleQuotas, hasRoleQuotas,
+        roleBased, doctorRoles, quota, hasQuotas,
         useSpecialRule, specialDocs, specialRuleDays,
         preventConsecutiveAll, preventLongGaps, balanceShifts, allowBlankDays,
         getRoleSlotsForDay, areConflicting, specialHols
@@ -1414,7 +1486,7 @@ function parseUIConfig() {
 function generateSingleScheduleCandidate(randomness = 0, formatUI = false, config) {
     const {
         numDays, holidaySet, noDutySet, offMap,
-        roleBased, doctorRoles, roleQuotas, hasRoleQuotas,
+        roleBased, doctorRoles, quota, hasQuotas,
         useSpecialRule, specialDocs, specialRuleDays,
         preventConsecutiveAll, preventLongGaps, balanceShifts, allowBlankDays,
         getRoleSlotsForDay, areConflicting, month, year, specialHols
@@ -1430,18 +1502,21 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
     // Pre-calculate remaining quotas vs remaining slots for probabilistic blank spacing
     let remainingRoleSlots = {};
     let remainingRoleQuotas = {};
-    if (roleBased && allowBlankDays && hasRoleQuotas) {
+    if (allowBlankDays && hasQuotas) {
         for (let d = 1; d <= numDays; d++) {
             if (!noDutySet.has(d)) {
                 let dRoleSlots = getRoleSlotsForDay(d);
                 Object.keys(dRoleSlots).forEach(role => {
-                    remainingRoleSlots[role] = (remainingRoleSlots[role] || 0) + dRoleSlots[role];
+                    const key = roleBased ? role : 'Default';
+                    remainingRoleSlots[key] = (remainingRoleSlots[key] || 0) + dRoleSlots[role];
                 });
             }
         }
         doctors.forEach(doc => {
-            const role = doctorRoles[doc] || 'Default';
-            if (roleQuotas[role]) remainingRoleQuotas[role] = (remainingRoleQuotas[role] || 0) + roleQuotas[role];
+            const key = getQuotaKey(doc, config);
+            if (quota[key] !== undefined) {
+                remainingRoleQuotas[key] = (remainingRoleQuotas[key] || 0) + quota[key];
+            }
         });
     }
 
@@ -1454,11 +1529,11 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
 
         docsList.sort((a, b) => {
             // Priority 1: Minimum Shift Quota Fulfillment
-            if (roleBased && hasRoleQuotas) {
-                const roleA = doctorRoles[a] || 'Default';
-                const roleB = doctorRoles[b] || 'Default';
-                const quotaA = roleQuotas[roleA] || 0;
-                const quotaB = roleQuotas[roleB] || 0;
+            if (hasQuotas) {
+                const keyA = getQuotaKey(a, config);
+                const keyB = getQuotaKey(b, config);
+                const quotaA = quota[keyA] || 0;
+                const quotaB = quota[keyB] || 0;
 
                 const aNeedsQuota = quotaA > 0 && tCounts[a] < quotaA;
                 const bNeedsQuota = quotaB > 0 && tCounts[b] < quotaB;
@@ -1547,15 +1622,12 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
             if (useSpecialRule && day <= specialRuleDays && specialDocs.length > 0) {
                 let availableSpecial = specialDocs.filter(doc => {
                     // 1. Hard Quota Ceiling
-                    if (roleBased && roleQuotas[doctorRoles[doc] || 'Default']) {
-                        const quota = roleQuotas[doctorRoles[doc] || 'Default'];
-                        if (tCounts[doc] >= quota) return false;
+                    const key = getQuotaKey(doc, config);
+                    if (quota[key] !== undefined) {
+                        const qVal = quota[key];
+                        if (tCounts[doc] >= qVal) return false;
                     }
                     if (offToday.has(doc) || offTomorrow.has(doc)) return false;
-                    // Locked special doctors should work consecutive shifts without break
-                    // const yesterdayDocs = scheduleMap[day - 1] || [];
-                    // if (isHoliday && holidaySet.has(day - 1) && yesterdayDocs.includes(doc)) return false;
-                    // if (preventConsecutiveAll && day > 1 && yesterdayDocs.includes(doc)) return false;
                     return true;
                 });
 
@@ -1572,18 +1644,25 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                     selected.push(chosenSpecial);
                     chosenToday.push(chosenSpecial);
                     specialDoctorAssigned = true;
-                    if (roleBased && allowBlankDays && remainingRoleSlots[reqRole] !== undefined) {
-                        remainingRoleSlots[reqRole]--;
-                        remainingRoleQuotas[reqRole]--;
+                    if (allowBlankDays && hasQuotas) {
+                        const targetKey = roleBased ? reqRole : 'Default';
+                        if (remainingRoleSlots[targetKey] !== undefined) {
+                            remainingRoleSlots[targetKey]--;
+                            const quotaKey = getQuotaKey(chosenSpecial, config);
+                            if (remainingRoleQuotas[quotaKey] !== undefined) {
+                                remainingRoleQuotas[quotaKey]--;
+                            }
+                        }
                     }
                 } else {
                     // 2. Strict Role Isolation
                     const baseRoleDocs = roleBased ? doctors.filter(doc => (doctorRoles[doc] || 'Default') === reqRole) : doctors;
                     const roleDocs = baseRoleDocs.filter(doc => {
                         // 1. Hard Quota Ceiling
-                        if (roleBased && roleQuotas[doctorRoles[doc] || 'Default']) {
-                            const quota = roleQuotas[doctorRoles[doc] || 'Default'];
-                            if (tCounts[doc] >= quota) return false;
+                        const key = getQuotaKey(doc, config);
+                        if (quota[key] !== undefined) {
+                            const qVal = quota[key];
+                            if (tCounts[doc] >= qVal) return false;
                         }
                         return true;
                     });
@@ -1641,9 +1720,17 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                     // Final assignment
                     if (availableDocs.length > 0) {
                         // Probabilistically leave it blank to balance shortages across the month
-                        if (roleBased && allowBlankDays && remainingRoleSlots[reqRole] !== undefined) {
-                            const slotsLeft = remainingRoleSlots[reqRole];
-                            const quotaLeft = remainingRoleQuotas[reqRole] || 0;
+                        if (allowBlankDays && hasQuotas) {
+                            const targetKey = roleBased ? reqRole : 'Default';
+                            const slotsLeft = remainingRoleSlots[targetKey];
+                            let quotaLeft = 0;
+                            if (roleBased) {
+                                quotaLeft = remainingRoleQuotas[reqRole] || 0;
+                            } else {
+                                doctors.forEach(doc => {
+                                    quotaLeft += (remainingRoleQuotas[doc] || 0);
+                                });
+                            }
                             if (slotsLeft > quotaLeft && quotaLeft > 0 && randomness > 0) {
                                 const blankProb = (slotsLeft - quotaLeft) / slotsLeft;
                                 if (Math.random() < (blankProb * (0.8 + Math.random() * 0.4))) {
@@ -1658,9 +1745,15 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                         const chosenDoc = availableDocs[0];
                         selected.push(chosenDoc);
                         chosenToday.push(chosenDoc);
-                        if (roleBased && allowBlankDays && remainingRoleSlots[reqRole] !== undefined) {
-                            remainingRoleSlots[reqRole]--;
-                            remainingRoleQuotas[reqRole]--;
+                        if (allowBlankDays && hasQuotas) {
+                            const targetKey = roleBased ? reqRole : 'Default';
+                            if (remainingRoleSlots[targetKey] !== undefined) {
+                                remainingRoleSlots[targetKey]--;
+                                const quotaKey = getQuotaKey(chosenDoc, config);
+                                if (remainingRoleQuotas[quotaKey] !== undefined) {
+                                    remainingRoleQuotas[quotaKey]--;
+                                }
+                            }
                         }
                     } else if (baseRoleDocs.length === 0 && !allowBlankDays) {
                         // Critical Coverage Error: no doctors mapped to this role at all
@@ -1668,8 +1761,11 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                     } else {
                         // Blank day / shortage marker
                         selected.push(SHORTAGE_MARKER);
-                        if (roleBased && allowBlankDays && remainingRoleSlots[reqRole] !== undefined) {
-                            remainingRoleSlots[reqRole]--;
+                        if (allowBlankDays && hasQuotas) {
+                            const targetKey = roleBased ? reqRole : 'Default';
+                            if (remainingRoleSlots[targetKey] !== undefined) {
+                                remainingRoleSlots[targetKey]--;
+                            }
                         }
                     }
                 }
@@ -2464,7 +2560,7 @@ function renderSummaryTable(config = null) {
     if (!globalResult) return;
 
     if (!config) config = parseUIConfig();
-    const { doctorRoles, roleQuotas, roleBased } = config;
+    const { doctorRoles, quota, roleBased } = config;
 
     // Draw summary section
     const sumBody = document.getElementById('summaryTableBody');
@@ -2478,11 +2574,13 @@ function renderSummaryTable(config = null) {
         const displayName = role !== 'Default' && roleBased ? `${esc(sum.name)} (${esc(role)})` : esc(sum.name);
 
         let quotaIndicator = '';
-        if (roleBased && roleQuotas[role] > 0) {
-            if (sum.total >= roleQuotas[role]) {
+        const key = getQuotaKey(sum.name, config);
+        const docQuota = quota[key];
+        if (docQuota !== undefined && docQuota > 0) {
+            if (sum.total >= docQuota) {
                 quotaIndicator = `<span class="ml-2 inline-flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] font-bold border border-emerald-200 dark:border-emerald-800/50 uppercase tracking-wider"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-0.5"><path d="M20 6 9 17l-5-5"/></svg>Quota</span>`;
             } else {
-                quotaIndicator = `<span class="ml-2 inline-flex items-center text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-1.5 py-0.5 rounded text-[10px] font-bold border border-orange-200 dark:border-orange-800/50 uppercase tracking-wider"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>${sum.total}/${roleQuotas[role]}</span>`;
+                quotaIndicator = `<span class="ml-2 inline-flex items-center text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-1.5 py-0.5 rounded text-[10px] font-bold border border-orange-200 dark:border-orange-800/50 uppercase tracking-wider"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>${sum.total}/${docQuota}</span>`;
             }
         }
 
@@ -3162,6 +3260,7 @@ window.exportConfigJSON = function () {
         offData: offData,
         extraSlotsData: extraSlotsData,
         manualOverrides: manualOverrides,
+        quota: quota,
         inputs: {
             inputMonth: document.getElementById('inputMonth')?.value || '',
             inputYear: document.getElementById('inputYear')?.value || '',
@@ -3173,6 +3272,7 @@ window.exportConfigJSON = function () {
             inputDoctorRoles: document.getElementById('inputDoctorRoles')?.value || '',
             inputDefaultRoleSlots: document.getElementById('inputDefaultRoleSlots')?.value || '',
             inputRoleQuotas: document.getElementById('inputRoleQuotas')?.value || '',
+            inputSinglePoolQuota: document.getElementById('inputSinglePoolQuota')?.value || '',
             inputConflicts: document.getElementById('inputConflicts')?.value || '',
             inputSpecialDays: document.getElementById('inputSpecialDays')?.value || '',
             inputSpecialDocs: document.getElementById('inputSpecialDocs')?.value || '',
@@ -3222,6 +3322,14 @@ window.importConfigJSON = function (event) {
                 manualOverrides = config.manualOverrides;
             } else {
                 manualOverrides = {};
+            }
+
+            if (config.quota) {
+                quota = config.quota;
+            } else if (config.roleQuota && !config.quota) {
+                quota = config.roleQuota;
+            } else {
+                quota = {};
             }
 
             if (config.inputs) {

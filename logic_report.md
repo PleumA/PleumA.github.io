@@ -88,17 +88,17 @@ Before any scheduling runs, this function translates human input fields from the
 1.  **Doctor-to-Role Mapping**: Converts text like `A:R1, B:R2` into a fast key-value map: `{ "A": "R1", "B": "R2" }`.
 2.  **Special Holidays**: Parses comma-separated holiday strings into a `Set` for $O(1)$ lookup speeds.
 3.  **No-Duty Days**: Converts days with no active shifts into another lookup `Set`.
-4.  **Role Quotas**: Parses exact monthly limits like `R1:12, R2:10` into a dictionary: `{ "R1": 12, "R2": 10 }`.
+4.  **Unified Quotas**: Parses exact monthly limits into the unified `quota` dictionary. In Role-Based Mode, parses limits (e.g. `R1:12, R2:10`) into `{ "R1": 12, "R2": 10 }`. In Single-Pool Mode, parses per-doctor limits (e.g. `A:5, B:4`) into `{ "A": 5, "B": 4 }`. Values $\le 0$ are discarded, and unknown keys trigger warnings.
 5.  **Conflict Lists**: Parses items like `A:B` into bidirectional sets: `{ "A": Set("B"), "B": Set("A") }`.
 6.  **Locked Special Rules**: Extracts locked doctor arrays for specific early days of the month.
 7.  **Custom Date Range Logic**: If `isCustomDateRange` is active, computes an exact timeline array (`scheduleDates`) of `Date` objects from the start to end date (up to 90 days), and normalizes the `totalDaysInMonth` loop boundary.
 
 ### 2. Pre-flight Quota Calculation
-If **Role-Based Mode** is active, the algorithm runs a check:
-$$\sum \text{Quotas} = \text{Total Shifts for the Month}$$
-If the total shifts required for the month (considering custom slots and weekend configurations) does not match the sum of exact doctor quotas, the solver aborts and prompts:
-*   *Thai*: `"ข้อผิดพลาด: โควตาเวรทั้งหมด (X) ต้องเท่ากับจำนวนเวรทั้งหมดในเดือน (Y)"`
-*   *English*: `"Error: Total doctor shift quotas (X) must equal total shifts required (Y)"`
+When any quotas are defined (`hasQuotas` is true), the algorithm runs a check:
+$$\sum_{doc \in doctors} \text{Quota}[getQuotaKey(doc)] = \text{Total Slots for the Timeline}$$
+If the total slots required for the timeline (considering custom slots and weekend configurations) does not match the sum of exact doctor quotas across all doctors, the solver aborts and prompts:
+*   *Thai*: `"ข้อผิดพลาด: โควตารวม (X) แต่มีทั้งหมด Y ช่อง..."`
+*   *English*: `"Error: Quotas sum to X but there are Y slots — add/remove shifts..."`
 
 **Exception**: If **Allow Blank Days** (`chkAllowBlankDays`) is checked, this pre-flight validation is bypassed to allow the solver to run and output blank slots (`ขาดคน`) for unbalanced configurations.
 

@@ -4,12 +4,13 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.5] - 2026-07-01
+## [1.1.0] - 2026-07-01
 ### Added
 - **Mobile View Schedule Floating Button**: Added a floating "View Schedule" button for narrow screens (< 1024px) that appears after the schedule calculation completes, allowing users to smooth-scroll down to the results section. The button automatically hides when the user scrolls down to the results section.
 - **Role to Column Header feature**: Moved role labels from individual schedule cells to the column header (e.g., displaying the role name below the Duty column in List/Table view) when Role-Based Mode is active.
 - **Dynamic Role Badges (Person-Centric View)**: Added color-coded role badges next to doctor names in the Person-Centric view's left column.
 - **Role Display Unit Tests**: Created `tests/roleHeaderDisplay.test.js` to assert role-related headers, cells, TSV copying, and XLSX exports in both ON/OFF states.
+- **Unified Quota System**: Unified `roleQuotas` and per-doctor quotas into a single module-scope `quota` state variable. Added an "Exact Quota Per Doctor" (`inputSinglePoolQuota`) field under "Doctors per Day" in the UI (visible when Role-Based mode is OFF). Both modes now route through a single pre-flight validation check, check active limits on candidate searches, and draw dynamic quota indicators. Supports seamless `.json` config backup migration of legacy `roleQuota` fields to the new schema. Added `tests/quotaUnified.test.js` unit test suite.
 
 ### Changed
 - **Sticky Right Panel Layout on Desktop**: Implemented a responsive two-column layout for screen viewports >= 1024px (`lg:` breakpoint) where the configuration sidebar and results panel scroll independently within the viewport limit (`calc(100vh - 150px)` height boundary), keeping the right panel sticky and header visible at all times.
