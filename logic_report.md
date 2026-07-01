@@ -186,7 +186,57 @@ A schedule with a **lower penalty score** is more balanced and contains fewer ru
 
 ---
 
+## 🔒 Lock Special Duty — Advanced Queue Locking
+
+The **Lock Special Duty** feature pins exactly one doctor from a defined pool (`specialDocs`) to every qualifying day. It operates in two modes selectable by the `lockConditionType` UI field.
+
+### Mode 1 — First N Days (default)
+
+When `lockConditionType = "firstNDays"`, the solver reads two inputs:
+
+| Input | ID | Default |
+|---|---|---|
+| Start day (inclusive) | `inputSpecialStartDay` | 1 |
+| End day (inclusive) | `inputSpecialDays` | 14 |
+
+**If start day = 1**, `specialRuleDays` is set to a plain integer (`endDay`). The solver condition `day <= specialRuleDays` then naturally covers days 1 – N with no extra infrastructure.
+
+**If start day > 1**, a custom `EveryWeekdayLockProxy` is created with a pre-computed `lockedDays` Set (all integers from `startDay` to `endDay`). The proxy's `valueOf()` returns `+99999` for days inside the set and `−99999` for days outside, so the solver's comparison `day <= specialRuleDays` evaluates to `true` only on locked days.
+
+### Mode 2 — Every [Weekday]
+
+When `lockConditionType = "everyWeekday"`, the solver creates an `EveryWeekdayLockProxy` that scans every calendar `Date` object in the schedule window and collects the 1-based day indices where `date.getDay() === lockWeekday`.
+
+For **standard month ranges**, `new Date(year, month-1, d)` is used. For **custom date ranges**, the pre-built `scheduleDates` array is used directly — correctly spanning month and year boundaries.
+
+If no matching weekdays exist in the range, a non-fatal warning toast is emitted and the solver continues without crashing.
+
+### EveryWeekdayLockProxy — Internal Design
+
+```javascript
+class EveryWeekdayLockProxy {
+    constructor(lockWeekday, numDays, calcYear, month,
+                scheduleDates, noDutySet, customLockedDaysSet = null)
+
+    valueOf()   // returns +99999 (locked) or −99999 (not locked)
+    resetCounter()  // resets sequential day counter before each solver trial
+}
+```
+
+`valueOf()` is invoked by the JavaScript engine whenever the proxy object is compared with a number (`day <= specialRuleDays`). It determines the current day using this priority order:
+
+1. **`window.currentRenderDay`** — set by `updateDayNote()` before each rendering call, ensuring the rendering engine always interrogates the correct day.
+2. **`arguments.callee.caller`** — tried first in sloppy mode; resolves the day from the solver's call-frame argument.
+3. **Sequential counter** (`currentDay`) — walks forward from day 1, automatically skipping no-duty days, as a fallback for environments where caller introspection is blocked.
+
+### Consecutive Shift Exemption
+
+Locked doctors are **exempt** from both the consecutive-holiday check and the `preventConsecutiveAll` constraint. This is intentional: the feature's semantic contract is that the locked pool covers *every* qualifying day without interruption. All other (non-locked) doctors still respect these constraints normally.
+
+---
+
 ## 💻 Detailed Function Reference
+
 
 Here is a detailed breakdown of the functions in `app.js`:
 

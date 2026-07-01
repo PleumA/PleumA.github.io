@@ -20,9 +20,11 @@ global.document = {
                 style: {},
                 setAttribute: () => {},
                 innerText: '',
-                querySelector: () => ({ innerHTML: '' }),
+                querySelector: () => ({ innerHTML: '', textContent: '' }),
                 dispatchEvent: () => {},
-                querySelectorAll: () => []
+                querySelectorAll: () => [],
+                insertBefore: () => {},
+                appendChild: () => {}
             };
         }
         if (typeof mockDOM[id].dispatchEvent !== 'function') {
@@ -30,6 +32,12 @@ global.document = {
         }
         if (typeof mockDOM[id].querySelectorAll !== 'function') {
             mockDOM[id].querySelectorAll = () => [];
+        }
+        if (typeof mockDOM[id].insertBefore !== 'function') {
+            mockDOM[id].insertBefore = () => {};
+        }
+        if (typeof mockDOM[id].appendChild !== 'function') {
+            mockDOM[id].appendChild = () => {};
         }
         if (!mockDOM[id].classList) {
             classListMap[id] = classListMap[id] || new Set();

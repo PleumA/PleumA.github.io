@@ -29,7 +29,9 @@
 - **Conflict / Hate List**: Excludes incompatible doctors (e.g., `A:B` or `A conflicts with B`) from working the same shift.
 - **Off Requests**: Enforces days off; no shifts are allocated on requested off days or on the day prior to an off day.
 - **Holiday Spacing**: Prevents doctors from working consecutive weekend/holiday shifts.
-- **Queue Locking**: Supports locking a specific group of doctors to cover special slots during the first $N$ days of the month.
+- **Queue Locking**: Supports locking a specific group of doctors to cover special slots in two modes:
+  - **First N Days (default)**: Locks the group to a contiguous day range. A configurable *Start Day* allows partial-month windows (e.g. days 7 – 14) — not just "from day 1". Locked doctors are exempt from consecutive-shift constraints so they work every day in the range without gaps.
+  - **Every [Weekday]**: Locks the group onto every occurrence of a chosen weekday (e.g. every Sunday) within the schedule range, correctly spanning custom multi-month ranges. A warning toast is displayed if no matching weekdays exist.
 
 ### 3. Interactive UI & Customization
 - **Table, Calendar, & Person Views**: View duties in a clean date-list format, an interactive month calendar, or a pivoted person-centric grid.
@@ -82,5 +84,5 @@ Built for high reliability, clean execution, and security:
 - **`app.js`**: Contains the scheduling state, Monte Carlo solver search loops, dynamic HTML renderers, and the dual-language translation dictionaries.
 - **`manifest.json`**: Standard web app manifest defining PWA configuration, installable setups, and colors.
 - **`sw.js`**: Service worker script caching key assets for reliable offline performance.
-- **`tests/*.test.js`**: A comprehensive, lightweight Node.js unit testing suite (11 test files) that verifies corner-case solver behaviors (e.g., circular conflicts, quota sums, and impossible constraints in `solver.test.js`), UI DOM interactions (JSON export/import in `jsonRoundTrip.test.js`), state management (undo stacks in `manualOverrides.test.js`), and security (XSS assertions in `xss.test.js`). The tests utilize a custom decoupled mock-DOM evaluation pattern to run without requiring heavy frameworks like Jest, reporting clean outputs in a unified `PASSED: X, FAILED: Y` format.
+- **`tests/*.test.js`**: A comprehensive, lightweight Node.js unit testing suite (11 test files, 66+ tests) that verifies corner-case solver behaviors (e.g., circular conflicts, quota sums, and impossible constraints in `solver.test.js`), UI DOM interactions (JSON export/import in `jsonRoundTrip.test.js`), state management (undo stacks in `manualOverrides.test.js`), Lock Special Duty scheduling logic — including Every Weekday mode, custom start day range, and consecutive shift enforcement — in `lockSpecialDuty.test.js`, and security (XSS assertions in `xss.test.js`). The tests utilize a custom decoupled mock-DOM evaluation pattern to run without requiring heavy frameworks like Jest, reporting clean outputs in a unified `PASSED: X, FAILED: Y` format.
 - **`run-tests.js`**: Orchestrates test suite execution and aggregates outputs and exit statuses across files.

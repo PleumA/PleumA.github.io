@@ -4,6 +4,21 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-07-01
+### Added
+- **Lock Special Duty — Every Weekday Mode**: Added a new lock condition type selector (`firstNDays` / `everyWeekday`) under the Lock Special Duty toggle. When set to *Every [Weekday]*, the solver locks exactly one doctor from the special pool onto every occurrence of the chosen weekday (e.g. every Sunday) across the schedule range — including custom date ranges spanning multiple months.
+- **Lock Special Duty — Custom Start Day**: The "First N Days" lock mode now accepts a configurable *Start Day* input (`inputSpecialStartDay`), enabling partial-month range locks (e.g. days 7 – 14). When start day = 1, behaviour is unchanged from the previous version.
+- **Warning Toast — No Matching Weekdays**: If "Every Weekday" mode is selected but the chosen weekday has zero occurrences in the active schedule range, a non-fatal toast warns the user and the solver continues normally.
+
+### Changed
+- **Lock Special Duty — Consecutive Shifts Enforced**: The locked doctor is now **exempt** from the consecutive-holiday and `preventConsecutiveAll` constraints, ensuring they work every locked day without gaps. All other doctors continue to respect those constraints normally.
+- **Doctors per Day — Role-Based Visibility**: The DEFAULT SLOTS input is now hidden when Role-Based Mode is ON and shown when it is OFF. The last entered value is preserved across visibility toggles. CUSTOM DAILY SLOTS remains visible regardless of mode.
+- **Doctors per Day — Undefined Values Fixed**: Custom Daily Slots and Off Requests fields no longer display `undefined` when the corresponding data is absent; they now safely fall back to an empty string.
+
+### Fixed
+- **Save / Load — New Lock Fields**: `lockConditionType`, `selectLockWeekday`, and `inputSpecialStartDay` are now saved into the exported JSON and restored on import. Old JSON files without these fields silently default to `firstNDays`, weekday `0` (Sunday), and start day `1`.
+- **Test Suite — Mock DOM Completeness**: The Node.js mock DOM in `tests/lockSpecialDuty.test.js` now auto-patches `dispatchEvent`, `querySelectorAll`, `insertBefore`, and `appendChild` on any element returned by `getElementById`, eliminating spurious "Error parsing JSON" noise during config-import tests.
+
 ## [1.0.3] - 2026-07-01
 ### Added
 - **Auto-Calculate on Date Change**: Automatically triggers `generateSchedule()` when both start/end dates are populated, when dates are edited, or when the custom date range mode is toggled off/on.
