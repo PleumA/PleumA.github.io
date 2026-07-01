@@ -15,7 +15,7 @@ try {
 const SHORTAGE_MARKER = "__SHORTAGE__";
 const esc = (str) => {
     if (typeof str !== 'string') return str;
-    return str.replace(/[&<>"']/g, function(m) {
+    return str.replace(/[&<>"']/g, function (m) {
         switch (m) {
             case '&': return '&amp;';
             case '<': return '&lt;';
@@ -140,9 +140,9 @@ const translations = {
         offRequestsNone: "ยังไม่มีการกำหนดวันขอพัก",
         customSlotsNone: "ยังไม่มีการระบุจำนวนแพทย์เฉพาะวัน",
         lockConditionTypeLabel: "ประเภทการล็อก",
-        firstNDaysOpt: "ช่วงแรก N วัน / First N Days",
-        everyWeekdayOpt: "ทุกวัน [weekday] / Every [Weekday]",
-        lockWeekdayLabel: "วันที่ต้องการล็อก / Day to Lock"
+        firstNDaysOpt: "ช่วงแรก N วัน",
+        everyWeekdayOpt: "ทุกวัน",
+        lockWeekdayLabel: "วันที่ต้องการล็อก"
     },
     en: {
         title: "Automatic On-Call Scheduler",
@@ -259,7 +259,7 @@ const translations = {
         customSlotsNone: "No custom slots set",
         lockConditionTypeLabel: "Lock Condition Type",
         firstNDaysOpt: "First N Days",
-        everyWeekdayOpt: "Every [Weekday]",
+        everyWeekdayOpt: "Everyday",
         lockWeekdayLabel: "Day to Lock"
     }
 };
@@ -279,8 +279,8 @@ let scheduleDates = [];
 let manualOverrides = {};
 
 // Dark Mode state
-let darkMode = localStorage.getItem('schedule_dark') !== null 
-    ? localStorage.getItem('schedule_dark') === 'true' 
+let darkMode = localStorage.getItem('schedule_dark') !== null
+    ? localStorage.getItem('schedule_dark') === 'true'
     : (window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : false);
 
 // Initial setup on document load
@@ -893,7 +893,7 @@ function toggleLockConditionUI() {
     const type = document.getElementById('lockConditionType')?.value || 'firstNDays';
     const firstNContainer = document.getElementById('lockFirstNDaysContainer');
     const everyWeekdayContainer = document.getElementById('lockEveryWeekdayContainer');
-    
+
     if (type === 'firstNDays') {
         if (firstNContainer) firstNContainer.classList.remove('hidden');
         if (everyWeekdayContainer) everyWeekdayContainer.classList.add('hidden');
@@ -1075,10 +1075,10 @@ class EveryWeekdayLockProxy {
         this.month = month;
         this.scheduleDates = scheduleDates;
         this.noDutySet = noDutySet;
-        
+
         this.lockedDays = new Set();
         this.lockedIndices = [];
-        
+
         if (customLockedDaysSet) {
             this.lockedDays = customLockedDaysSet;
             customLockedDaysSet.forEach(d => {
@@ -1093,21 +1093,21 @@ class EveryWeekdayLockProxy {
                 }
             }
         }
-        
+
         this.activeDays = [];
         for (let d = 1; d <= numDays; d++) {
             if (!noDutySet.has(d)) {
                 this.activeDays.push(d);
             }
         }
-        
+
         this.currentDay = 1;
     }
-    
+
     resetCounter() {
         this.currentDay = 1;
     }
-    
+
     valueOf() {
         let day = null;
         try {
@@ -1118,14 +1118,14 @@ class EveryWeekdayLockProxy {
         } catch (e) {
             // Ignore
         }
-        
+
         if (day === null && window.currentRenderDay !== undefined && window.currentRenderDay !== null) {
             const stack = new Error().stack || '';
             if (stack.includes('updateDayNote') || stack.includes('getDayNotes') || stack.includes('renderResults') || !stack.includes('generateSingleScheduleCandidate')) {
                 day = window.currentRenderDay;
             }
         }
-        
+
         if (day === null) {
             while (this.currentDay <= this.numDays && this.noDutySet.has(this.currentDay)) {
                 this.currentDay++;
@@ -1133,7 +1133,7 @@ class EveryWeekdayLockProxy {
             day = this.currentDay;
             this.currentDay++;
         }
-        
+
         if (day !== undefined && day <= this.numDays && this.lockedDays.has(day)) {
             return 99999;
         }
@@ -1161,7 +1161,7 @@ function parseUIConfig() {
     const specialHols = specialHolidaysInput.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
     const noDutyDays = noDutyDaysInput.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
     let numDays = scheduleDates.length;
-    
+
     // Fallback for isolated test environments that don't trigger generateSchedule
     if (numDays === 0 && !isCustomDateRange) {
         numDays = new Date(calcYear, month, 0).getDate();
@@ -1388,10 +1388,10 @@ function parseUIConfig() {
 
         if (!allowBlankDays && totalRequiredShifts !== totalSlotsInMonth) {
             const diff = Math.abs(totalRequiredShifts - totalSlotsInMonth);
-            const msgTH = totalRequiredShifts < totalSlotsInMonth 
+            const msgTH = totalRequiredShifts < totalSlotsInMonth
                 ? `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาเพิ่มอีก ${diff} เวรในโควตา (หรือเปิดอนุญาตเว้นว่าง)`
                 : `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาลดโควตาลง ${diff} เวร`;
-            const msgEN = totalRequiredShifts < totalSlotsInMonth 
+            const msgEN = totalRequiredShifts < totalSlotsInMonth
                 ? `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — add ${diff} more shifts to any role.`
                 : `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — remove ${diff} shifts from any role.`;
             throw new Error(currentLang === 'th' ? msgTH : msgEN);
@@ -1497,7 +1497,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
     for (let day = 1; day <= numDays; day++) {
         const isHoliday = holidaySet.has(day);
         const isNoDuty = noDutySet.has(day);
-        
+
         let offKeyToday = day;
         let offKeyTomorrow = day + 1;
         if (isCustomDateRange) {
@@ -1516,7 +1516,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                 offKeyTomorrow = null;
             }
         }
-        
+
         const offToday = offMap[offKeyToday] || new Set();
         const offTomorrow = (offKeyTomorrow !== null && offMap[offKeyTomorrow]) ? offMap[offKeyTomorrow] : new Set();
 
@@ -1925,7 +1925,7 @@ window.generateSchedule = async function () {
         bestCandidate.schedule.forEach(row => {
             const dateObj = isCustomDateRange ? scheduleDates[row.day - 1] : new Date(calcYear, month - 1, row.day);
             row.dayName = currentLang === 'th' ? thDays[dateObj.getDay()] : enDays[dateObj.getDay()];
-            
+
             if (isCustomDateRange) {
                 const dd = String(dateObj.getDate()).padStart(2, '0');
                 const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -2320,21 +2320,21 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
     if (btnConfirm) btnConfirm.classList.remove('hidden');
 
     showToast(currentLang === 'th' ? `อัปเดตเวรวันที่ ${day} สำเร็จ!` : `Day ${day} duty updated successfully!`);
-    
+
     const config = parseUIConfig();
     explainSlotFailure(day, newDoctor, config);
 };
 
 // Explain why a manual swap might violate a constraint
-window.explainSlotFailure = function(day, doc, config) {
-    if(!doc || doc === SHORTAGE_MARKER || doc === '-' || !config) return;
+window.explainSlotFailure = function (day, doc, config) {
+    if (!doc || doc === SHORTAGE_MARKER || doc === '-' || !config) return;
     const { preventConsecutiveAll, offMap } = config;
     let reasons = [];
-    
+
     if (offMap.has(`${doc}_${day}`)) {
         reasons.push(currentLang === 'th' ? `ขอพัก/ลาในวันนี้` : `requested off today`);
     }
-    
+
     if (preventConsecutiveAll) {
         const yesterday = globalResult.schedule[day - 2];
         if (yesterday && yesterday.selectedDocs.some(s => s && s.name === doc)) {
@@ -2345,7 +2345,7 @@ window.explainSlotFailure = function(day, doc, config) {
             reasons.push(currentLang === 'th' ? `อยู่เวรติดกัน (พรุ่งนี้)` : `working tomorrow`);
         }
     }
-    
+
     const dayRow = globalResult.schedule[day - 1];
     let slotsInDay = 0;
     if (dayRow) {
@@ -2776,7 +2776,7 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config = null, i
     // Show "Reset to Auto" option if cell has a manual override applied
     const isOverridden = manualOverrides[day] && manualOverrides[day][slotIndex] !== undefined;
     const btnClassBase = isMobile ? 'w-full text-left px-4 py-3 min-h-[48px] text-base' : 'w-full text-left px-3 py-1.5 text-xs';
-    
+
     if (isOverridden) {
         optionsHtml += `
             <button onclick="resetSlotToAuto(${day}, ${slotIndex})" class="${btnClassBase} bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-400 font-bold flex items-center gap-2 border-b border-indigo-100 dark:border-indigo-950/50">
@@ -2814,13 +2814,13 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config = null, i
     return optionsHtml;
 }
 
-window.closeMobileSheet = function() {
+window.closeMobileSheet = function () {
     const sheet = document.getElementById('mobileDoctorSheet');
     if (sheet) sheet.classList.add('hidden');
 }
 
 // Keep closeMobileModal in case it's called anywhere else by accident
-window.closeMobileModal = function() {
+window.closeMobileModal = function () {
     window.closeMobileSheet();
 }
 
@@ -2843,7 +2843,7 @@ window.openCellDropdown = function (event, dropdownId) {
         const parts = dropdownId.split('-');
         const slotIndex = parseInt(parts.pop());
         const day = parseInt(parts.pop());
-        
+
         let currentDoc = "";
         if (globalResult && globalResult.schedule) {
             const row = globalResult.schedule.find(r => r.day === day);
@@ -2858,7 +2858,7 @@ window.openCellDropdown = function (event, dropdownId) {
         let optionsHtml = '';
         const config = parseUIConfig();
         const { doctorRoles } = config;
-        
+
         const isOverridden = manualOverrides[day] && manualOverrides[day][slotIndex] !== undefined;
         if (isOverridden) {
             optionsHtml += `<button onclick="resetSlotToAuto(${day}, ${slotIndex}); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-indigo-600 dark:text-indigo-400 font-bold transition-colors">คืนค่าระบบคำนวณ</button>`;
@@ -2870,7 +2870,7 @@ window.openCellDropdown = function (event, dropdownId) {
             const displayName = role !== 'Default' ? `${doc} (${role})` : doc;
             optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, ${index}); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left ${isCurrent} transition-colors">${esc(displayName)}</button>`;
         });
-        
+
         optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -1); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-red-600 dark:text-red-400 font-bold transition-colors">⚠️ ขาดคน</button>`;
         optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -2); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-slate-400 dark:text-slate-500 font-bold transition-colors">- ว่าง</button>`;
 
@@ -3002,8 +3002,8 @@ window.exportToExcel = function () {
         window.XLSX.utils.book_append_sheet(wb, ws, `Schedule Month ${globalResult.month}`);
 
         // Add Individual Duty Summary to a second sheet
-        const summaryHeaders = currentLang === 'th' ? 
-            ["ชื่อแพทย์", "เวรวันทำการ (จ-ศ)", "เวรวันหยุด (ส-อา, พิเศษ)", "รวมทั้งหมด"] : 
+        const summaryHeaders = currentLang === 'th' ?
+            ["ชื่อแพทย์", "เวรวันทำการ (จ-ศ)", "เวรวันหยุด (ส-อา, พิเศษ)", "รวมทั้งหมด"] :
             ["Doctor Name", "Weekdays (Mon-Fri)", "Holidays (Sat-Sun, Special)", "Total Shifts"];
         const summaryData = [summaryHeaders];
         globalResult.summary.forEach(s => {
@@ -3025,7 +3025,7 @@ window.exportToExcel = function () {
 };
 
 window.isPendingCalc = false;
-window.handleCustomDateRangeChange = async function() {
+window.handleCustomDateRangeChange = async function () {
     if (!isCustomDateRange) return;
     const startStr = document.getElementById('inputStartDate').value;
     const endStr = document.getElementById('inputEndDate').value;
@@ -3041,12 +3041,12 @@ window.handleCustomDateRangeChange = async function() {
             showToast(currentLang === 'th' ? "ช่วงวันที่เกิน 90 วัน กรุณาตรวจสอบ" : "Range exceeds 90 days, please check", true);
             return;
         }
-        
+
         if (isCalculating) {
             window.isPendingCalc = true;
             return;
         }
-        
+
         do {
             window.isPendingCalc = false;
             await window.generateSchedule();
@@ -3224,18 +3224,18 @@ window.importConfigJSON = function (event) {
 // --- UI Utility: Drag and Drop & Undo Stack ---
 const undoStack = [];
 
-window.pushToUndoStack = function() {
+window.pushToUndoStack = function () {
     undoStack.push(JSON.parse(JSON.stringify(manualOverrides)));
     if (undoStack.length > 20) undoStack.shift();
 };
 
-window.undoLastAction = function() {
+window.undoLastAction = function () {
     if (undoStack.length > 0) {
         manualOverrides = undoStack.pop();
         applyManualOverrides();
         renderTableView();
         renderCalendarView();
-        
+
         if (typeof renderPersonCentricView === 'function') {
             const config = parseUIConfig();
             renderPersonCentricView(config);
@@ -3256,7 +3256,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-window.handleDragStart = function(e, day, slotIndex, docIndex) {
+window.handleDragStart = function (e, day, slotIndex, docIndex) {
     if (docIndex < 0) return;
     const docName = doctors[docIndex];
     if (!docName) return;
@@ -3264,12 +3264,12 @@ window.handleDragStart = function(e, day, slotIndex, docIndex) {
     e.dataTransfer.effectAllowed = 'move';
 };
 
-window.handleDragOver = function(e) {
+window.handleDragOver = function (e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
 };
 
-window.handleDrop = function(e, targetDay, targetSlotIndex, targetDocIndex) {
+window.handleDrop = function (e, targetDay, targetSlotIndex, targetDocIndex) {
     e.preventDefault();
     try {
         const data = JSON.parse(e.dataTransfer.getData('text/plain'));
@@ -3277,7 +3277,7 @@ window.handleDrop = function(e, targetDay, targetSlotIndex, targetDocIndex) {
         const srcDay = data.day;
         const srcSlot = data.slotIndex;
         const srcDoc = data.docName;
-        
+
         if (srcDay === targetDay && srcSlot === targetSlotIndex) return;
 
         window.pushToUndoStack();
@@ -3289,13 +3289,13 @@ window.handleDrop = function(e, targetDay, targetSlotIndex, targetDocIndex) {
         // Execute swap manually 
         window.updateDoctorAssignment(srcDay, srcSlot, targetDocIdx);
         window.updateDoctorAssignment(targetDay, targetSlotIndex, srcDocIdx);
-        
+
         window.isDragAndDropOperation = false;
-        
+
         // Final refresh to ensure counts are fully up to date
         renderTableView();
         renderCalendarView();
-        
+
         showToast(currentLang === 'th' ? 'สลับเวรด้วยการลากวางสำเร็จ' : 'Drag & Drop swap successful');
     } catch (err) {
         console.error("Drag and drop failed:", err);
@@ -3309,16 +3309,16 @@ function renderPersonCentricView(config) {
     if (!head || !body) return;
 
     let headHtml = `<tr class="text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider"><th class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[120px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${translations[currentLang].tableHeaderDoctors || "Doctor"}</th>`;
-    for(let d=1; d<=config.numDays; d++) {
-        const dayRow = globalResult.schedule[d-1];
-        const dayName = dayRow ? dayRow.dayName.substring(0,2) : '';
+    for (let d = 1; d <= config.numDays; d++) {
+        const dayRow = globalResult.schedule[d - 1];
+        const dayName = dayRow ? dayRow.dayName.substring(0, 2) : '';
         const isHol = dayRow ? dayRow.isHoliday : false;
         let dayClass = isHol ? "text-rose-500 font-bold" : "text-slate-500 dark:text-slate-400";
-        
+
         let displayDateNum = d;
         let monthLabel = '';
         let borderClass = "border-slate-200 dark:border-slate-800";
-        
+
         if (isCustomDateRange && scheduleDates && scheduleDates[d - 1]) {
             const dateObj = scheduleDates[d - 1];
             displayDateNum = dateObj.getDate();
@@ -3329,33 +3329,33 @@ function renderPersonCentricView(config) {
                 monthLabel = ` ${mName}`;
             }
             if (displayDateNum === 1 && d > 1) {
-                 borderClass = "border-l-2 border-indigo-300 dark:border-indigo-700 " + borderClass;
+                borderClass = "border-l-2 border-indigo-300 dark:border-indigo-700 " + borderClass;
             }
         }
-        
+
         headHtml += `<th class="py-2 px-1 border-b ${borderClass} text-center w-8 min-w-[32px] ${dayClass}"><div class="text-[10px] font-bold">${dayName}</div><div class="text-xs font-black whitespace-nowrap">${displayDateNum}${monthLabel}</div></th>`;
     }
     headHtml += `</tr>`;
     head.innerHTML = headHtml;
 
     let bodyHtml = '';
-    
+
     const displayDocs = [...doctors];
     if (globalResult.schedule.some(d => d.selectedDocs.some(s => s && s.name === SHORTAGE_MARKER))) {
         displayDocs.push(SHORTAGE_MARKER);
     }
-    
+
     displayDocs.forEach((doc, idx) => {
         let isShortage = doc === SHORTAGE_MARKER;
         let docName = isShortage ? (translations[currentLang].shortageSlot || "Shortage") : doc;
-        
+
         let rowClass = idx % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-50/50 dark:bg-slate-800/20";
         bodyHtml += `<tr class="${rowClass} hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">`;
         bodyHtml += `<td class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 z-10 min-w-[120px] ${rowClass} ${isShortage ? 'text-red-500' : 'text-slate-800 dark:text-slate-200'} shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${esc(docName)}</td>`;
-        
-        for(let d=1; d<=config.numDays; d++) {
-            const dayRow = globalResult.schedule[d-1];
-            
+
+        for (let d = 1; d <= config.numDays; d++) {
+            const dayRow = globalResult.schedule[d - 1];
+
             let borderClass = "border-slate-200 dark:border-slate-800";
             if (isCustomDateRange && scheduleDates && scheduleDates[d - 1]) {
                 if (scheduleDates[d - 1].getDate() === 1 && d > 1) {
@@ -3367,12 +3367,12 @@ function renderPersonCentricView(config) {
                 bodyHtml += `<td class="border-b ${borderClass} bg-slate-200/50 dark:bg-slate-800/40"></td>`;
                 continue;
             }
-            
+
             let slotIndices = [];
             dayRow.selectedDocs.forEach((sd, sIdx) => {
                 if (sd && sd.name === doc) slotIndices.push(sIdx + 1);
             });
-            
+
             if (slotIndices.length > 0) {
                 let bgClass = "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400";
                 if (isShortage) {
@@ -3389,7 +3389,7 @@ function renderPersonCentricView(config) {
                     ];
                     bgClass = colors[doctors.indexOf(doc) % colors.length];
                 }
-                
+
                 bodyHtml += `<td class="border-b ${borderClass} p-0.5 text-center"><div class="rounded w-full h-full text-[10px] font-bold flex items-center justify-center py-1 ${bgClass}">${slotIndices.join(',')}</div></td>`;
             } else {
                 bodyHtml += `<td class="border-b ${borderClass}"></td>`;
