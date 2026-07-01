@@ -23,7 +23,7 @@
   - **Strict Quota Enforcement**: Doctors who have reached their exact quota are immediately removed from the available pool for all subsequent shifts.
   - **Graceful Dead-end Fallback**: If a day cannot be filled due to quota lockouts, the system outputs `ขาดคน` (Missing) without crashing and shows a warning toast pointing out constraint conflicts.
 - **Dynamic Doctors per Day**: Allows defining a global default slot count or custom slot numbers for specific days. Seamlessly collapses role-specific slot configurations into general pool slots when Role-Based Mode is toggled off.
-- **Custom Date Ranges**: Easily pivot from generating rigid month-based schedules to arbitrary custom date ranges (e.g. Mid-month to mid-month, or quarterly schedules up to 90 days), with the core solver array seamlessly expanding or contracting.
+- **Custom Date Ranges**: Easily pivot from generating rigid month-based schedules to arbitrary custom date ranges (e.g. Mid-month to mid-month, or quarterly schedules up to 90 days), with the core solver array seamlessly expanding or contracting. Day labels in Calendar and Person views automatically reset at month boundaries for chronological clarity instead of continuous index increments.
 - **Allow Blank Days (Toggleable)**: When **ON**, allows unassigned slots (`ขาดคน`) if no eligible doctor is available due to constraints. When **OFF** (default), a 5-level **Must-Fill cascade** progressively relaxes spacing, conflict, and off-request rules to force-fill the slot.
 - **Strict Deduplication**: Enforces a strict uniqueness check to ensure the exact same doctor cannot be scheduled for multiple slots on the same day, even during forced Must-Fill cascades.
 - **Conflict / Hate List**: Excludes incompatible doctors (e.g., `A:B` or `A conflicts with B`) from working the same shift.
@@ -37,11 +37,11 @@
 - **Manual Overrides & Drag-and-Drop**: Easily correct schedules manually. Instead of rigid dropdown menus, you can natively **drag and drop** a doctor's name from one slot to another in the calendar to effortlessly execute 2-way shift swaps.
 - **Undo / History Stack**: Safely navigate manual corrections. The app tracks a 20-step deep memory stack allowing you to press `Ctrl+Z` to seamlessly revert accidental cell edits and resets.
 - **Targeted DOM Updates & Deferred Sync**: The core rendering engine is optimized so that manual interactions do not repaint the surrounding grid. The global Stats Dashboard and Summary Table updates are deferred until the user explicitly clicks the "Confirm Changes" button, keeping interactions buttery smooth.
-- **Real-Time Recalculation**: Schedule configurations (e.g., month, year, doctors per day, constraints) immediately trigger the smart solver to re-calculate the ideal schedule without needing manual confirmations.
+- **Real-Time Recalculation**: Schedule configurations (e.g., month, year, doctors per day, constraints) immediately trigger the smart solver to re-calculate the ideal schedule without needing manual confirmations. Recalculation automatically fires when both custom range dates are filled or changed.
 - **Save/Load Configuration**: Export all application settings, quotas, constraints, and **manual cell overrides** into a `.json` backup file, and instantly import them later to restore your precise environment without re-typing.
 - **Excel Export**: Quick copy or `.xlsx` download support (via SheetJS).
 - **Clipping-Free Sidebar Dropdowns**: Removed container overflow boundaries on the Off Requests list, allowing dropdown menus to render cleanly on top of other sidebar panels rather than clipping.
-- **Localization & Theme**: Supports dynamic switching between Thai (TH) and English (EN) languages, along with a sleek system-synced Dark Mode. Automatically detects browser/system language on first load (defaulting to Thai for Thai users, English for others) while strictly remembering manual user preferences via `localStorage`.
+- **Localization & Theme**: Supports dynamic switching between Thai (TH) and English (EN) languages, along with a sleek system-synced Dark Mode. Automatically detects browser/system language and system dark mode preferences on initial load, while strictly preserving manual user overrides via `localStorage`.
 
 ### 4. Installable PWA & Offline Support
 - **Offline Capability**: Features a service worker (`sw.js`) and a web app manifest (`manifest.json`) caching all layout resources, stylesheets, custom fonts, and third-party libraries (Tailwind CSS, SheetJS, Lucide Icons) for complete offline reliability in hospital wards with spotty Wi-Fi.
@@ -82,8 +82,5 @@ Built for high reliability, clean execution, and security:
 - **`app.js`**: Contains the scheduling state, Monte Carlo solver search loops, dynamic HTML renderers, and the dual-language translation dictionaries.
 - **`manifest.json`**: Standard web app manifest defining PWA configuration, installable setups, and colors.
 - **`sw.js`**: Service worker script caching key assets for reliable offline performance.
-- **`tests/*.test.js`**: A comprehensive, lightweight Node.js unit testing suite that verifies corner-case solver behaviors (e.g., circular conflicts, quota sums, and impossible constraints in `solver.test.js`), UI DOM interactions (JSON export/import in `jsonRoundTrip.test.js`), state management (undo stacks in `manualOverrides.test.js`), and security (XSS assertions in `xss.test.js`). The tests utilize a custom decoupled mock-DOM evaluation pattern to run without requiring heavy frameworks like Jest.
-
----
-
-
+- **`tests/*.test.js`**: A comprehensive, lightweight Node.js unit testing suite (11 test files) that verifies corner-case solver behaviors (e.g., circular conflicts, quota sums, and impossible constraints in `solver.test.js`), UI DOM interactions (JSON export/import in `jsonRoundTrip.test.js`), state management (undo stacks in `manualOverrides.test.js`), and security (XSS assertions in `xss.test.js`). The tests utilize a custom decoupled mock-DOM evaluation pattern to run without requiring heavy frameworks like Jest, reporting clean outputs in a unified `PASSED: X, FAILED: Y` format.
+- **`run-tests.js`**: Orchestrates test suite execution and aggregates outputs and exit statuses across files.

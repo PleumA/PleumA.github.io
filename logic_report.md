@@ -159,6 +159,8 @@ graph TD
     2.  **Role Isolation**: An `R1` slot will never receive an `R2` doctor.
     3.  **Uniqueness**: A doctor will never work two slots on the same day.
 
+9.  **Heuristic Workload Balancing (`balanceShifts`)**: When enabled, the sorting of candidate doctors dynamically prioritizes those with the lowest shift counts (total, workday, or holiday) by resolving any non-zero workload difference during candidate generation instead of relying on a broad `0.4` tolerance. This ensures tighter, more balanced shift allocation across the pool.
+
 ---
 
 ### 4. Schedule Evaluation: Scoring & Penalty Math
@@ -433,6 +435,9 @@ During the recent test suite expansion and auditing phase, several significant l
 - **Cascade Bypassing Constraints**: Previously, Cascade Level 4 inadvertently dropped the hard `offToday` tracking restriction. This was patched so that even under extreme shortages, the solver will never assign a doctor to a day they requested off.
 - **Reference-Based Date Comparison**: Single-day custom date ranges incorrectly passed validation due to strict object reference comparisons (`sd !== ed`). The validation logic was refactored to correctly compare the underlying time values (`sd.getTime() >= ed.getTime()`).
 - **XSS in Calendar Component**: Drag-and-drop HTML attributes in `renderCalendarView` previously received raw, unescaped doctor names. The architecture was permanently shifted to pass safe array integer indices rather than string literals, eliminating the XSS vector.
+- **Continuous Date Increments Across Spanning Months**: Custom date ranges crossing month boundaries generated continuous day index numbers (e.g., "32 Sat") on the Calendar and Person views instead of resetting. Day labels now correctly reset at month boundaries to show actual dates.
+- **Swallowed Validation Fail-Safe Messages**: Synchronous UI config validation errors (like quota mismatches) were logged to console but swallowed in the UI under a generic fallback message. The actual validation messages are now fully propagated to the UI toast.
+- **Test Harness Decoupling**: Fixed the `quotaSinglePool` test file regexes which were using rigid replacements, resolving mock evaluation failures.
 
 ### Remaining Logic Anomalies (Known Bugs)
 - **Type mismatch for `offMap`**: The manual override verification (`explainSlotFailure` and `updateDayNote`) mistakenly interacts with `offMap` / `offToday` dynamically, sometimes resulting in a `TypeError: offMap.has is not a function` when evaluating override validity.

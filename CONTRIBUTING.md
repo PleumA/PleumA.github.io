@@ -26,10 +26,11 @@ Since there are no build steps, you can run the project instantly:
    ```
 
 ### Running Tests
-The project features a local Node.js unit testing suite targeting the core solver algorithm. You can run the tests using Node:
+The project features a local Node.js unit testing suite targeting the core solver algorithm and UI logic. You can run all test suites using the main test runner:
 ```bash
-node tests/solver.test.js
+node run-tests.js
 ```
+Or run individual test files separately (e.g., `node tests/solver.test.js`).
 
 ## 📝 Guidelines
 
@@ -38,7 +39,7 @@ node tests/solver.test.js
 - Avoid introducing heavy npm packages or build configurations unless absolutely necessary.
 - Follow modern JavaScript best practices (clean async loops, $O(1)$ lookups with `Set`, defensive cloning of state).
 - **Internationalization (i18n)**: All new UI elements must support dual-language toggling via `data-i18n` attributes. Do not hardcode Thai or English text into the HTML structure. Always add translation keys to the `translations` map in `app.js`.
-- **Date Handling**: Respect the `isCustomDateRange` global state. Avoid assuming a rigid 1-to-31 day iteration loop; instead, resolve real calendar `Date` objects using the `scheduleDates` array if custom mode is active, and always output dates in `DD/MM/YYYY` format using `formatShortDate`.
+- **Date Handling**: Respect the `isCustomDateRange` global state. Avoid assuming a rigid 1-to-31 day iteration loop; instead, resolve real calendar `Date` objects using the `scheduleDates` array if custom mode is active, and always output dates in `DD/MM/YYYY` format using `formatShortDate`. Ensure that day labels in views reset at month boundaries when spanning across multiple calendar months.
 
 ### UX/UI & Mobile First
 - Make sure all controls work perfectly on mobile screens (viewport width $< 768\text{px}$). Use the bottom sheet overlay (`#mobileDoctorSheet`) instead of standard dropdown menus.

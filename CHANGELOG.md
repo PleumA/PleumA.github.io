@@ -4,6 +4,20 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-07-01
+### Added
+- **Auto-Calculate on Date Change**: Automatically triggers `generateSchedule()` when both start/end dates are populated, when dates are edited, or when the custom date range mode is toggled off/on.
+- **Auto-Detect Dark Mode**: Automatically detects browser/system light/dark preference on load and applies it, while preserving manual preference overrides.
+
+### Changed
+- **Heuristics Tuning**: Refined the solver's `balanceShifts` workload heuristic to evaluate any non-zero difference in total shifts, removing the previous `0.4` threshold to ensure more deterministic workload balancing.
+- **Prescriptive Error Toasts**: Ensured that the actual validation error message (e.g. quota mismatch) is passed directly to the UI toast instead of being swallowed.
+- **Test Suite Formats**: Standardized all test files to output in the unified `PASSED: X, FAILED: Y` format, and updated `run-tests.js` to combine stdout/stderr streams to prevent swallowed errors.
+
+### Fixed
+- **Custom Range Month Boundaries**: Fixed a bug where Calendar and Person views printed day labels as continuous indexes (e.g. "32 Sat") when spanning across month boundaries. The day labels now correctly reset at month boundaries.
+- **Quota Single Pool Test Suite**: Standardized `quotaSinglePool.test.js` to use aligned global variables and correct DOM mock definitions to avoid silent failures.
+
 ## [1.0.2] - 2026-07-30
 ### Added
 - **Accessibility**: Added descriptive `aria-label` and `aria-hidden` attributes to dynamic schedule slot buttons to support screen readers, making the click-to-swap interface fully accessible to visually impaired users.
