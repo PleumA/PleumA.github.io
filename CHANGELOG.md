@@ -4,6 +4,17 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-07-01
+### Added
+- **Mobile View Schedule Floating Button**: Added a floating "View Schedule" button for narrow screens (< 1024px) that appears after the schedule calculation completes, allowing users to smooth-scroll down to the results section. The button automatically hides when the user scrolls down to the results section.
+
+### Changed
+- **Sticky Right Panel Layout on Desktop**: Implemented a responsive two-column layout for screen viewports >= 1024px (`lg:` breakpoint) where the configuration sidebar and results panel scroll independently within the viewport limit (`calc(100vh - 150px)` height boundary), keeping the right panel sticky and header visible at all times.
+
+### Fixed
+- **Left Sidebar Element Clipping**: Solved an issue where nested element cards in the left config sidebar were shrunk and clipped out of view by changing the layout to block/space-y, rendering all input fields and toggles fully reachable by scroll.
+- **Floating Button Visibility on Desktop**: Fixed specificity of the floating mobile button's CSS selector, wrapping it in a mobile media query to ensure it never displays on desktop viewports.
+
 ## [1.0.4] - 2026-07-01
 ### Added
 - **Lock Special Duty — Every Weekday Mode**: Added a new lock condition type selector (`firstNDays` / `everyWeekday`) under the Lock Special Duty toggle. When set to *Every [Weekday]*, the solver locks exactly one doctor from the special pool onto every occurrence of the chosen weekday (e.g. every Sunday) across the schedule range — including custom date ranges spanning multiple months.
