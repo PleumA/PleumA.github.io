@@ -18,6 +18,8 @@
 
 ### 2. Constraints & Rules Engine
 - **Role-Based Calculation (Toggleable)**: When **ON**, maps doctors to roles (e.g., `A:R1, B:R2`) and calculates duty separately for each role pool. When **OFF**, treats all doctors as a single pool.
+  - **Dynamic Role Header Promotion**: When Role-Based Mode is enabled, the assigned role label is moved up to the column header (e.g. Duty 1 (R1) or a sub-header `R1`), leaving individual cell doctor chips completely free of role suffixes. Suffixes are also moved to headers in exported Excel spreadsheets and copied clipboard data.
+  - **Dynamic Role Badges (Person-Centric View)**: In the Person-Centric grid, doctor names in the left-hand column are decorated with color-coded, dynamic role badges mapping to their roles.
 - **Exact Shift Quotas**: Enforces an exact shift quota per role (e.g., `R1:12, R2:10, R3:6`). 
   - **Pre-Flight Check**: Aborts computation if the sum of all quotas does not perfectly match the total available slots for the month (unless **Allow Blank Days** is toggled ON to support unbalanced quotas/shortages).
   - **Strict Quota Enforcement**: Doctors who have reached their exact quota are immediately removed from the available pool for all subsequent shifts.

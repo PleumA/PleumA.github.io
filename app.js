@@ -2217,13 +2217,12 @@ function updateTargetedCellDOM(day, slotIndex) {
     }
 
     let displayDoc = docName;
-    const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
     if (docName === SHORTAGE_MARKER) {
         displayDoc = translations[currentLang].shortageSlot;
     } else if (docName === "-" || docName === "") {
         displayDoc = translations[currentLang].emptySlot;
     } else if (doctors.includes(docName)) {
-        displayDoc = (isRoleBasedEnabled && docRole !== 'Default') ? `${docName} (${docRole})` : docName;
+        displayDoc = docName;
     }
 
     // 1. Update Table View Button
@@ -2518,6 +2517,48 @@ function renderResults() {
 }
 
 // Render standard Table List View
+const roleColors = {
+    'R1': 'text-violet-650 dark:text-violet-400',
+    'R2': 'text-teal-650 dark:text-teal-400',
+    'R3': 'text-indigo-650 dark:text-indigo-400',
+    'Staff': 'text-emerald-650 dark:text-emerald-400'
+};
+
+function getSlotRole(slotIdx) {
+    if (!globalResult) return 'Default';
+    for (let r of globalResult.schedule) {
+        const docObj = r.selectedDocs && r.selectedDocs[slotIdx];
+        if (docObj && docObj.name !== SHORTAGE_MARKER && docObj.name !== "-" && docObj.name !== "") {
+            if (docObj.role && docObj.role !== 'Default') {
+                return docObj.role;
+            }
+        }
+    }
+    try {
+        const config = parseUIConfig();
+        const dayRoleSlots = config.getRoleSlotsForDay(1);
+        const daySlotsList = [];
+        Object.keys(dayRoleSlots).forEach(role => {
+            const count = dayRoleSlots[role];
+            for (let i = 0; i < count; i++) {
+                daySlotsList.push(role);
+            }
+        });
+        if (daySlotsList[slotIdx]) return daySlotsList[slotIdx];
+    } catch (e) {
+        // Ignore
+    }
+    return 'Default';
+}
+
+function getRoleBadgeColorClass(role) {
+    if (role === 'R1') return 'text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-900';
+    if (role === 'R2') return 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-900';
+    if (role === 'R3') return 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-900';
+    if (role === 'Staff') return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900';
+    return 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700';
+}
+
 function renderTableView(config) {
     const headerRow = document.getElementById('scheduleTableHeader');
     let headerHtml = `
@@ -2525,8 +2566,22 @@ function renderTableView(config) {
             <th class="py-3.5 px-6 border-b border-slate-200 dark:border-slate-800 font-bold w-16">${translations[currentLang].tableDateCol}</th>
             <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-800 font-bold w-24">${translations[currentLang].tableDayCol}</th>
     `;
+    const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
     for (let i = 1; i <= globalResult.maxSlots; i++) {
-        headerHtml += `<th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-800 font-bold">${translations[currentLang].tableDutyCol} ${i}</th>`;
+        let subHeader = '';
+        if (isRoleBasedEnabled) {
+            const role = getSlotRole(i - 1);
+            if (role && role !== 'Default') {
+                const colorClass = roleColors[role] || 'text-slate-500 dark:text-slate-400';
+                subHeader = `<div class="text-[10px] font-bold mt-0.5 uppercase ${colorClass}">${role}</div>`;
+            }
+        }
+        headerHtml += `
+            <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-800 font-bold">
+                <div>${translations[currentLang].tableDutyCol} ${i}</div>
+                ${subHeader}
+            </th>
+        `;
     }
     headerHtml += `<th class="py-3.5 px-6 border-b border-slate-200 dark:border-slate-800 font-bold">${translations[currentLang].tableNoteCol}</th></tr>`;
     headerRow.innerHTML = headerHtml;
@@ -2593,13 +2648,12 @@ function renderTableView(config) {
             }
 
             let displayDoc = d;
-            const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
             if (d === SHORTAGE_MARKER) {
                 displayDoc = translations[currentLang].shortageSlot;
             } else if (d === "-" || d === "") {
                 displayDoc = translations[currentLang].emptySlot;
             } else if (doctors.includes(d)) {
-                displayDoc = (isRoleBasedEnabled && dRole !== 'Default') ? `${esc(d)} (${esc(dRole)})` : esc(d);
+                displayDoc = esc(d);
             }
 
             if (row.isNoDuty) {
@@ -2712,7 +2766,6 @@ function renderCalendarView(config) {
                 }
 
                 let displayDoc = doc;
-                const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
                 let docIndexToPass = -2;
                 if (doc === SHORTAGE_MARKER) {
                     displayDoc = translations[currentLang].shortageSlot;
@@ -2720,7 +2773,7 @@ function renderCalendarView(config) {
                 } else if (doc === "-" || doc === "") {
                     displayDoc = translations[currentLang].emptySlot;
                 } else if (doctors.includes(doc)) {
-                    displayDoc = (isRoleBasedEnabled && dRole !== 'Default') ? `${esc(doc)} (${esc(dRole)})` : esc(doc);
+                    displayDoc = esc(doc);
                     docIndexToPass = doctors.indexOf(doc);
                 }
 
@@ -2913,8 +2966,16 @@ window.copyScheduleForExcel = function () {
     }
 
     let tsvData = currentLang === 'th' ? "วันที่\tวัน\t" : "Date\tDay\t";
+    const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
     for (let i = 1; i <= globalResult.maxSlots; i++) {
-        tsvData += (currentLang === 'th' ? `เวรคนที่ ${i}\t` : `Duty ${i}\t`);
+        let dutyHeader = currentLang === 'th' ? `เวรคนที่ ${i}` : `Duty ${i}`;
+        if (isRoleBasedEnabled) {
+            const role = getSlotRole(i - 1);
+            if (role && role !== 'Default') {
+                dutyHeader += ` (${role})`;
+            }
+        }
+        tsvData += `${dutyHeader}\t`;
     }
     tsvData += (currentLang === 'th' ? "หมายเหตุ\n" : "Notes\n");
 
@@ -2924,13 +2985,10 @@ window.copyScheduleForExcel = function () {
         for (let i = 0; i < globalResult.maxSlots; i++) {
             let docObj = row.selectedDocs[i];
             let doc = docObj ? docObj.name : "";
-            const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
             if (doc === SHORTAGE_MARKER) {
                 doc = "";
             } else if (doc === "-" || doc === "") {
                 doc = "";
-            } else if (doctors.includes(doc)) {
-                if (isRoleBasedEnabled && docObj && docObj.role !== 'Default') doc = `${doc} (${docObj.role})`;
             }
             tsvData += `${doc}\t`;
         }
@@ -2973,7 +3031,17 @@ window.exportToExcel = function () {
     if (!window.XLSX || !globalResult) return;
     try {
         const headers = [translations[currentLang].tableDateCol, translations[currentLang].tableDayCol];
-        for (let i = 1; i <= globalResult.maxSlots; i++) headers.push(`${translations[currentLang].tableDutyCol} ${i}`);
+        const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
+        for (let i = 1; i <= globalResult.maxSlots; i++) {
+            let headerText = `${translations[currentLang].tableDutyCol} ${i}`;
+            if (isRoleBasedEnabled) {
+                const role = getSlotRole(i - 1);
+                if (role && role !== 'Default') {
+                    headerText += ` (${role})`;
+                }
+            }
+            headers.push(headerText);
+        }
         headers.push(translations[currentLang].tableNoteCol);
 
         const data = [headers];
@@ -2983,13 +3051,10 @@ window.exportToExcel = function () {
             for (let i = 0; i < globalResult.maxSlots; i++) {
                 let docObj = r.selectedDocs[i];
                 let doc = docObj ? docObj.name : "";
-                const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
                 if (doc === SHORTAGE_MARKER) {
                     doc = "";
                 } else if (doc === "-" || doc === "") {
                     doc = "";
-                } else if (doctors.includes(doc)) {
-                    if (isRoleBasedEnabled && docObj && docObj.role !== 'Default') doc = `${doc} (${docObj.role})`;
                 }
                 rowData.push(doc);
             }
@@ -3349,9 +3414,18 @@ function renderPersonCentricView(config) {
         let isShortage = doc === SHORTAGE_MARKER;
         let docName = isShortage ? (translations[currentLang].shortageSlot || "Shortage") : doc;
 
+        let badgeHtml = '';
+        if (config.roleBased && !isShortage) {
+            const docRole = config.doctorRoles[doc] || 'Default';
+            if (docRole !== 'Default') {
+                const badgeColor = getRoleBadgeColorClass(docRole);
+                badgeHtml = ` <span class="ml-1.5 px-1.5 py-0.5 text-[10px] rounded font-bold border ${badgeColor}">${esc(docRole)}</span>`;
+            }
+        }
+
         let rowClass = idx % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-50/50 dark:bg-slate-800/20";
         bodyHtml += `<tr class="${rowClass} hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">`;
-        bodyHtml += `<td class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 z-10 min-w-[120px] ${rowClass} ${isShortage ? 'text-red-500' : 'text-slate-800 dark:text-slate-200'} shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${esc(docName)}</td>`;
+        bodyHtml += `<td class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 z-10 min-w-[120px] ${rowClass} ${isShortage ? 'text-red-500' : 'text-slate-800 dark:text-slate-200'} shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${esc(docName)}${badgeHtml}</td>`;
 
         for (let d = 1; d <= config.numDays; d++) {
             const dayRow = globalResult.schedule[d - 1];

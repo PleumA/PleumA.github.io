@@ -289,6 +289,11 @@ Here is a detailed breakdown of the functions in `app.js`:
 *   **Responsibility**: Converts the `globalResult.schedule` data array into HTML grids and tables.
 *   **Security Feature**: Before injecting doctor names into templates, they are passed through the `esc()` sanitizer.
 *   **Responsive Selector Binding**: Injects `<button onclick="openCellDropdown(event, 'id')">` into each slot.
+*   **Role Display Architecture**:
+    *   **List View (`renderTableView`)**: When `isRoleBased` is ON, the role label (e.g. `R1`, `R2`) is extracted via `getSlotRole` and rendered below the duty column headers (e.g., `DUTY 1` with subtitle `R1`). Row cells display only the doctor's name. When OFF, headers show standard Duty titles and cells remain unchanged.
+    *   **Calendar View (`renderCalendarView`)**: Strips role suffixes from all dynamic doctor name chips.
+    *   **Person-Centric View (`renderPersonCentricView`)**: Renders a dynamic, color-coded role badge (e.g. `[R1]`) next to doctor names in the left-hand sticky column using `getRoleBadgeColorClass`. Cells display slot numbers without any role decorations.
+    *   **Excel/Clipboard Exports**: Headers are dynamically appended with their respective roles (e.g. `Duty 1 (R1)`) when Role-Based mode is ON, keeping the data rows clean with just doctor names.
 
 #### `getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config, isMobile)`
 *   **Inputs**:

@@ -7,9 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [1.0.5] - 2026-07-01
 ### Added
 - **Mobile View Schedule Floating Button**: Added a floating "View Schedule" button for narrow screens (< 1024px) that appears after the schedule calculation completes, allowing users to smooth-scroll down to the results section. The button automatically hides when the user scrolls down to the results section.
+- **Role to Column Header feature**: Moved role labels from individual schedule cells to the column header (e.g., displaying the role name below the Duty column in List/Table view) when Role-Based Mode is active.
+- **Dynamic Role Badges (Person-Centric View)**: Added color-coded role badges next to doctor names in the Person-Centric view's left column.
+- **Role Display Unit Tests**: Created `tests/roleHeaderDisplay.test.js` to assert role-related headers, cells, TSV copying, and XLSX exports in both ON/OFF states.
 
 ### Changed
 - **Sticky Right Panel Layout on Desktop**: Implemented a responsive two-column layout for screen viewports >= 1024px (`lg:` breakpoint) where the configuration sidebar and results panel scroll independently within the viewport limit (`calc(100vh - 150px)` height boundary), keeping the right panel sticky and header visible at all times.
+- **Excel & Clipboard Export Formats**: Copied spreadsheet data (TSV) and exported Excel files now dynamically format headers with their corresponding role suffix (e.g. `Duty 1 (R1)`), keeping individual data cells cleanly limited to doctor names.
 
 ### Fixed
 - **Left Sidebar Element Clipping**: Solved an issue where nested element cards in the left config sidebar were shrunk and clipped out of view by changing the layout to block/space-y, rendering all input fields and toggles fully reachable by scroll.
