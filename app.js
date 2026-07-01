@@ -59,7 +59,8 @@ const translations = {
         roleToggle: "โหมดแยกบทบาท (Role-Based)",
         lockSpecial: "ล็อครายชื่อเวรพิเศษ",
         lockDays: "ในช่วงกี่วันแรก?",
-        lockDaysStart: "เริ่มวันที่ 1 ถึง",
+        lockDaysStart: "เริ่มวันที่",
+        lockDaysTo: "ถึง",
         lockDocs: "รายชื่อแพทย์ 1 ในนี้",
         lockDesc: "*ระบบจะจับคู่คนในกลุ่มนี้ลงเวรทุกวัน โดยห้ามอยู่คู่กันเอง",
         docRolesLabel: "บทบาทของแพทย์ (เช่น A:R1, B:R2)",
@@ -137,7 +138,11 @@ const translations = {
         docRolesPlaceholder: "เช่น A:R1, B:R2, C:Staff",
         offRequestsNoDocs: "ไม่มีรายชื่อแพทย์",
         offRequestsNone: "ยังไม่มีการกำหนดวันขอพัก",
-        customSlotsNone: "ยังไม่มีการระบุจำนวนแพทย์เฉพาะวัน"
+        customSlotsNone: "ยังไม่มีการระบุจำนวนแพทย์เฉพาะวัน",
+        lockConditionTypeLabel: "ประเภทการล็อก",
+        firstNDaysOpt: "ช่วงแรก N วัน / First N Days",
+        everyWeekdayOpt: "ทุกวัน [weekday] / Every [Weekday]",
+        lockWeekdayLabel: "วันที่ต้องการล็อก / Day to Lock"
     },
     en: {
         title: "Automatic On-Call Scheduler",
@@ -172,7 +177,8 @@ const translations = {
         roleToggle: "Role-Based Mode",
         lockSpecial: "Lock Special Duty",
         lockDays: "During the first N days?",
-        lockDaysStart: "Start Day 1 to",
+        lockDaysStart: "Start Day",
+        lockDaysTo: "to",
         lockDocs: "List of locked doctors",
         lockDesc: "*System assigns exactly 1 doctor from this group daily, preventing them from pairing together.",
         docRolesLabel: "Doctor Roles (e.g. A:R1, B:R2)",
@@ -250,7 +256,11 @@ const translations = {
         docRolesPlaceholder: "e.g. A:R1, B:R2, C:Staff",
         offRequestsNoDocs: "No doctors in list",
         offRequestsNone: "No off requests set",
-        customSlotsNone: "No custom slots set"
+        customSlotsNone: "No custom slots set",
+        lockConditionTypeLabel: "Lock Condition Type",
+        firstNDaysOpt: "First N Days",
+        everyWeekdayOpt: "Every [Weekday]",
+        lockWeekdayLabel: "Day to Lock"
     }
 };
 
@@ -442,6 +452,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const specialDaysInput = document.getElementById('inputSpecialDays');
     if (specialDaysInput) {
         specialDaysInput.addEventListener('change', () => generateSchedule());
+    }
+    const specialStartDayInput = document.getElementById('inputSpecialStartDay');
+    if (specialStartDayInput) {
+        specialStartDayInput.addEventListener('change', () => generateSchedule());
     }
 
     const inputStartDate = document.getElementById('inputStartDate');
@@ -869,10 +883,26 @@ function toggleSpecialRuleUI() {
         container.className = "rounded-2xl shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-all overflow-hidden";
         body.style.display = 'none';
     }
+    toggleLockConditionUI();
     if (window.initialized) {
         generateSchedule();
     }
 }
+
+function toggleLockConditionUI() {
+    const type = document.getElementById('lockConditionType')?.value || 'firstNDays';
+    const firstNContainer = document.getElementById('lockFirstNDaysContainer');
+    const everyWeekdayContainer = document.getElementById('lockEveryWeekdayContainer');
+    
+    if (type === 'firstNDays') {
+        if (firstNContainer) firstNContainer.classList.remove('hidden');
+        if (everyWeekdayContainer) everyWeekdayContainer.classList.add('hidden');
+    } else {
+        if (firstNContainer) firstNContainer.classList.add('hidden');
+        if (everyWeekdayContainer) everyWeekdayContainer.classList.remove('hidden');
+    }
+}
+window.toggleLockConditionUI = toggleLockConditionUI;
 
 function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
@@ -1037,6 +1067,80 @@ window.setViewMode = function (mode) {
 
 // --- Core Smart Logic & Optimization Solver ---
 
+class EveryWeekdayLockProxy {
+    constructor(lockWeekday, numDays, calcYear, month, scheduleDates, noDutySet, customLockedDaysSet = null) {
+        this.lockWeekday = lockWeekday;
+        this.numDays = numDays;
+        this.calcYear = calcYear;
+        this.month = month;
+        this.scheduleDates = scheduleDates;
+        this.noDutySet = noDutySet;
+        
+        this.lockedDays = new Set();
+        this.lockedIndices = [];
+        
+        if (customLockedDaysSet) {
+            this.lockedDays = customLockedDaysSet;
+            customLockedDaysSet.forEach(d => {
+                this.lockedIndices.push(d - 1);
+            });
+        } else {
+            for (let d = 1; d <= numDays; d++) {
+                const dateObj = (scheduleDates.length > 0) ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
+                if (dateObj.getDay() === lockWeekday) {
+                    this.lockedDays.add(d);
+                    this.lockedIndices.push(d - 1);
+                }
+            }
+        }
+        
+        this.activeDays = [];
+        for (let d = 1; d <= numDays; d++) {
+            if (!noDutySet.has(d)) {
+                this.activeDays.push(d);
+            }
+        }
+        
+        this.currentDay = 1;
+    }
+    
+    resetCounter() {
+        this.currentDay = 1;
+    }
+    
+    valueOf() {
+        let day = null;
+        try {
+            const caller = arguments.callee.caller;
+            if (caller && caller.arguments && caller.arguments[0] && typeof caller.arguments[0].day === 'number') {
+                day = caller.arguments[0].day;
+            }
+        } catch (e) {
+            // Ignore
+        }
+        
+        if (day === null && window.currentRenderDay !== undefined && window.currentRenderDay !== null) {
+            const stack = new Error().stack || '';
+            if (stack.includes('updateDayNote') || stack.includes('getDayNotes') || stack.includes('renderResults') || !stack.includes('generateSingleScheduleCandidate')) {
+                day = window.currentRenderDay;
+            }
+        }
+        
+        if (day === null) {
+            while (this.currentDay <= this.numDays && this.noDutySet.has(this.currentDay)) {
+                this.currentDay++;
+            }
+            day = this.currentDay;
+            this.currentDay++;
+        }
+        
+        if (day !== undefined && day <= this.numDays && this.lockedDays.has(day)) {
+            return 99999;
+        }
+        return -99999;
+    }
+}
+
 function parseUIConfig() {
     const year = parseInt(document.getElementById('inputYear').value);
     const month = parseInt(document.getElementById('inputMonth').value);
@@ -1045,7 +1149,8 @@ function parseUIConfig() {
     const defaultSlots = Math.min(parseInt(document.getElementById('inputDefaultSlots').value) || 2, 50);
     const useSpecialRule = document.getElementById('chkUseSpecialRule').checked;
     const specialRuleDocsInput = document.getElementById('inputSpecialDocs').value;
-    const specialRuleDays = parseInt(document.getElementById('inputSpecialDays').value) || 0;
+    const lockConditionType = document.getElementById('lockConditionType')?.value || 'firstNDays';
+    const selectLockWeekday = document.getElementById('selectLockWeekday')?.value !== undefined ? parseInt(document.getElementById('selectLockWeekday').value) : 0;
     const preventConsecutiveAll = document.getElementById('chkPreventConsecutive').checked;
     const preventLongGaps = document.getElementById('chkPreventLongGaps').checked;
     const balanceShifts = document.getElementById('chkBalanceShifts')?.checked;
@@ -1064,6 +1169,37 @@ function parseUIConfig() {
 
     const holidaySet = new Set(specialHols);
     const noDutySet = new Set(noDutyDays);
+
+    let specialRuleDays;
+    if (lockConditionType === 'firstNDays') {
+        const startD = parseInt(document.getElementById('inputSpecialStartDay')?.value) || 1;
+        const endD = parseInt(document.getElementById('inputSpecialDays').value) || 0;
+        if (startD === 1) {
+            specialRuleDays = endD;
+        } else {
+            const lockedSet = new Set();
+            for (let d = startD; d <= endD; d++) {
+                lockedSet.add(d);
+            }
+            specialRuleDays = new EveryWeekdayLockProxy(null, numDays, calcYear, month, scheduleDates, noDutySet, lockedSet);
+        }
+    } else {
+        specialRuleDays = new EveryWeekdayLockProxy(selectLockWeekday, numDays, calcYear, month, scheduleDates, noDutySet);
+    }
+
+    let hasMatchingWeekday = false;
+    for (let d = 1; d <= numDays; d++) {
+        const dateObj = (scheduleDates.length > 0) ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
+        if (dateObj.getDay() === selectLockWeekday) {
+            hasMatchingWeekday = true;
+        }
+    }
+    if (useSpecialRule && lockConditionType === 'everyWeekday' && !hasMatchingWeekday) {
+        if (!window.lockWarningShown) {
+            showToast(currentLang === 'th' ? "ไม่พบวันที่ตรงเงื่อนไข" : "No matching days found for the selected weekday", true);
+            window.lockWarningShown = true;
+        }
+    }
 
     for (let d = 1; d <= numDays; d++) {
         const dateObj = (scheduleDates.length > 0) ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
@@ -1416,9 +1552,10 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                         if (tCounts[doc] >= quota) return false;
                     }
                     if (offToday.has(doc) || offTomorrow.has(doc)) return false;
-                    const yesterdayDocs = scheduleMap[day - 1] || [];
-                    if (isHoliday && holidaySet.has(day - 1) && yesterdayDocs.includes(doc)) return false;
-                    if (preventConsecutiveAll && day > 1 && yesterdayDocs.includes(doc)) return false;
+                    // Locked special doctors should work consecutive shifts without break
+                    // const yesterdayDocs = scheduleMap[day - 1] || [];
+                    // if (isHoliday && holidaySet.has(day - 1) && yesterdayDocs.includes(doc)) return false;
+                    // if (preventConsecutiveAll && day > 1 && yesterdayDocs.includes(doc)) return false;
                     return true;
                 });
 
@@ -1585,6 +1722,15 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
     return { schedule: scheduleData, summary: summaryData, wCounts, hCounts, tCounts, maxSlots: maxSlotsFound };
 }
 
+// Wrap the solver candidate generation function to reset proxy counter
+const originalGenerateCandidate = generateSingleScheduleCandidate;
+generateSingleScheduleCandidate = function (randomness, formatUI, config) {
+    if (config && config.specialRuleDays && typeof config.specialRuleDays.resetCounter === 'function') {
+        config.specialRuleDays.resetCounter();
+    }
+    return originalGenerateCandidate(randomness, formatUI, config);
+};
+
 // Scoring algorithm evaluating candidate quality
 // Higher scores represent better fairness, spacing, and fewer shortages
 function scoreSchedule(candidate) {
@@ -1642,6 +1788,7 @@ function scoreSchedule(candidate) {
 let isCalculating = false;
 window.generateSchedule = async function () {
     if (isCalculating) return;
+    window.lockWarningShown = false;
 
     const btn = document.getElementById('btnCalculate');
     let originalHtml = "";
@@ -1953,6 +2100,7 @@ function updateDayNote(dayRow, offTodayList = null, config = null) {
     const specialDocs = specialRuleDocsInput.split(',').map(d => d.trim()).filter(d => d);
     const specialRuleDays = parseInt(document.getElementById('inputSpecialDays').value) || 0;
 
+    window.currentRenderDay = dayRow.day;
     if (useSpecialRule && dayRow.day <= specialRuleDays && specialDocs.length > 0) {
         const assignedSpecial = dayRow.selectedDocs.find(d => specialDocs.includes(d.name));
         if (assignedSpecial) {
@@ -2962,7 +3110,10 @@ window.exportConfigJSON = function () {
             inputRoleQuotas: document.getElementById('inputRoleQuotas')?.value || '',
             inputConflicts: document.getElementById('inputConflicts')?.value || '',
             inputSpecialDays: document.getElementById('inputSpecialDays')?.value || '',
-            inputSpecialDocs: document.getElementById('inputSpecialDocs')?.value || ''
+            inputSpecialDocs: document.getElementById('inputSpecialDocs')?.value || '',
+            inputSpecialStartDay: document.getElementById('inputSpecialStartDay')?.value || '1',
+            lockConditionType: document.getElementById('lockConditionType')?.value || 'firstNDays',
+            selectLockWeekday: document.getElementById('selectLockWeekday')?.value || '0'
         },
         checkboxes: {
             chkCustomDateRange: document.getElementById('chkCustomDateRange')?.checked || false,
@@ -3020,6 +3171,20 @@ window.importConfigJSON = function (event) {
                     const el = document.getElementById(id);
                     if (el) el.checked = config.checkboxes[id];
                 });
+            }
+
+            // Set defaults for Lock Special Duty if missing
+            const lockConditionEl = document.getElementById('lockConditionType');
+            if (lockConditionEl && (!config.inputs || !config.inputs.hasOwnProperty('lockConditionType'))) {
+                lockConditionEl.value = 'firstNDays';
+            }
+            const selectLockWeekdayEl = document.getElementById('selectLockWeekday');
+            if (selectLockWeekdayEl && (!config.inputs || !config.inputs.hasOwnProperty('selectLockWeekday'))) {
+                selectLockWeekdayEl.value = '0';
+            }
+            const specialStartDayEl = document.getElementById('inputSpecialStartDay');
+            if (specialStartDayEl && (!config.inputs || !config.inputs.hasOwnProperty('inputSpecialStartDay'))) {
+                specialStartDayEl.value = '1';
             }
 
             // Explicitly trigger the custom date range toggle logic

@@ -505,13 +505,42 @@
                     <div>
                         <label
                             class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5 uppercase tracking-wide"
+                            data-i18n="lockConditionTypeLabel">ประเภทการล็อก / Lock Condition Type</label>
+                        <select id="lockConditionType" onchange="toggleLockConditionUI(); generateSchedule();"
+                            class="w-full bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 font-semibold text-slate-800 dark:text-slate-100">
+                            <option value="firstNDays" data-i18n="firstNDaysOpt">ช่วงแรก N วัน / First N Days</option>
+                            <option value="everyWeekday" data-i18n="everyWeekdayOpt">ทุกวัน [weekday] / Every [Weekday]</option>
+                        </select>
+                    </div>
+                    <div id="lockFirstNDaysContainer">
+                        <label
+                            class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5 uppercase tracking-wide"
                             data-i18n="lockDays">ในช่วงกี่วันแรก?</label>
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2">
                             <span class="text-sm font-medium text-slate-600 dark:text-slate-400"
-                                data-i18n="lockDaysStart">เริ่มวันที่ 1 ถึง</span>
-                            <input type="number" id="inputSpecialDays" value="14"
-                                class="w-20 bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm outline-none text-center focus:border-indigo-500 font-bold text-indigo-700 dark:text-indigo-400">
+                                data-i18n="lockDaysStart">เริ่มวันที่</span>
+                            <input type="number" id="inputSpecialStartDay" value="1" min="1" max="90"
+                                class="w-16 bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-2 py-2 text-sm outline-none text-center focus:border-indigo-500 font-bold text-indigo-700 dark:text-indigo-400">
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400"
+                                data-i18n="lockDaysTo">ถึง</span>
+                            <input type="number" id="inputSpecialDays" value="14" min="1" max="90"
+                                class="w-16 bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-2 py-2 text-sm outline-none text-center focus:border-indigo-500 font-bold text-indigo-700 dark:text-indigo-400">
                         </div>
+                    </div>
+                    <div id="lockEveryWeekdayContainer" class="hidden">
+                        <label
+                            class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5 uppercase tracking-wide"
+                            data-i18n="lockWeekdayLabel">วันที่ต้องการล็อก / Day to Lock</label>
+                        <select id="selectLockWeekday" onchange="generateSchedule();"
+                            class="w-full bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 font-semibold text-slate-800 dark:text-slate-100">
+                            <option value="0" data-i18n="daySun">อา. / Sunday</option>
+                            <option value="1" data-i18n="dayMon">จ. / Monday</option>
+                            <option value="2" data-i18n="dayTue">อ. / Tuesday</option>
+                            <option value="3" data-i18n="dayWed">พ. / Wednesday</option>
+                            <option value="4" data-i18n="dayThu">พฤ. / Thursday</option>
+                            <option value="5" data-i18n="dayFri">ศ. / Friday</option>
+                            <option value="6" data-i18n="daySat">ส. / Saturday</option>
+                        </select>
                     </div>
                     <div>
                         <label
