@@ -263,7 +263,9 @@ let scheduleDates = [];
 let manualOverrides = {};
 
 // Dark Mode state
-let darkMode = localStorage.getItem('schedule_dark') === 'true';
+let darkMode = localStorage.getItem('schedule_dark') !== null 
+    ? localStorage.getItem('schedule_dark') === 'true' 
+    : (window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : false);
 
 // Initial setup on document load
 document.addEventListener('DOMContentLoaded', () => {
@@ -1057,19 +1059,57 @@ function parseUIConfig() {
 
     const offMap = {};
     offData.forEach(req => {
-        const d = isCustomDateRange ? req.date.trim() : parseInt(req.date);
-        if (d && req.names) {
-            const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
-            if (!offMap[d]) offMap[d] = new Set();
-            namesArr.forEach(n => offMap[d].add(n));
+        const dateStr = String(req.date).trim();
+        if (isCustomDateRange) {
+            if (dateStr && req.names) {
+                const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
+                if (!offMap[dateStr]) offMap[dateStr] = new Set();
+                namesArr.forEach(n => offMap[dateStr].add(n));
+            }
+        } else {
+            if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                const start = parseInt(parts[0]);
+                const end = parseInt(parts[1]);
+                if (!isNaN(start) && !isNaN(end) && start <= end) {
+                    const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
+                    for (let i = start; i <= end; i++) {
+                        if (!offMap[i]) offMap[i] = new Set();
+                        namesArr.forEach(n => offMap[i].add(n));
+                    }
+                }
+            } else {
+                const d = parseInt(dateStr);
+                if (d && req.names) {
+                    const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
+                    if (!offMap[d]) offMap[d] = new Set();
+                    namesArr.forEach(n => offMap[d].add(n));
+                }
+            }
         }
     });
 
     const extraSlotsMap = {};
     extraSlotsData.forEach(req => {
-        const d = isCustomDateRange ? req.date.trim() : parseInt(req.date);
+        const dateStr = String(req.date).trim();
         const s = req.slots;
-        if (d && s) extraSlotsMap[d] = s;
+        if (isCustomDateRange) {
+            if (dateStr && s) extraSlotsMap[dateStr] = s;
+        } else {
+            if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                const start = parseInt(parts[0]);
+                const end = parseInt(parts[1]);
+                if (!isNaN(start) && !isNaN(end) && start <= end && s) {
+                    for (let i = start; i <= end; i++) {
+                        extraSlotsMap[i] = s;
+                    }
+                }
+            } else {
+                const d = parseInt(dateStr);
+                if (d && s) extraSlotsMap[d] = s;
+            }
+        }
     });
 
     const doctorRoles = {};
@@ -1286,14 +1326,14 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
             if (balanceShifts) {
                 if (isHol) {
                     const diff = (hCounts[a] + noise[a]) - (hCounts[b] + noise[b]);
-                    if (Math.abs(diff) > 0.4) return diff;
+                    if (diff !== 0) return diff;
                 } else {
                     const diff = (wCounts[a] + noise[a]) - (wCounts[b] + noise[b]);
-                    if (Math.abs(diff) > 0.4) return diff;
+                    if (diff !== 0) return diff;
                 }
 
                 const diffT = (tCounts[a] + noise[a]) - (tCounts[b] + noise[b]);
-                if (Math.abs(diffT) > 0.4) return diffT;
+                if (diffT !== 0) return diffT;
             }
 
             if (preventLongGaps) {
@@ -1788,7 +1828,7 @@ window.generateSchedule = async function () {
             }
             document.getElementById('resultsContainer')?.classList.add('hidden');
         } else {
-            showToast(currentLang === 'th' ? "เกิดข้อผิดพลาดในการคำนวณ" : "Error calculating schedule", true);
+            showToast(error.message || (currentLang === 'th' ? "เกิดข้อผิดพลาดในการคำนวณ" : "Error calculating schedule"), true);
         }
     }
 };

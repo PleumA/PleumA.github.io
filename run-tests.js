@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const path = require('path');
 
 const testsDir = path.join(__dirname, 'tests');
@@ -13,12 +13,17 @@ for (const file of testFiles) {
     console.log(`========================================================`);
     console.log(`▶️  RUNNING SUITE: ${file}`);
     console.log(`========================================================`);
-    try {
-        // Execute each test file synchronously, piping output directly to the console
-        execSync(`node "${path.join(testsDir, file)}"`, { encoding: 'utf8', stdio: 'inherit' });
-    } catch (err) {
+
+    // Use spawnSync so we can capture both stdout and stderr
+    const result = spawnSync('node', [path.join(testsDir, file)], { encoding: 'utf8' });
+    const output = (result.stdout || '') + (result.stderr || '');
+    process.stdout.write(output);
+
+    // Detect any FAILED lines in output regardless of exit code
+    const hasFailed = result.status !== 0 || /❌.*FAILED/.test(output) || /FAILED:\s*[1-9]/.test(output);
+    if (hasFailed) {
         allPassed = false;
-        console.error(`\n❌ [FAILED] ${file} exited with code ${err.status}`);
+        if (result.status !== 0) process.stdout.write(`\n❌ [FAILED] ${file} exited with code ${result.status}\n`);
     }
     console.log('\n'); // Spacing between suites
 }
@@ -28,6 +33,6 @@ if (allPassed) {
     console.log("🎉 ALL TEST SUITES PASSED SUCCESSFULLY!");
     process.exit(0);
 } else {
-    console.error("💥 SOME TEST SUITES FAILED. Check the output logs above.");
+    console.log("💥 SOME TEST SUITES FAILED. Check the output logs above.");
     process.exit(1);
 }

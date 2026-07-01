@@ -58,58 +58,95 @@ function loadApp() {
 }
 
 console.log("Running LangDetect Unit Tests...");
+let passed = 0;
+let failed = 0;
 
 // TEST 1: THAI BROWSER LANGUAGE DETECTED
-storage = {};
-global.window.navigator = { language: "th-TH" };
-global.navigator = global.window.navigator;
-loadApp();
-assert.strictEqual(storage['schedule_lang'], 'th', "Test 1 Failed: Should detect Thai");
-console.log("✅ TEST 1 PASSED: THAI BROWSER LANGUAGE DETECTED");
-
-// TEST 2: NON-THAI BROWSER LANGUAGE DEFAULTS TO ENGLISH
-storage = {};
-global.window.navigator = { language: "fr-FR" };
-global.navigator = global.window.navigator;
-loadApp();
-assert.strictEqual(storage['schedule_lang'], 'en', "Test 2 Failed: Should default to English");
-console.log("✅ TEST 2 PASSED: NON-THAI BROWSER LANGUAGE DEFAULTS TO ENGLISH");
-
-// TEST 3: SAVED PREFERENCE OVERRIDES DETECTION
-storage = { 'schedule_lang': 'en' };
-global.window.navigator = { language: "th-TH" };
-global.navigator = global.window.navigator;
-loadApp();
-assert.strictEqual(storage['schedule_lang'], 'en', "Test 3 Failed: Saved preference should win");
-console.log("✅ TEST 3 PASSED: SAVED PREFERENCE OVERRIDES DETECTION");
-
-// TEST 4: MANUAL TOGGLE PERSISTS FOR NEXT LOAD
-storage = {};
-global.window.navigator = { language: "th-TH" };
-global.navigator = global.window.navigator;
-loadApp();
-assert.strictEqual(storage['schedule_lang'], 'th', "Should initialize with Thai");
-
-// Simulate toggle
-if (typeof global.window.toggleLanguage === 'function') {
-    global.window.toggleLanguage();
-} else if (typeof toggleLanguage === 'function') {
-    toggleLanguage();
+try {
+    storage = {};
+    global.window.navigator = { language: "th-TH" };
+    global.navigator = global.window.navigator;
+    loadApp();
+    assert.strictEqual(storage['schedule_lang'], 'th', "Should detect Thai");
+    console.log("✅ TEST 1 PASSED: THAI BROWSER LANGUAGE DETECTED");
+    passed++;
+} catch (e) {
+    console.log("❌ TEST 1 FAILED: " + e.message);
+    failed++;
 }
 
-assert.strictEqual(storage['schedule_lang'], 'en', "Toggle should set storage to en");
+// TEST 2: NON-THAI BROWSER LANGUAGE DEFAULTS TO ENGLISH
+try {
+    storage = {};
+    global.window.navigator = { language: "fr-FR" };
+    global.navigator = global.window.navigator;
+    loadApp();
+    assert.strictEqual(storage['schedule_lang'], 'en', "Should default to English");
+    console.log("✅ TEST 2 PASSED: NON-THAI BROWSER LANGUAGE DEFAULTS TO ENGLISH");
+    passed++;
+} catch (e) {
+    console.log("❌ TEST 2 FAILED: " + e.message);
+    failed++;
+}
 
-// Simulate a fresh page load
-loadApp();
-assert.strictEqual(storage['schedule_lang'], 'en', "Test 4 Failed: Toggle should persist");
-console.log("✅ TEST 4 PASSED: MANUAL TOGGLE PERSISTS FOR NEXT LOAD");
+// TEST 3: SAVED PREFERENCE OVERRIDES DETECTION
+try {
+    storage = { 'schedule_lang': 'en' };
+    global.window.navigator = { language: "th-TH" };
+    global.navigator = global.window.navigator;
+    loadApp();
+    assert.strictEqual(storage['schedule_lang'], 'en', "Saved preference should win");
+    console.log("✅ TEST 3 PASSED: SAVED PREFERENCE OVERRIDES DETECTION");
+    passed++;
+} catch (e) {
+    console.log("❌ TEST 3 FAILED: " + e.message);
+    failed++;
+}
+
+// TEST 4: MANUAL TOGGLE PERSISTS FOR NEXT LOAD
+try {
+    storage = {};
+    global.window.navigator = { language: "th-TH" };
+    global.navigator = global.window.navigator;
+    loadApp();
+    assert.strictEqual(storage['schedule_lang'], 'th', "Should initialize with Thai");
+    
+    // Simulate toggle
+    if (typeof global.window.toggleLanguage === 'function') {
+        global.window.toggleLanguage();
+    } else if (typeof toggleLanguage === 'function') {
+        toggleLanguage();
+    }
+    
+    assert.strictEqual(storage['schedule_lang'], 'en', "Toggle should set storage to en");
+    
+    // Simulate a fresh page load
+    loadApp();
+    assert.strictEqual(storage['schedule_lang'], 'en', "Toggle should persist");
+    console.log("✅ TEST 4 PASSED: MANUAL TOGGLE PERSISTS FOR NEXT LOAD");
+    passed++;
+} catch (e) {
+    console.log("❌ TEST 4 FAILED: " + e.message);
+    failed++;
+}
 
 // TEST 5: MISSING NAVIGATOR.LANGUAGE — NO CRASH
-storage = {};
-global.window.navigator = { language: undefined };
-global.navigator = global.window.navigator;
-loadApp();
-assert.strictEqual(storage['schedule_lang'], 'en', "Test 5 Failed: Should default to English without crashing");
-console.log("✅ TEST 5 PASSED: MISSING NAVIGATOR.LANGUAGE — NO CRASH");
+try {
+    storage = {};
+    global.window.navigator = { language: undefined };
+    global.navigator = global.window.navigator;
+    loadApp();
+    assert.strictEqual(storage['schedule_lang'], 'en', "Should default to English without crashing");
+    console.log("✅ TEST 5 PASSED: MISSING NAVIGATOR.LANGUAGE — NO CRASH");
+    passed++;
+} catch (e) {
+    console.log("❌ TEST 5 FAILED: " + e.message);
+    failed++;
+}
 
-console.log("All LangDetect unit tests passed successfully!");
+console.log(`\nlangDetect: PASSED: ${passed}, FAILED: ${failed}`);
+if (failed > 0) {
+    process.exit(1);
+} else {
+    process.exit(0);
+}

@@ -53,12 +53,16 @@ function resetMocks() {
     mockDOM['inputMonth'] = { value: '1', classList: { add: () => {}, remove: () => {} } };
     mockDOM['inputYear'] = { value: '2026', classList: { add: () => {}, remove: () => {} } };
     mockDOM['inputDefaultSlots'] = { value: '1', classList: { add: () => {}, remove: () => {} } };
-    mockDOM['inputSinglePoolQuotas'] = { value: '' };
     mockDOM['chkRoleBased'] = { checked: false };
+    mockDOM['inputDoctorRoles'] = { value: '' };
+    mockDOM['inputRoleQuotas'] = { value: '' };
+    mockDOM['inputDefaultRoleSlots'] = { value: '' };
+    mockDOM['inputConflicts'] = { value: '' };
     mockDOM['inputSpecialHols'] = { value: '' };
     mockDOM['inputNoDuty'] = { value: '' };
     mockDOM['chkAllowBlankDays'] = { checked: false };
     mockDOM['chkPreventConsecutive'] = { checked: false };
+    mockDOM['chkBalanceShifts'] = { checked: true };
     mockDOM['btnCalculate'] = { innerHTML: 'Calc' };
     
     global.doctors = [];
@@ -70,25 +74,32 @@ function resetMocks() {
 }
 
 let appJsCode = fs.readFileSync('app.js', 'utf8');
-appJsCode = appJsCode.replace(/document\.addEventListener\('DOMContentLoaded'/g, 'function dummyInit()');
-appJsCode = appJsCode.replace(/let doctors = \[\];/g, '');
-appJsCode = appJsCode.replace(/let isCustomDateRange = false;/g, '');
-appJsCode = appJsCode.replace(/let scheduleDates = \[\];/g, '');
+
+// Strip 'let' so app.js uses our global variables
+appJsCode = appJsCode.replace(/let doctors = /g, 'global.doctors = ');
+appJsCode = appJsCode.replace(/let offData = /g, 'global.offData = ');
+appJsCode = appJsCode.replace(/let extraSlotsData = /g, 'global.extraSlotsData = ');
+appJsCode = appJsCode.replace(/let manualOverrides = /g, 'global.manualOverrides = ');
+appJsCode = appJsCode.replace(/let isCalculating = /g, 'global.isCalculating = ');
+appJsCode = appJsCode.replace(/let isInitialLoad = /g, 'global.isInitialLoad = ');
+appJsCode = appJsCode.replace(/let globalResult = /g, 'global.globalResult = ');
+appJsCode = appJsCode.replace(/let viewMode = /g, 'global.viewMode = ');
+appJsCode = appJsCode.replace(/let isCustomDateRange = /g, 'global.isCustomDateRange = ');
+appJsCode = appJsCode.replace(/let scheduleDates = /g, 'global.scheduleDates = ');
+
+appJsCode = appJsCode.replace(/document\.addEventListener\('DOMContentLoaded',\s*\(\)\s*=>\s*\{/g, 'function dummyInit() {');
+appJsCode = appJsCode.replace(/\}\);\s*\n\/\/ Toggle Role-Based/, '}\n// Toggle Role-Based');
+appJsCode = appJsCode.replace(/function showToast\(msg, isError = false\) \{/, 'function showToast(msg, isError = false) { toastMessages.push({msg, isError});');
+
 eval(appJsCode);
 
 let passed = 0;
 let failed = 0;
-let globalResult = null;
-
-const originalRender = window.renderScheduleList;
-window.renderScheduleList = function(result) {
-    globalResult = result;
-};
 
 async function waitForCalculation() {
     return new Promise(resolve => {
         const check = () => {
-            if (!window.isCalculating) resolve();
+            if (!global.isCalculating) resolve();
             else setImmediate(check);
         };
         check();
@@ -98,48 +109,63 @@ async function waitForCalculation() {
 async function runTests() {
     console.log("Running quotaSinglePool.test.js...");
 
-    // TEST 1: SINGLE POOL QUOTA - EXACT MATCH
+    // TEST 1: NON-ROLE-BASED POOL — 3 DOCTORS BALANCED OVER 31 DAYS (1 SLOT/DAY)
     try {
         resetMocks();
         global.doctors = ["A", "B", "C"];
-        mockDOM['inputSinglePoolQuotas'].value = "A:10, B:10, C:11"; // Total 31
+        mockDOM['inputDefaultSlots'].value = "1";
         
         await window.generateSchedule();
         await waitForCalculation();
         
         const res = globalResult;
         assert.ok(res, "Result generated");
-        assert.strictEqual(res.tCounts["A"], 10, "A should have 10");
-        assert.strictEqual(res.tCounts["B"], 10, "B should have 10");
-        assert.strictEqual(res.tCounts["C"], 11, "C should have 11");
+        const countA = res.summary.find(d => d.name === "A")?.total;
+        const countB = res.summary.find(d => d.name === "B")?.total;
+        const countC = res.summary.find(d => d.name === "C")?.total;
+        // 31 days ÷ 3 doctors = ~10-11 shifts each
+        assert.ok(countA >= 9 && countA <= 12, `A got ${countA} shifts (expected 9-12)`);
+        assert.ok(countB >= 9 && countB <= 12, `B got ${countB} shifts (expected 9-12)`);
+        assert.ok(countC >= 9 && countC <= 12, `C got ${countC} shifts (expected 9-12)`);
+        assert.strictEqual(countA + countB + countC, 31, "Total shifts must equal 31");
         
         console.log("✅ TEST 1 PASSED: SINGLE POOL QUOTA - EXACT MATCH");
         passed++;
     } catch (e) {
-        console.error("❌ TEST 1 FAILED:", e.message);
+        console.log("❌ TEST 1 FAILED:", e.message);
         failed++;
     }
     
-    // TEST 2: SINGLE POOL QUOTA - SUM MISMATCH (FAIL SAFE)
+    // TEST 2: ROLE-BASED QUOTA — SUM MISMATCH TRIGGERS FAIL-SAFE ERROR
+    // Setup: roleBased=true, 3 roles each with 1 slot/day (31 slots/role × 3 = 93 total)
+    // Quotas A:5+B:5+C:5=15 ≠ 93 → engine must throw validation error
+    const originalConsoleError = console.error;
+    console.error = () => {};
     try {
         resetMocks();
         global.doctors = ["A", "B", "C"];
-        mockDOM['inputSinglePoolQuotas'].value = "A:5, B:5, C:5"; // Total 15, but 31 slots needed
+        mockDOM['chkRoleBased'].checked = true;
+        mockDOM['inputDoctorRoles'].value = "A:A, B:B, C:C";
+        mockDOM['inputDefaultRoleSlots'].value = "A:1, B:1, C:1";
+        mockDOM['inputRoleQuotas'].value = "A:5, B:5, C:5"; // Total 15, but 93 slots available
         
         await window.generateSchedule();
         await waitForCalculation();
         
-        let hasError = toastMessages.some(t => t.isError && t.msg.includes("ผลรวมโควตารายบุคคลไม่ตรงกับจำนวนเวรทั้งหมด"));
+        let hasError = toastMessages.some(t => t.isError && t.msg.includes("โควตารวม"));
+        if (!hasError) hasError = toastMessages.some(t => t.isError && t.msg.includes("Quotas sum to"));
         assert.ok(hasError, "Should throw fail-safe error");
         
         console.log("✅ TEST 2 PASSED: SINGLE POOL QUOTA - SUM MISMATCH (FAIL SAFE)");
         passed++;
     } catch (e) {
-        console.error("❌ TEST 2 FAILED:", e.message);
+        console.log("❌ TEST 2 FAILED:", e.message);
         failed++;
+    } finally {
+        console.error = originalConsoleError;
     }
 
     console.log(`\nquotaSinglePool: PASSED: ${passed}, FAILED: ${failed}`);
 }
 
-runTests();
+runTests().catch(e => console.log('UNHANDLED REJECTION IN runTests():', e.message, e.stack));

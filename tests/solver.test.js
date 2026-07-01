@@ -74,6 +74,8 @@ let appJsCode = fs.readFileSync('./app.js', 'utf8');
 eval(appJsCode);
 
 console.log("Running Solver Unit Tests...");
+let passed = 0;
+let failed = 0;
 
 // TEST 1: Quotas that don't sum correctly
 resetMocks();
@@ -86,11 +88,16 @@ try {
     parseUIConfig();
     assert.fail("Should have thrown quota sum error");
 } catch (e) {
-    if (!e.message.includes("120") || !e.message.includes("62")) {
-        console.error("Test 1 Failed: Wrong error message:", e.message);
-        process.exit(1);
+    if (e.name === 'AssertionError') {
+        console.log("❌ TEST 1 FAILED: " + e.message);
+        failed++;
+    } else if (!e.message.includes("120") || !e.message.includes("62")) {
+        console.log("❌ TEST 1 FAILED: Wrong error message: " + e.message);
+        failed++;
+    } else {
+        console.log("✅ TEST 1 PASSED: Quotas that don't sum correctly throw expected error.");
+        passed++;
     }
-    console.log("✅ TEST 1 PASSED: Quotas that don't sum correctly throw expected error.");
 }
 
 // TEST 2: Circular conflict lists
@@ -103,13 +110,13 @@ try {
     let config2 = parseUIConfig();
     const candidate = generateSingleScheduleCandidate(0, false, config2);
     if (candidate.schedule.length !== 31) {
-        console.error("Test 2 Failed: Schedule length is not 31.");
-        process.exit(1);
+        throw new Error("Schedule length is not 31.");
     }
     console.log("✅ TEST 2 PASSED: Circular conflicts fall back cleanly without infinite looping.");
+    passed++;
 } catch (e) {
-    console.error("Test 2 Failed: Solver crashed on circular conflicts:", e.message);
-    process.exit(1);
+    console.log("❌ TEST 2 FAILED: Solver crashed on circular conflicts: " + e.message);
+    failed++;
 }
 
 // TEST 3: Impossible constraint combinations (e.g., hard quota lockouts leading to coverage error)
@@ -124,11 +131,21 @@ try {
     generateSingleScheduleCandidate(0, false, config3);
     assert.fail("Should have thrown coverage error");
 } catch (e) {
-    if (!e.message.includes("Critical Coverage Error")) {
-        console.error("Test 3 Failed: Wrong error message:", e.message);
-        process.exit(1);
+    if (e.name === 'AssertionError') {
+        console.log("❌ TEST 3 FAILED: " + e.message);
+        failed++;
+    } else if (!e.message.includes("Critical Coverage Error")) {
+        console.log("❌ TEST 3 FAILED: Wrong error message: " + e.message);
+        failed++;
+    } else {
+        console.log("✅ TEST 3 PASSED: Impossible constraints throw Critical Coverage Error.");
+        passed++;
     }
-    console.log("✅ TEST 3 PASSED: Impossible constraints throw Critical Coverage Error.");
 }
 
-console.log("All unit tests passed successfully!");
+console.log(`\nsolver: PASSED: ${passed}, FAILED: ${failed}`);
+if (failed > 0) {
+    process.exit(1);
+} else {
+    process.exit(0);
+}

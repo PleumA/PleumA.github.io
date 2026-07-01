@@ -65,21 +65,17 @@ function resetMocks() {
 }
 
 let appJsCode = fs.readFileSync('app.js', 'utf8');
-appJsCode = appJsCode.replace(/document\.addEventListener\('DOMContentLoaded'/g, 'function dummyInit()');
+appJsCode = appJsCode.replace(/document\.addEventListener\('DOMContentLoaded',\s*\(\)\s*=>\s*\{/g, 'function dummyInit() {');
+appJsCode = appJsCode.replace(/\}\);\s*\n\/\/ Toggle Role-Based/, '}\n// Toggle Role-Based');
 appJsCode = appJsCode.replace(/let doctors = \[\];/g, '');
 appJsCode = appJsCode.replace(/let isCustomDateRange = false;/g, '');
 appJsCode = appJsCode.replace(/let scheduleDates = \[\];/g, '');
 appJsCode = appJsCode.replace(/let offData = \[\];/g, 'global.offData = [];');
+appJsCode = appJsCode.replace(/let globalResult = null;/g, 'global.globalResult = null;');
 eval(appJsCode);
 
 let passed = 0;
 let failed = 0;
-let globalResult = null;
-
-const originalRender = window.renderScheduleList;
-window.renderScheduleList = function(result) {
-    globalResult = result;
-};
 
 async function waitForCalculation() {
     return new Promise(resolve => {
