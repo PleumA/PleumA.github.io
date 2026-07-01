@@ -134,7 +134,10 @@ const translations = {
         roleQuotasPlaceholder: "เช่น R1:12, R2:10",
         csvPlaceholder1: "เช่น 13, 14, 15",
         csvPlaceholder2: "เช่น 15, 16",
-        docRolesPlaceholder: "เช่น A:R1, B:R2, C:Staff"
+        docRolesPlaceholder: "เช่น A:R1, B:R2, C:Staff",
+        offRequestsNoDocs: "ไม่มีรายชื่อแพทย์",
+        offRequestsNone: "ยังไม่มีการกำหนดวันขอพัก",
+        customSlotsNone: "ยังไม่มีการระบุจำนวนแพทย์เฉพาะวัน"
     },
     en: {
         title: "Automatic On-Call Scheduler",
@@ -244,7 +247,10 @@ const translations = {
         roleQuotasPlaceholder: "e.g. R1:12, R2:10",
         csvPlaceholder1: "e.g. 13, 14, 15",
         csvPlaceholder2: "e.g. 15, 16",
-        docRolesPlaceholder: "e.g. A:R1, B:R2, C:Staff"
+        docRolesPlaceholder: "e.g. A:R1, B:R2, C:Staff",
+        offRequestsNoDocs: "No doctors in list",
+        offRequestsNone: "No off requests set",
+        customSlotsNone: "No custom slots set"
     }
 };
 
@@ -464,6 +470,14 @@ function toggleRoleBasedUI() {
     const panel = document.getElementById('roleBasedSettings');
     if (panel) {
         panel.style.display = isOn ? '' : 'none';
+    }
+    const defaultSlotsContainer = document.getElementById('defaultSlotsContainer');
+    if (defaultSlotsContainer) {
+        if (isOn) {
+            defaultSlotsContainer.classList.add('hidden');
+        } else {
+            defaultSlotsContainer.classList.remove('hidden');
+        }
     }
 }
 
@@ -886,7 +900,7 @@ function showToast(msg, isError = false) {
 function renderOffRequests() {
     const container = document.getElementById('offRequestsList');
     if (offData.length === 0) {
-        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-550 text-center py-2">${translations[currentLang].offRequestsNoDocs}</p>`;
+        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-550 text-center py-2">${translations[currentLang].offRequestsNone || ''}</p>`;
         return;
     }
     container.innerHTML = '';
@@ -938,7 +952,7 @@ function deleteOffRow(id) {
 function renderExtraSlots() {
     const container = document.getElementById('extraSlotsList');
     if (extraSlotsData.length === 0) {
-        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-550 text-center py-2">${translations[currentLang].offRequestsNoDocs}</p>`;
+        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-550 text-center py-2">${translations[currentLang].customSlotsNone || ''}</p>`;
         return;
     }
     container.innerHTML = '';
