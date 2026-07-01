@@ -968,8 +968,8 @@ function renderOffRequests() {
         const selectedNames = req.names.split(',').map(n => n.trim()).filter(n => n);
 
         div.innerHTML = `
-            <div class="w-16 shrink-0 font-sans">
-                <input type="number" min="1" max="31" placeholder="วัน" value="${req.date}" onchange="updateOffRow(${req.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
+            <div class="${isCustomDateRange ? 'w-56' : 'w-48'} shrink-0 font-sans">
+                <input type="text" placeholder="${isCustomDateRange ? (currentLang === 'th' ? 'เช่น 20/05/2026 หรือ 25/02/2026-04/03/2026' : 'e.g. 20/05/2026, or 25/02/2026-04/03/2026') : (currentLang === 'th' ? 'เช่น 5, 12 หรือ 2-10' : 'e.g. 5, 12, or 2-10')}" value="${req.date}" onchange="updateOffRow(${req.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
             </div>
             <div class="relative flex-1">
                 <button type="button" onclick="toggleDropdown(event, 'dropdown-${req.id}')" class="w-full text-left border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-slate-900 flex justify-between items-center hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
@@ -1233,36 +1233,102 @@ function parseUIConfig() {
         if (dayOfWeek === 0 || dayOfWeek === 6) holidaySet.add(d);
     }
 
+    const parseDateDDMMYYYY = (str) => {
+        const parts = str.split('/');
+        if (parts.length !== 3) return null;
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const y = parseInt(parts[2], 10);
+        const date = new Date(y, m, d);
+        if (isNaN(date.getTime())) return null;
+        return date;
+    };
+
+    const formatDateDDMMYYYY = (date) => {
+        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    };
+
     const offMap = {};
     offData.forEach(req => {
-        const dateStr = String(req.date).trim();
-        if (isCustomDateRange) {
-            if (dateStr && req.names) {
-                const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
-                if (!offMap[dateStr]) offMap[dateStr] = new Set();
-                namesArr.forEach(n => offMap[dateStr].add(n));
-            }
-        } else {
-            if (dateStr.includes('-')) {
-                const parts = dateStr.split('-');
-                const start = parseInt(parts[0]);
-                const end = parseInt(parts[1]);
-                if (!isNaN(start) && !isNaN(end) && start <= end) {
-                    const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
-                    for (let i = start; i <= end; i++) {
-                        if (!offMap[i]) offMap[i] = new Set();
-                        namesArr.forEach(n => offMap[i].add(n));
+        const fullDateStr = String(req.date).trim();
+        if (!fullDateStr || !req.names) return;
+        
+        const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
+        if (namesArr.length === 0) return;
+
+        const tokens = fullDateStr.split(',').map(t => t.trim()).filter(t => t);
+        
+        tokens.forEach(token => {
+            if (isCustomDateRange) {
+                if (token.includes('-')) {
+                    const parts = token.split('-');
+                    const startStr = parts[0].trim();
+                    const endStr = parts[1].trim();
+                    const startDate = parseDateDDMMYYYY(startStr);
+                    const endDate = parseDateDDMMYYYY(endStr);
+                    
+                    if (startDate && endDate) {
+                        if (startDate > endDate) {
+                            showToast(currentLang === 'th' ? `ช่วงวันที่ไม่ถูกต้อง: ${token}` : `Invalid date range: ${token}`, "error");
+                            return;
+                        }
+                        const spanDays = Math.round((endDate - startDate) / 86400000) + 1;
+                        if (spanDays > 90) {
+                            showToast(currentLang === 'th' ? `ช่วงวันที่ยาวเกินไป (>90 วัน): ${token}` : `Date range too long (>90 days): ${token}`, "warning");
+                        }
+                        for (let i = 0; i < spanDays; i++) {
+                            const curDate = new Date(startDate.getTime() + i * 86400000);
+                            const curStr = formatDateDDMMYYYY(curDate);
+                            if (!offMap[curStr]) offMap[curStr] = new Set();
+                            namesArr.forEach(n => offMap[curStr].add(n));
+                        }
+                    } else {
+                        showToast(currentLang === 'th' ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}` : `Invalid date format: ${token}`, "warning");
+                    }
+                } else {
+                    const d = parseDateDDMMYYYY(token);
+                    if (d) {
+                        const curStr = formatDateDDMMYYYY(d);
+                        if (!offMap[curStr]) offMap[curStr] = new Set();
+                        namesArr.forEach(n => offMap[curStr].add(n));
+                    } else {
+                        showToast(currentLang === 'th' ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}` : `Invalid date format: ${token}`, "warning");
                     }
                 }
             } else {
-                const d = parseInt(dateStr);
-                if (d && req.names) {
-                    const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
-                    if (!offMap[d]) offMap[d] = new Set();
-                    namesArr.forEach(n => offMap[d].add(n));
+                if (token.includes('-')) {
+                    const parts = token.split('-');
+                    const start = parseInt(parts[0], 10);
+                    const end = parseInt(parts[1], 10);
+                    if (!isNaN(start) && !isNaN(end)) {
+                        if (start > end) {
+                            showToast(currentLang === 'th' ? `ช่วงวันที่ไม่ถูกต้อง: ${token}` : `Invalid date range: ${token}`, "error");
+                            return;
+                        }
+                        if (end - start + 1 > 90) {
+                            showToast(currentLang === 'th' ? `ช่วงวันที่ยาวเกินไป (>90 วัน): ${token}` : `Date range too long (>90 days): ${token}`, "warning");
+                        }
+                        for (let i = start; i <= end; i++) {
+                            if (!offMap[i]) offMap[i] = new Set();
+                            namesArr.forEach(n => offMap[i].add(n));
+                        }
+                    } else {
+                        showToast(currentLang === 'th' ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}` : `Invalid format: ${token}`, "warning");
+                    }
+                } else {
+                    const d = parseInt(token, 10);
+                    if (!isNaN(d)) {
+                        if (!offMap[d]) offMap[d] = new Set();
+                        namesArr.forEach(n => offMap[d].add(n));
+                    } else {
+                        showToast(currentLang === 'th' ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}` : `Invalid format: ${token}`, "warning");
+                    }
                 }
             }
-        }
+        });
     });
 
     const extraSlotsMap = {};
