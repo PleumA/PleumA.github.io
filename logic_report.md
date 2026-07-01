@@ -89,9 +89,10 @@ Before any scheduling runs, this function translates human input fields from the
 2.  **Special Holidays**: Parses comma-separated holiday strings into a `Set` for $O(1)$ lookup speeds.
 3.  **No-Duty Days**: Converts days with no active shifts into another lookup `Set`.
 4.  **Unified Quotas**: Parses exact monthly limits into the unified `quota` dictionary. In Role-Based Mode, parses limits (e.g. `R1:12, R2:10`) into `{ "R1": 12, "R2": 10 }`. In Single-Pool Mode, parses per-doctor limits (e.g. `A:5, B:4`) into `{ "A": 5, "B": 4 }`. Values $\le 0$ are discarded, and unknown keys trigger warnings.
-5.  **Conflict Lists**: Parses items like `A:B` into bidirectional sets: `{ "A": Set("B"), "B": Set("A") }`.
-6.  **Locked Special Rules**: Extracts locked doctor arrays for specific early days of the month.
-7.  **Custom Date Range Logic**: If `isCustomDateRange` is active, computes an exact timeline array (`scheduleDates`) of `Date` objects from the start to end date (up to 90 days), and normalizes the `totalDaysInMonth` loop boundary.
+5.  **Off Requests (`offMap`)**: Parses comma-separated values and date ranges (e.g. `1, 3-5, 10` or `25/02/2026-04/03/2026`). In Custom Date Range mode, ranges are parsed using standard `DD/MM/YYYY` formats and expanded day-by-day crossing month boundaries. In Standard mode, ranges are evaluated as day-number integers. Validations are checked (inverted range errors, >90 day warnings) and elements are expanded into a fast-lookup `offMap`: `{ [dateKey]: Set(doctorNames) }`.
+6.  **Conflict Lists**: Parses items like `A:B` into bidirectional sets: `{ "A": Set("B"), "B": Set("A") }`.
+7.  **Locked Special Rules**: Extracts locked doctor arrays for specific early days of the month.
+8.  **Custom Date Range Logic**: If `isCustomDateRange` is active, computes an exact timeline array (`scheduleDates`) of `Date` objects from the start to end date (up to 90 days), and normalizes the `totalDaysInMonth` loop boundary.
 
 ### 2. Pre-flight Quota Calculation
 When any quotas are defined (`hasQuotas` is true), the algorithm runs a check:

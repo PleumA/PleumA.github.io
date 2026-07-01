@@ -4,6 +4,13 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-01
+### Added
+- **Off Request Date Ranges**: Supported comma-separated multiple entries (e.g. `5, 12`) and spanning date ranges (e.g. `2-10` or `25/02/2026-04/03/2026`) in both Standard and Custom Date Range modes.
+- **Off Request Validation**: Proactively throws warning toasts if an off-request range spans more than 90 days, and displays error toasts for inverted range inputs (where start > end).
+- **Flexible UI Inputs**: Upgraded UI fields from number inputs to text inputs, automatically rendering localized helper placeholders for Thai/English.
+- **Off Request Date Range Unit Tests**: Wrote comprehensive unit tests (`tests/offRequest.test.js`) evaluating all input formats, comma separations, spanning limits, and inversion rules.
+
 ## [1.1.0] - 2026-07-01
 ### Added
 - **Mobile View Schedule Floating Button**: Added a floating "View Schedule" button for narrow screens (< 1024px) that appears after the schedule calculation completes, allowing users to smooth-scroll down to the results section. The button automatically hides when the user scrolls down to the results section.
