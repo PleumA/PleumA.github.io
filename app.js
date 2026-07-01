@@ -292,11 +292,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (btnCalendarView) btnCalendarView.classList.add('hidden');
                 if (offNote) offNote.classList.remove('hidden');
                 if (viewMode === 'calendar') window.setViewMode('table');
+                window.handleCustomDateRangeChange();
             } else {
                 customContainer.classList.add('hidden');
                 monthYearContainer.classList.remove('hidden');
                 if (btnCalendarView) btnCalendarView.classList.remove('hidden');
                 if (offNote) offNote.classList.add('hidden');
+                generateSchedule();
             }
         });
     }
@@ -432,6 +434,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const specialDaysInput = document.getElementById('inputSpecialDays');
     if (specialDaysInput) {
         specialDaysInput.addEventListener('change', () => generateSchedule());
+    }
+
+    const inputStartDate = document.getElementById('inputStartDate');
+    if (inputStartDate) {
+        inputStartDate.addEventListener('change', () => window.handleCustomDateRangeChange());
+    }
+    const inputEndDate = document.getElementById('inputEndDate');
+    if (inputEndDate) {
+        inputEndDate.addEventListener('change', () => window.handleCustomDateRangeChange());
     }
 
     // Sync roles mapping input
@@ -2451,9 +2462,22 @@ function renderCalendarView(config) {
 
         dayCell.className = `border rounded-2xl p-2.5 min-h-[110px] flex flex-col gap-1.5 transition-all hover:shadow-md ${cardBg}`;
 
+        let displayDateNum = dayRow.day;
+        let monthLabel = '';
+        if (isCustomDateRange && scheduleDates && scheduleDates[dayRow.day - 1]) {
+            const dateObj = scheduleDates[dayRow.day - 1];
+            displayDateNum = dateObj.getDate();
+            if (displayDateNum === 1 || dayRow.day === 1) {
+                const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const monthNamesTh = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                const mName = currentLang === 'th' ? monthNamesTh[dateObj.getMonth()] : monthNamesEn[dateObj.getMonth()];
+                monthLabel = ` ${mName}`;
+            }
+        }
+
         let dayHeaderHtml = `
             <div class="flex justify-between items-center border-b border-black/5 dark:border-white/5 pb-1">
-                <span class="text-sm ${dateNumClass}">${dayRow.day}</span>
+                <span class="text-sm ${dateNumClass}">${displayDateNum}${monthLabel}</span>
                 <span class="text-[10px] text-slate-400 dark:text-slate-550 font-bold">${dayRow.dayName.substring(0, 3)}</span>
             </div>
         `;
@@ -2798,6 +2822,36 @@ window.exportToExcel = function () {
     }
 };
 
+window.isPendingCalc = false;
+window.handleCustomDateRangeChange = async function() {
+    if (!isCustomDateRange) return;
+    const startStr = document.getElementById('inputStartDate').value;
+    const endStr = document.getElementById('inputEndDate').value;
+    if (startStr && endStr) {
+        const sd = new Date(startStr);
+        const ed = new Date(endStr);
+        if (sd >= ed) {
+            showToast(currentLang === 'th' ? "วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด" : "Start date must be before end date", true);
+            return;
+        }
+        const diffDays = Math.round((ed - sd) / (1000 * 60 * 60 * 24)) + 1;
+        if (diffDays > 90) {
+            showToast(currentLang === 'th' ? "ช่วงวันที่เกิน 90 วัน กรุณาตรวจสอบ" : "Range exceeds 90 days, please check", true);
+            return;
+        }
+        
+        if (isCalculating) {
+            window.isPendingCalc = true;
+            return;
+        }
+        
+        do {
+            window.isPendingCalc = false;
+            await window.generateSchedule();
+        } while (window.isPendingCalc);
+    }
+};
+
 // Explicitly attach all remaining entry points called by inline HTML to window object
 window.addDoctor = addDoctor;
 window.removeDoctor = removeDoctor;
@@ -3041,7 +3095,26 @@ function renderPersonCentricView(config) {
         const dayName = dayRow ? dayRow.dayName.substring(0,2) : '';
         const isHol = dayRow ? dayRow.isHoliday : false;
         let dayClass = isHol ? "text-rose-500 font-bold" : "text-slate-500 dark:text-slate-400";
-        headHtml += `<th class="py-2 px-1 border-b border-slate-200 dark:border-slate-800 text-center w-8 min-w-[32px] ${dayClass}"><div class="text-[10px] font-bold">${dayName}</div><div class="text-xs font-black">${d}</div></th>`;
+        
+        let displayDateNum = d;
+        let monthLabel = '';
+        let borderClass = "border-slate-200 dark:border-slate-800";
+        
+        if (isCustomDateRange && scheduleDates && scheduleDates[d - 1]) {
+            const dateObj = scheduleDates[d - 1];
+            displayDateNum = dateObj.getDate();
+            if (displayDateNum === 1 || d === 1) {
+                const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const monthNamesTh = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                const mName = currentLang === 'th' ? monthNamesTh[dateObj.getMonth()] : monthNamesEn[dateObj.getMonth()];
+                monthLabel = ` ${mName}`;
+            }
+            if (displayDateNum === 1 && d > 1) {
+                 borderClass = "border-l-2 border-indigo-300 dark:border-indigo-700 " + borderClass;
+            }
+        }
+        
+        headHtml += `<th class="py-2 px-1 border-b ${borderClass} text-center w-8 min-w-[32px] ${dayClass}"><div class="text-[10px] font-bold">${dayName}</div><div class="text-xs font-black whitespace-nowrap">${displayDateNum}${monthLabel}</div></th>`;
     }
     headHtml += `</tr>`;
     head.innerHTML = headHtml;
@@ -3063,8 +3136,16 @@ function renderPersonCentricView(config) {
         
         for(let d=1; d<=config.numDays; d++) {
             const dayRow = globalResult.schedule[d-1];
+            
+            let borderClass = "border-slate-200 dark:border-slate-800";
+            if (isCustomDateRange && scheduleDates && scheduleDates[d - 1]) {
+                if (scheduleDates[d - 1].getDate() === 1 && d > 1) {
+                    borderClass = "border-l-2 border-indigo-300 dark:border-indigo-700 " + borderClass;
+                }
+            }
+
             if (!dayRow || dayRow.isNoDuty) {
-                bodyHtml += `<td class="border-b border-slate-200 dark:border-slate-800 bg-slate-200/50 dark:bg-slate-800/40"></td>`;
+                bodyHtml += `<td class="border-b ${borderClass} bg-slate-200/50 dark:bg-slate-800/40"></td>`;
                 continue;
             }
             
@@ -3090,9 +3171,9 @@ function renderPersonCentricView(config) {
                     bgClass = colors[doctors.indexOf(doc) % colors.length];
                 }
                 
-                bodyHtml += `<td class="border-b border-slate-200 dark:border-slate-800 p-0.5 text-center"><div class="rounded w-full h-full text-[10px] font-bold flex items-center justify-center py-1 ${bgClass}">${slotIndices.join(',')}</div></td>`;
+                bodyHtml += `<td class="border-b ${borderClass} p-0.5 text-center"><div class="rounded w-full h-full text-[10px] font-bold flex items-center justify-center py-1 ${bgClass}">${slotIndices.join(',')}</div></td>`;
             } else {
-                bodyHtml += `<td class="border-b border-slate-200 dark:border-slate-800"></td>`;
+                bodyHtml += `<td class="border-b ${borderClass}"></td>`;
             }
         }
         bodyHtml += `</tr>`;

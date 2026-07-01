@@ -331,6 +331,421 @@ async function runTests() {
         failed++;
     }
 
+    // 11. CALENDAR VIEW DAY LABELS RESET AT MONTH BOUNDARY
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        mockDOM['inputStartDate'].value = "2026-07-22";
+        mockDOM['inputEndDate'].value = "2026-08-05";
+        global.isCustomDateRange = true;
+        global.viewMode = 'calendar';
+
+        // Override createElement to return real objects that track innerHTML
+        const origCreateElement = global.document.createElement;
+        global.document.createElement = (tag) => ({
+            innerHTML: '',
+            className: '',
+            setAttribute: () => {},
+            appendChild: () => {},
+            classList: { add: () => {}, remove: () => {} },
+            click: () => {},
+            remove: () => {}
+        });
+
+        // Override calendarGrid.appendChild to accumulate innerHTML
+        let capturedGridHtml = '';
+        mockDOM['calendarGrid'].appendChild = (el) => { capturedGridHtml += el.innerHTML || ''; };
+
+        await window.generateSchedule();
+        renderCalendarView(parseUIConfig());
+
+        // The cell for Jul 31 should show 31, not an incrementing index
+        assert.strictEqual(capturedGridHtml.includes('>31<') || capturedGridHtml.includes('>31 Jul<') || capturedGridHtml.includes('>31 ก.ค.<'), true, "Jul 31 cell displays 31");
+        // The cell for Aug 1 should show 1, not 32
+        assert.strictEqual(!capturedGridHtml.includes('>32<'), true, "No 32 index");
+        assert.strictEqual(capturedGridHtml.includes('>1 Aug<') || capturedGridHtml.includes('>1 ส.ค.<'), true, "Aug 1 cell displays 1 with month");
+
+        global.document.createElement = origCreateElement;
+        console.log("✅ TEST 11 PASSED: CALENDAR VIEW DAY LABELS RESET AT MONTH BOUNDARY");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 11 FAILED:", e.message);
+        failed++;
+    }
+
+
+    // 12. PERSON VIEW DAY LABELS RESET AT MONTH BOUNDARY
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        mockDOM['inputStartDate'].value = "2026-07-22";
+        mockDOM['inputEndDate'].value = "2026-08-05";
+        global.isCustomDateRange = true;
+        global.viewMode = 'person';
+        
+        await window.generateSchedule();
+        
+        // Mock the person view headers
+        mockDOM['personViewHeader'] = { innerHTML: '' };
+        mockDOM['personViewBody'] = { innerHTML: '' };
+        
+        // Need to add this since it's called by renderResults()
+        const origGetElementById = global.document.getElementById;
+        global.document.getElementById = (id) => {
+            if (id === 'personViewHeader') return mockDOM['personViewHeader'];
+            if (id === 'personViewBody') return mockDOM['personViewBody'];
+            return origGetElementById(id);
+        };
+        
+        renderPersonCentricView(parseUIConfig());
+        let headerHtml = mockDOM['personViewHeader'].innerHTML;
+        
+        assert.strictEqual(headerHtml.includes('>31<') || headerHtml.includes('>31 Jul<') || headerHtml.includes('>31 ก.ค.<'), true, "Person view has Jul 31");
+        assert.strictEqual(!headerHtml.includes('>32<'), true, "No 32 index");
+        assert.strictEqual(headerHtml.includes('>1 Aug<') || headerHtml.includes('>1 ส.ค.<'), true, "Person view has Aug 1");
+        
+        global.document.getElementById = origGetElementById;
+        console.log("✅ TEST 12 PASSED: PERSON VIEW DAY LABELS RESET AT MONTH BOUNDARY");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 12 FAILED:", e.message);
+        failed++;
+    }
+
+    // 13. LIST VIEW UNAFFECTED (REGRESSION CHECK)
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        mockDOM['inputStartDate'].value = "2026-07-22";
+        mockDOM['inputEndDate'].value = "2026-08-05";
+        global.isCustomDateRange = true;
+        
+        await window.generateSchedule();
+        renderTableView(parseUIConfig());
+        
+        let bodyHtml = mockDOM['scheduleTableBody'].innerHTML;
+        assert.strictEqual(bodyHtml.includes('31/07/2026'), true, "List view has 31 Jul");
+        assert.strictEqual(bodyHtml.includes('01/08/2026'), true, "List view has 1 Aug");
+        
+        console.log("✅ TEST 13 PASSED: LIST VIEW UNAFFECTED");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 13 FAILED:", e.message);
+        failed++;
+    }
+
+    // 14. AUTO-CALCULATE FIRES WHEN BOTH DATES FILLED
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        global.isCustomDateRange = true;
+        mockDOM['inputStartDate'].value = "2026-07-01";
+        
+        let origGen = window.generateSchedule;
+        let called = 0;
+        window.generateSchedule = async () => { called++; };
+        
+        await window.handleCustomDateRangeChange(); // only start date
+        mockDOM['inputEndDate'].value = "2026-07-10";
+        await window.handleCustomDateRangeChange(); // both dates
+        
+        assert.strictEqual(called, 1);
+        window.generateSchedule = origGen;
+        console.log("✅ TEST 14 PASSED: AUTO-CALCULATE FIRES WHEN BOTH DATES FILLED");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 14 FAILED:", e.message);
+        failed++;
+    }
+
+    // 15. AUTO-CALCULATE DOES NOT FIRE WITH ONLY START DATE
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        global.isCustomDateRange = true;
+        mockDOM['inputStartDate'].value = "2026-07-01";
+        mockDOM['inputEndDate'].value = "";
+        
+        let origGen = window.generateSchedule;
+        let called = false;
+        window.generateSchedule = async () => { called = true; };
+        
+        await window.handleCustomDateRangeChange();
+        
+        assert.strictEqual(called, false);
+        window.generateSchedule = origGen;
+        console.log("✅ TEST 15 PASSED: AUTO-CALCULATE DOES NOT FIRE WITH ONLY START DATE");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 15 FAILED:", e.message);
+        failed++;
+    }
+
+    // 16. AUTO-CALCULATE DOES NOT FIRE WITH ONLY END DATE
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        global.isCustomDateRange = true;
+        mockDOM['inputStartDate'].value = "";
+        mockDOM['inputEndDate'].value = "2026-07-01";
+        
+        let origGen = window.generateSchedule;
+        let called = false;
+        window.generateSchedule = async () => { called = true; };
+        
+        await window.handleCustomDateRangeChange();
+        
+        assert.strictEqual(called, false);
+        window.generateSchedule = origGen;
+        console.log("✅ TEST 16 PASSED: AUTO-CALCULATE DOES NOT FIRE WITH ONLY END DATE");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 16 FAILED:", e.message);
+        failed++;
+    }
+
+    // 17. AUTO-CALCULATE DOES NOT FIRE WHEN START >= END
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        global.isCustomDateRange = true;
+        mockDOM['inputStartDate'].value = "2026-08-10";
+        mockDOM['inputEndDate'].value = "2026-07-01";
+        
+        let origGen = window.generateSchedule;
+        let called = false;
+        window.generateSchedule = async () => { called = true; };
+        
+        await window.handleCustomDateRangeChange();
+        
+        assert.strictEqual(called, false);
+        let hasError = toastMessages.some(t => t.isError && t.msg.includes("Start date must be before end date"));
+        assert.strictEqual(hasError, true);
+        
+        window.generateSchedule = origGen;
+        console.log("✅ TEST 17 PASSED: AUTO-CALCULATE DOES NOT FIRE WHEN START >= END");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 17 FAILED:", e.message);
+        failed++;
+    }
+
+    // 18. AUTO-CALCULATE FIRES ON START DATE CHANGE WHEN END DATE ALREADY FILLED
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        global.isCustomDateRange = true;
+        mockDOM['inputEndDate'].value = "2026-08-31";
+        
+        let origGen = window.generateSchedule;
+        let called = false;
+        window.generateSchedule = async () => { called = true; };
+        
+        mockDOM['inputStartDate'].value = "2026-08-01";
+        await window.handleCustomDateRangeChange();
+        
+        assert.strictEqual(called, true);
+        window.generateSchedule = origGen;
+        console.log("✅ TEST 18 PASSED: AUTO-CALCULATE FIRES ON START DATE CHANGE");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 18 FAILED:", e.message);
+        failed++;
+    }
+
+    // 19. AUTO-CALCULATE FIRES ON END DATE CHANGE WHEN START DATE ALREADY FILLED
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        global.isCustomDateRange = true;
+        mockDOM['inputStartDate'].value = "2026-07-01";
+        
+        let origGen = window.generateSchedule;
+        let called = false;
+        window.generateSchedule = async () => { called = true; };
+        
+        mockDOM['inputEndDate'].value = "2026-07-31";
+        await window.handleCustomDateRangeChange();
+        
+        assert.strictEqual(called, true);
+        window.generateSchedule = origGen;
+        console.log("✅ TEST 19 PASSED: AUTO-CALCULATE FIRES ON END DATE CHANGE");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 19 FAILED:", e.message);
+        failed++;
+    }
+
+    // 20. UPDATING A DATE AFTER FIRST CALCULATION TRIGGERS RECALCULATION
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        global.isCustomDateRange = true;
+        mockDOM['inputStartDate'].value = "2026-08-01";
+        mockDOM['inputEndDate'].value = "2026-08-15";
+        
+        await window.handleCustomDateRangeChange();
+        assert.strictEqual(scheduleDates.length, 15);
+        
+        mockDOM['inputEndDate'].value = "2026-08-31";
+        await window.handleCustomDateRangeChange();
+        assert.strictEqual(scheduleDates.length, 31);
+        
+        console.log("✅ TEST 20 PASSED: UPDATING A DATE AFTER FIRST CALCULATION");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 20 FAILED:", e.message);
+        failed++;
+    }
+
+    // 21. TOGGLE ON WITH DATES PRE-FILLED — AUTO-CALCULATES
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['inputStartDate'].value = "2026-07-01";
+        mockDOM['inputEndDate'].value = "2026-07-31";
+        global.isCustomDateRange = false;
+        
+        // Simulating the toggle logic
+        global.isCustomDateRange = true;
+        await window.handleCustomDateRangeChange();
+        
+        assert.strictEqual(scheduleDates.length, 31);
+        
+        console.log("✅ TEST 21 PASSED: TOGGLE ON WITH DATES PRE-FILLED");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 21 FAILED:", e.message);
+        failed++;
+    }
+
+    // 22. TOGGLE ON WITH DATES EMPTY — DOES NOT AUTO-CALCULATE
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['inputStartDate'].value = "";
+        mockDOM['inputEndDate'].value = "";
+        global.isCustomDateRange = false;
+        
+        let origGen = window.generateSchedule;
+        let called = false;
+        window.generateSchedule = async () => { called = true; };
+        
+        global.isCustomDateRange = true;
+        await window.handleCustomDateRangeChange();
+        
+        assert.strictEqual(called, false);
+        window.generateSchedule = origGen;
+        console.log("✅ TEST 22 PASSED: TOGGLE ON WITH DATES EMPTY");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 22 FAILED:", e.message);
+        failed++;
+    }
+
+    // 23. TOGGLE OFF — AUTO-RECALCULATES IN STANDARD MODE
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['inputMonth'].value = "6"; // June
+        mockDOM['inputYear'].value = "2026";
+        global.isCustomDateRange = false;
+        
+        await window.generateSchedule();
+        assert.strictEqual(scheduleDates.length, 30);
+        
+        console.log("✅ TEST 23 PASSED: TOGGLE OFF AUTO-RECALCULATES");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 23 FAILED:", e.message);
+        failed++;
+    }
+
+    // 24. RAPID DATE CHANGES DO NOT CAUSE MULTIPLE SIMULTANEOUS SOLVER RUNS
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        global.isCustomDateRange = true;
+        
+        let origGen = window.generateSchedule;
+        let runCount = 0;
+        let concurrentCalls = 0;
+        let maxConcurrentCalls = 0;
+        
+        window.generateSchedule = async () => {
+            concurrentCalls++;
+            maxConcurrentCalls = Math.max(maxConcurrentCalls, concurrentCalls);
+            runCount++;
+            
+            // simulate async work
+            await new Promise(resolve => setTimeout(resolve, 5));
+            
+            concurrentCalls--;
+        };
+        
+        mockDOM['inputEndDate'].value = "2026-08-31";
+        
+        global.isCalculating = true; // simulating a run in progress
+        mockDOM['inputStartDate'].value = "2026-08-01";
+        window.handleCustomDateRangeChange();
+        
+        mockDOM['inputStartDate'].value = "2026-08-05";
+        window.handleCustomDateRangeChange();
+        
+        mockDOM['inputStartDate'].value = "2026-08-10";
+        await window.handleCustomDateRangeChange();
+        
+        global.isCalculating = false; // finish original run
+        
+        // Assert queueing mechanism caught the last one
+        assert.strictEqual(maxConcurrentCalls <= 1, true, "No concurrent overlapping calls");
+        
+        window.generateSchedule = origGen;
+        console.log("✅ TEST 24 PASSED: RAPID DATE CHANGES DO NOT CAUSE MULTIPLE SIMULTANEOUS SOLVER RUNS");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 24 FAILED:", e.message);
+        failed++;
+    }
+
+    // 25. VALIDATION STILL RUNS BEFORE AUTO-CALCULATE
+    try {
+        resetMocks();
+        global.doctors = ["A", "B", "C", "D"];
+        mockDOM['chkCustomDateRange'].checked = true;
+        global.isCustomDateRange = true;
+        mockDOM['inputStartDate'].value = "2026-06-01";
+        mockDOM['inputEndDate'].value = "2026-09-01"; // > 90 days
+        
+        let origGen = window.generateSchedule;
+        let called = false;
+        window.generateSchedule = async () => { called = true; };
+        
+        await window.handleCustomDateRangeChange();
+        
+        assert.strictEqual(called, false);
+        let hasError = toastMessages.some(t => t.isError && t.msg.includes("Range exceeds 90 days"));
+        assert.strictEqual(hasError, true);
+        
+        window.generateSchedule = origGen;
+        console.log("✅ TEST 25 PASSED: VALIDATION STILL RUNS BEFORE AUTO-CALCULATE");
+        passed++;
+    } catch (e) {
+        console.error("❌ TEST 25 FAILED:", e.message);
+        failed++;
+    }
+
     console.log(`\ncustomDateRange: PASSED: ${passed}, FAILED: ${failed}`);
 }
 

@@ -1,0 +1,200 @@
+Before writing any code, read app.js in full, specifically 
+renderTableView(), renderCalendarView(), and the Person view 
+rendering function, plus how scheduleDates is populated for 
+custom date range mode.
+
+BUG REPORT: When isCustomDateRange is true and the range spans 
+across a month boundary (e.g. 22 Jul – 31 Aug), the Calendar view 
+and Person view display day labels as a continuously incrementing 
+index (e.g. ...30, 31, 32, 33... 41) instead of resetting at each 
+month boundary and showing the actual date. A label like "32 Sat" 
+or "41 Mon" does not correspond to any real calendar date and is 
+confusing to users.
+
+ROOT CAUSE TO INVESTIGATE: Find where day labels are generated 
+in custom range mode. It's likely using a simple loop counter 
+(dayIndex + startOffset) instead of reading the actual day-of-month 
+and month name from scheduleDates[dayIndex] (a native Date object).
+
+REQUIRED FIX:
+
+1. In renderCalendarView(), when isCustomDateRange is true, each 
+   day cell's displayed number must be 
+   scheduleDates[dayIndex].getDate() (the real day-of-month, 
+   1-31, resetting each month) — not a running index.
+
+2. When a custom range crosses a month boundary, add a visible 
+   month label or divider so the user can tell where one month 
+   ends and the next begins (e.g. a small "August" header above 
+   the first cell of August, or include the month abbreviation 
+   next to the day number for the first day of each new month, 
+   such as "1 Aug").
+
+3. In the Person view (pivoted grid), column headers must show 
+   the actual day-of-month and weekday from scheduleDates[dayIndex], 
+   not a sequential counter. Same month-crossing clarity applies — 
+   if the row of dates crosses into a new month, indicate it 
+   clearly (e.g. a thin divider line between Jul 31 and Aug 1, 
+   or repeat the month abbreviation at each month's first column).
+
+4. In renderTableView() (List view), confirm dates are already 
+   displaying correctly per the original Custom Date Range 
+   implementation (e.g. "22 Jul") — if List view is correct but 
+   Calendar/Person are not, this confirms the bug is isolated to 
+   those two specific renderers using a different (incorrect) 
+   labeling method than List view.
+
+5. Do NOT change anything for standard Month/Year mode 
+   (isCustomDateRange = false) — this bug fix only applies to 
+   custom range rendering paths.
+
+6. add change event listeners to both inputStartDate and inputEndDate. Now, as soon as a user selects or types a date, the app checks if both fields have valid inputs, and if they do, it automatically triggers generateSchedule().
+Updated the Checkbox Toggle (chkCustomDateRange):
+If you toggle the "Custom Date Range" checkbox ON and the start/end dates are already filled in, it will instantly calculate the schedule for that range.
+If you toggle the checkbox OFF (returning to standard Month/Year mode), it automatically recalculates back to the selected standard month.
+I've also updated todo.md with these enhancements
+
+TESTING:
+Add test cases to tests/customDateRange.test.js (append, do not 
+renumber existing tests):
+
+TEST 11: CALENDAR VIEW DAY LABELS RESET AT MONTH BOUNDARY
+- Setup: isCustomDateRange = true, range = 22 Jul to 5 Aug.
+- Assert: the day cell for scheduleDates index corresponding to 
+  Jul 31 displays "31".
+- Assert: the very next day cell (Aug 1) displays "1", not "32".
+- Assert: a month indicator distinguishes the two periods.
+
+TEST 12: PERSON VIEW DAY LABELS RESET AT MONTH BOUNDARY
+- Setup: same range as TEST 11.
+- Assert: the person view column header for the day after Jul 31 
+  shows "1" (or "1 Aug"), not a continued index like "32".
+
+TEST 13: LIST VIEW UNAFFECTED (REGRESSION CHECK)
+- Setup: same range as TEST 11.
+- Assert: List view date labels were already correct before this 
+  fix and remain correct after (e.g. "31 Jul", "1 Aug").
+
+
+TEST 14: AUTO-CALCULATE FIRES WHEN BOTH DATES FILLED
+- Setup: isCustomDateRange = true.
+  Simulate inputStartDate change event with a valid date.
+  Then simulate inputEndDate change event with a valid 
+  later date.
+- Assert: generateSchedule() is called exactly once after 
+  both fields have valid values.
+- Assert: the resulting schedule covers the correct date range.
+
+TEST 15: AUTO-CALCULATE DOES NOT FIRE WITH ONLY START DATE
+- Setup: isCustomDateRange = true.
+  Simulate inputStartDate change event with a valid date.
+  inputEndDate remains empty.
+- Assert: generateSchedule() is NOT called.
+- Assert: no error is thrown.
+- Assert: no partial or empty schedule is produced.
+
+TEST 16: AUTO-CALCULATE DOES NOT FIRE WITH ONLY END DATE
+- Setup: isCustomDateRange = true.
+  Simulate inputEndDate change event with a valid date.
+  inputStartDate remains empty.
+- Assert: generateSchedule() is NOT called.
+- Assert: no error is thrown.
+
+TEST 17: AUTO-CALCULATE DOES NOT FIRE WHEN START >= END
+- Setup: isCustomDateRange = true.
+  Set inputStartDate = "2026-08-10".
+  Simulate inputEndDate change event with "2026-07-01" 
+  (end before start).
+- Assert: generateSchedule() is NOT called.
+- Assert: the existing validation error toast fires instead.
+
+TEST 18: AUTO-CALCULATE FIRES ON START DATE CHANGE 
+         WHEN END DATE ALREADY FILLED
+- Setup: isCustomDateRange = true.
+  inputEndDate already has a valid date ("2026-08-31").
+  Simulate inputStartDate change event with "2026-08-01".
+- Assert: generateSchedule() is called immediately after 
+  the start date change event, without needing to change 
+  the end date again.
+- Assert: resulting schedule covers Aug 1–31.
+
+TEST 19: AUTO-CALCULATE FIRES ON END DATE CHANGE 
+         WHEN START DATE ALREADY FILLED
+- Setup: isCustomDateRange = true.
+  inputStartDate already has a valid date ("2026-07-01").
+  Simulate inputEndDate change event with "2026-07-31".
+- Assert: generateSchedule() is called immediately.
+- Assert: resulting schedule covers Jul 1–31.
+
+TEST 20: UPDATING A DATE AFTER FIRST CALCULATION 
+         TRIGGERS RECALCULATION
+- Setup: isCustomDateRange = true.
+  Both dates filled — generateSchedule() fires (first calc).
+  Then simulate inputEndDate change event to a new 
+  later date ("2026-08-15" → "2026-08-31").
+- Assert: generateSchedule() fires a second time.
+- Assert: the new schedule covers the updated range, 
+  not the old one.
+- Assert: no stale data from the first calculation remains.
+
+TEST 21: TOGGLE ON WITH DATES PRE-FILLED — AUTO-CALCULATES
+- Setup: inputStartDate = "2026-07-01", 
+  inputEndDate = "2026-07-31" (pre-filled).
+  isCustomDateRange is currently OFF.
+  Simulate chkCustomDateRange toggle ON event.
+- Assert: generateSchedule() is called immediately 
+  upon toggle ON, without the user changing any date field.
+- Assert: resulting schedule covers Jul 1–31.
+
+TEST 22: TOGGLE ON WITH DATES EMPTY — DOES NOT AUTO-CALCULATE
+- Setup: inputStartDate = "", inputEndDate = "" (both empty).
+  Simulate chkCustomDateRange toggle ON event.
+- Assert: generateSchedule() is NOT called.
+- Assert: no error toast fires — user is simply waiting 
+  to fill in dates.
+
+TEST 23: TOGGLE OFF — AUTO-RECALCULATES IN STANDARD MODE
+- Setup: isCustomDateRange was ON with a valid schedule.
+  Standard month/year dropdowns are set to a specific 
+  month and year.
+  Simulate chkCustomDateRange toggle OFF event.
+- Assert: generateSchedule() is called using the standard 
+  Month/Year values (not the custom date range).
+- Assert: the resulting schedule matches what would be 
+  produced by a standard month calculation for that 
+  month/year selection.
+- Assert: custom date range UI is hidden after toggle OFF.
+
+TEST 24: RAPID DATE CHANGES DO NOT CAUSE MULTIPLE 
+         SIMULTANEOUS SOLVER RUNS
+- Setup: isCustomDateRange = true, both dates valid.
+  Simulate inputStartDate change 3 times in quick 
+  succession (e.g. 3 different start dates, all valid 
+  with the existing end date).
+- Assert: generateSchedule() does not run concurrently 
+  with itself (no overlapping async solver instances).
+- Assert: only the last changed value's schedule is 
+  the final output (no stale intermediate result 
+  overwrites the final one).
+- Assert: no crash or unhandled promise rejection occurs.
+
+TEST 25: VALIDATION STILL RUNS BEFORE AUTO-CALCULATE
+- Setup: isCustomDateRange = true.
+  Set inputStartDate = "2026-06-01".
+  Simulate inputEndDate change event with a date 91 days 
+  later (exceeds 90-day cap).
+- Assert: generateSchedule() is NOT called.
+- Assert: the 90-day cap warning toast fires instead.
+- Assert: no schedule is produced.
+
+After the fix:
+1. Run the full test suite.
+2. Confirm all new tests pass.
+3. Confirm no other previously passing tests regress.
+4. Update todo.md with a "## Bug Fix: Date Label Reset" section 
+   marked complete only when verified.
+5. For any FAILED test, state exactly which assertion 
+   failed and what the actual vs expected values were.
+6. Update todo.md — mark complete only when all 12 
+   new tests pass or are explicitly documented with 
+   the specific app.js location causing the failure.
