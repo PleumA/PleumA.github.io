@@ -36,6 +36,7 @@
   - **Every [Weekday]**: Locks the group onto every occurrence of a chosen weekday (e.g. every Sunday) within the schedule range, correctly spanning custom multi-month ranges. A warning toast is displayed if no matching weekdays exist.
 
 ### 3. Interactive UI & Customization
+- **Structured Interactive Inputs**: All configuration settings (Doctor Roles, Quotas, Conflict Lists, Holidays, Off Requests) use intuitive structured components (steppers, dropdowns, and chips) to eliminate formatting errors, syncing seamlessly to the internal scheduling engine.
 - **Table, Calendar, & Person Views**: View duties in a clean date-list format, an interactive month calendar, or a pivoted person-centric grid.
 - **Inline Constraint Explainer**: Manual schedule overrides are proactively validated against active rules. If an administrator assigns a shift that breaks constraints (e.g. consecutive days or off requests), an exact explanation is proactively displayed.
 - **Manual Overrides & Drag-and-Drop**: Easily correct schedules manually. Instead of rigid dropdown menus, you can natively **drag and drop** a doctor's name from one slot to another in the calendar to effortlessly execute 2-way shift swaps.

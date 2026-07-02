@@ -84,7 +84,7 @@ The application's runtime memory is managed by several global variables declared
 The core scheduling problem is NP-hard, meaning the number of possible schedule combinations grows exponentially with the number of doctors, roles, days, and constraints. An analytical approach often gets stuck. The solver instead uses a **Monte Carlo approach** with random greedy selection.
 
 ### 1. The Parser: `parseUIConfig()`
-Before any scheduling runs, this function translates human input fields from the webpage into structured collections for the algorithm. It processes:
+Before any scheduling runs, this function translates human input fields from the webpage into structured collections for the algorithm. *Note: All interactive UI components (dropdowns, chips, steppers) sync their data into hidden text fields (e.g. `inputDoctorRoles`, `inputConflicts`), preserving the parser's original comma-separated string logic.* It processes:
 1.  **Doctor-to-Role Mapping**: Converts text like `A:R1, B:R2` into a fast key-value map: `{ "A": "R1", "B": "R2" }`.
 2.  **Special Holidays**: Parses comma-separated holiday strings into a `Set` for $O(1)$ lookup speeds.
 3.  **No-Duty Days**: Converts days with no active shifts into another lookup `Set`.

@@ -41,6 +41,9 @@ const translations = {
         defaultSlots: "จำนวนคน (ค่าเริ่มต้น)",
         customSlots: "กำหนดจำนวนคนเฉพาะวัน",
         addBtn: "เพิ่ม",
+        addConflictBtn: "เพิ่มคู่ขัดแย้ง",
+        noDocsWarning: "โปรดเพิ่มรายชื่อแพทย์ก่อน",
+        addDatePlaceholder: "เพิ่มวัน...",
         customSlotsDesc: "ระบุจำนวนคนที่ต้องการใช้เฉพาะบางวันได้",
         offRequests: "วันขอพัก (Off)",
         offRequestsSelect: "เลือกแพทย์...",
@@ -162,6 +165,9 @@ const translations = {
         defaultSlots: "Default Slots (default count)",
         customSlots: "Custom Daily Slots",
         addBtn: "Add",
+        addConflictBtn: "Add Conflict Pair",
+        noDocsWarning: "Please add doctors first",
+        addDatePlaceholder: "Add date...",
         customSlotsDesc: "Specify slot count for specific dates",
         offRequests: "Off Requests",
         offRequestsSelect: "Select doctors...",
@@ -306,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sync default doctors
     syncDoctorsToInput();
     renderDoctorTags();
+    if (typeof initStructuredInputs === 'function') initStructuredInputs();
     renderSpecialDocsCheckboxList();
 
     // Custom Date Range Listener
@@ -370,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 doctors.pop();
                 syncDoctorsToInput();
                 renderDoctorTags();
+                initStructuredInputs();
                 generateSchedule();
             }
         }
@@ -738,6 +746,7 @@ function renderDoctorTags() {
 
     lucide.createIcons();
     updateDoctorSelectors();
+    if (typeof renderStructuredDoctorRoles === 'function') renderStructuredDoctorRoles();
 }
 
 function addDoctor(name) {
@@ -3607,6 +3616,7 @@ window.importConfigJSON = function (event) {
             syncDoctorsToInput();
             if (typeof syncDoctorRolesInput === 'function') syncDoctorRolesInput();
             renderDoctorTags();
+            if (typeof initStructuredInputs === 'function') initStructuredInputs();
             renderOffRequests();
             renderExtraSlots();
             renderSpecialDocsCheckboxList();

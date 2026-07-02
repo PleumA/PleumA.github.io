@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [1.3.0] - 2026-07-02
 ### Added
+- **F8 Structured UI Inputs**: Replaced all 6 legacy free-text comma-separated string inputs (Doctor Roles, Slots Per Role, Exact Monthly Quota, Conflict List, Special Holidays, No-Duty Days) with structured, interactive UI components. This eliminates syntax errors (like missing commas or typos) by providing dropdowns, chips, and stepper buttons for configuration.
 - **Quota Density Sorting Heuristic**: Implemented a density-based sorting heuristic in the solver (`sortDoctors`) to prioritize doctors with higher `remainingQuota / remainingAvailableDays`, preventing late-month shortages for doctors with off requests (e.g. the `failed_case` configuration).
 - **UI Auto-Updating**: Enabled immediate auto-recalculation and re-rendering of the Individual Duty Summary table and Stats Dashboard when manual edits, cell auto-resets, or undo actions occur.
 

@@ -307,48 +307,52 @@
                             <div class="pt-3">
                                 <label
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                                    data-i18n="docRolesLabel">บทบาทของแพทย์ (เช่น A:R1, B:R2)</label>
-                                <input type="text" id="inputDoctorRoles" value="A:R1, B:R2, C:R1, D:R2, E:R1, F:R2"
-                                    placeholder="e.g., A:R1, B:R2, C:R1" data-i18n="docRolesPlaceholder"
-                                    class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
-                                <p class="text-[10px] text-slate-500 mt-1">Format: Name:Role, Name:Role</p>
+                                    data-i18n="docRolesLabel">บทบาทของแพทย์</label>
+                                <input type="text" id="inputDoctorRoles" value="A:R1, B:R2, C:R1, D:R2, E:R1, F:R2" class="hidden">
+                                <div id="structuredDoctorRolesContainer" class="space-y-2">
+                                    <!-- Structured rows will be injected here by app.js -->
+                                </div>
                             </div>
                             <div>
                                 <label
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                                    data-i18n="defaultRoleSlotsLabel">จำนวนคนแยกตามบทบาท (เช่น R1:1, R2:1)</label>
-                                <input type="text" id="inputDefaultRoleSlots" value="R1:1, R2:1"
-                                    placeholder="เช่น R1:1, R2:1" data-i18n="roleSlotsPlaceholder"
-                                    class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                                    data-i18n="defaultRoleSlotsLabel">จำนวนคนแยกตามบทบาท</label>
+                                <input type="text" id="inputDefaultRoleSlots" value="R1:1, R2:1" class="hidden">
+                                <div id="structuredRoleSlotsContainer" class="space-y-2">
+                                    <!-- Stepper rows will be injected here by app.js -->
+                                </div>
                             </div>
                             <div>
                                 <label
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                                    data-i18n="roleQuotasLabel">กำหนดโควตาเวรแบบระบุจำนวน (เช่น R1:12, R2:10)</label>
-                                <input type="text" id="inputRoleQuotas" value="" placeholder="เช่น R1:12, R2:10"
-                                    data-i18n="roleQuotasPlaceholder"
-                                    class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                                    data-i18n="roleQuotasLabel">กำหนดโควตาเวรแบบระบุจำนวน</label>
+                                <input type="text" id="inputRoleQuotas" value="" class="hidden">
+                                <div id="structuredRoleQuotasContainer" class="space-y-2">
+                                    <!-- Stepper rows will be injected here by app.js -->
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div>
+                    <div class="space-y-2">
                         <label
-                            class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                            data-i18n="specialHolsLabel">วันหยุดพิเศษ (คั่นด้วย ,)</label>
-                        <input type="text" id="inputSpecialHols" placeholder="เช่น 13, 14, 15"
-                            data-i18n="csvPlaceholder1"
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                            class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide"
+                            data-i18n="specialHolsLabel">วันหยุดพิเศษ</label>
+                        <div id="structuredSpecialHolsContainer" class="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl min-h-[50px] focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 outline-none transition-all cursor-text">
+                            <input type="text" id="inputSpecialHolsUI" data-i18n="addDatePlaceholder" placeholder="เพิ่มวัน..." class="flex-1 bg-transparent border-none outline-none text-sm min-w-[140px] py-0.5 text-slate-800 dark:text-slate-100">
+                        </div>
+                        <input type="text" id="inputSpecialHols" class="hidden">
                     </div>
-                    <div
-                        class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div class="space-y-2 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                         <label
-                            class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide">
+                            class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                             <i data-lucide="coffee" class="w-4 h-4 text-slate-400"></i>
-                            <span data-i18n="noDutyLabel">วันที่งดเวร (ไม่ต้องมีคนอยู่)</span>
+                            <span data-i18n="noDutyLabel">วันที่งดเวร</span>
                         </label>
-                        <input type="text" id="inputNoDuty" placeholder="เช่น 15, 16" data-i18n="csvPlaceholder2"
-                            class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100">
+                        <div id="structuredNoDutyContainer" class="flex flex-wrap gap-2 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[50px] focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 outline-none transition-all cursor-text">
+                            <input type="text" id="inputNoDutyUI" data-i18n="addDatePlaceholder" placeholder="เพิ่มวัน..." class="flex-1 bg-transparent border-none outline-none text-sm min-w-[140px] py-0.5 text-slate-800 dark:text-slate-100">
+                        </div>
+                        <input type="text" id="inputNoDuty" class="hidden">
                     </div>
                 </div>
             </div>
@@ -374,10 +378,11 @@
                         <label
                             class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                             data-i18n="singlePoolQuotasLabel">โควต้าต่อแพทย์ / Exact Quota Per Doctor</label>
-                        <input type="text" id="inputSinglePoolQuota" value="" placeholder="เช่น A:12, B:10"
-                            data-i18n="singlePoolQuotasPlaceholder"
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-800 dark:text-slate-100">
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1"
+                        <input type="text" id="inputSinglePoolQuota" value="" class="hidden">
+                        <div id="structuredSinglePoolQuotasContainer" class="space-y-2">
+                            <!-- Stepper rows will be injected here by app.js -->
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2"
                             data-i18n="singlePoolQuotasDesc">ถ้าไม่ระบุ จะไม่มีการจำกัดโควต้า / Leave blank to disable</p>
                     </div>
                     <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
@@ -491,14 +496,17 @@
                     <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
                         <label
                             class="block text-xs font-bold text-slate-650 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                            data-i18n="conflictListLabel">รายชื่อแพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict
-                            List)</label>
-                        <textarea id="inputConflicts" rows="2" placeholder="e.g., A:B, C:D"
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100"></textarea>
-                        <p class="text-[10px] text-slate-500 mt-1">Format: Name:Name, Name:Name</p>
-                        <p class="text-[11px] text-slate-400 dark:text-slate-550 mt-1.5 leading-relaxed"
+                            data-i18n="conflictListLabel">รายชื่อแพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict List)</label>
+                        <textarea id="inputConflicts" class="hidden"></textarea>
+                        <div id="structuredConflictsContainer" class="space-y-2 mt-2">
+                            <!-- Pair rows will be injected here by app.js -->
+                        </div>
+                        <button type="button" onclick="addStructuredConflictPair()" class="mt-3 text-xs bg-teal-100 dark:bg-teal-950/50 text-teal-700 dark:text-teal-400 px-3 py-2 rounded-lg font-bold hover:bg-teal-200 dark:hover:bg-teal-900/60 transition-colors flex items-center gap-1 min-h-[44px]">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span data-i18n="addConflictBtn">เพิ่มคู่ขัดแย้ง</span>
+                        </button>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-550 mt-2 leading-relaxed"
                             data-i18n="conflictDesc">
-                            *ระบุคู่ที่ขัดแย้งกัน เช่น A:B, C:D หรือ A conflicts with B</p>
+                            *ระบุคู่ที่ขัดแย้งกันเพื่อให้ระบบไม่จัดให้อยู่เวรด้วยกัน</p>
                     </div>
                 </div>
             </div>
@@ -977,6 +985,7 @@
     </div>
 
     <!-- Application Logic -->
+    <script src="structuredInputs.js"></script>
     <script src="app.js"></script>
 </body>
 
