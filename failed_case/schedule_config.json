@@ -1,0 +1,53 @@
+{
+  "doctors": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E"
+  ],
+  "offData": [
+    {
+      "id": 1,
+      "date": "22-30",
+      "names": "A"
+    }
+  ],
+  "extraSlotsData": [],
+  "manualOverrides": {},
+  "quota": {
+    "A": 12,
+    "B": 12,
+    "C": 12,
+    "D": 12,
+    "E": 12
+  },
+  "inputs": {
+    "inputMonth": "9",
+    "inputYear": "2026",
+    "inputStartDate": "",
+    "inputEndDate": "",
+    "inputDefaultSlots": "2",
+    "inputSpecialHols": "",
+    "inputNoDuty": "",
+    "inputDoctorRoles": "A:R1, B:R2, C:R1, D:R2, E:R1",
+    "inputDefaultRoleSlots": "",
+    "inputRoleQuotas": "",
+    "inputSinglePoolQuota": "A:12,B:12,C:12,D:12,E:12",
+    "inputConflicts": "",
+    "inputSpecialDays": "14",
+    "inputSpecialDocs": "",
+    "inputSpecialStartDay": "1",
+    "lockConditionType": "firstNDays",
+    "selectLockWeekday": "0"
+  },
+  "checkboxes": {
+    "chkCustomDateRange": false,
+    "chkRoleBased": false,
+    "chkPreventConsecutive": false,
+    "chkPreventLongGaps": false,
+    "chkBalanceShifts": false,
+    "chkAllowBlankDays": true,
+    "chkUseSpecialRule": false
+  }
+}

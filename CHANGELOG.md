@@ -4,6 +4,15 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-02
+### Added
+- **Quota Density Sorting Heuristic**: Implemented a density-based sorting heuristic in the solver (`sortDoctors`) to prioritize doctors with higher `remainingQuota / remainingAvailableDays`, preventing late-month shortages for doctors with off requests (e.g. the `failed_case` configuration).
+- **UI Auto-Updating**: Enabled immediate auto-recalculation and re-rendering of the Individual Duty Summary table and Stats Dashboard when manual edits, cell auto-resets, or undo actions occur.
+
+### Fixed
+- **Lexical Scoping Bug in sortDoctors**: Fixed a bug where `sortDoctors` (defined outside the scheduling loop) read the block-scoped loop variable `day` resulting in `undefined`. It now correctly receives `day` as `currentDay`.
+- **Manual Override Constraint Checking Crash**: Fixed a `TypeError: offMap.has is not a function` crash during manual cell assignment updates by correctly querying the inner `Set` using `offMap[dayKey].has(doc)`.
+
 ## [1.2.0] - 2026-07-01
 ### Added
 - **Off Request Date Ranges**: Supported comma-separated multiple entries (e.g. `5, 12`) and spanning date ranges (e.g. `2-10` or `25/02/2026-04/03/2026`) in both Standard and Custom Date Range modes.

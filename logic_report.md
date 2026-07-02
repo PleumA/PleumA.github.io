@@ -161,6 +161,9 @@ graph TD
     3.  **Uniqueness**: A doctor will never work two slots on the same day.
 
 9.  **Heuristic Workload Balancing (`balanceShifts`)**: When enabled, the sorting of candidate doctors dynamically prioritizes those with the lowest shift counts (total, workday, or holiday) by resolving any non-zero workload difference during candidate generation instead of relying on a broad `0.4` tolerance. This ensures tighter, more balanced shift allocation across the pool.
+10. **Quota Density Sorting Heuristic**: To prevent late-month shortages for doctors with off requests, the sorting of candidate doctors dynamically prioritizes doctors with higher **Quota Density**:
+    $$\text{Quota Density} = \frac{\text{Remaining Quota}}{\text{Remaining Available Days}}$$
+    Where $\text{Remaining Quota} = \text{Quota} - tCounts[doc]$ and $\text{Remaining Available Days}$ is the number of remaining days in the schedule timeline where the doctor has no off requests. This ensures doctors with a more constrained availability are scheduled on their available days first, preserving doctors with wider availability to cover dates where others are off.
 
 ---
 
@@ -316,10 +319,10 @@ Here is a detailed breakdown of the functions in `app.js`:
     *   `doctorIndex`: The index of the selected doctor in the global `doctors` array.
         *   `-1` maps to `SHORTAGE_MARKER` (`ขาดคน`).
         *   `-2` maps to empty (`-`).
-*   **Responsibility**: Registers manual changes. It updates `manualOverrides`, updates the clicked cell in the DOM immediately, and schedules stats updates.
+*   **Responsibility**: Registers manual changes. It updates `manualOverrides`, updates the clicked cell in the DOM immediately, and automatically recalculates/renders the Individual Duty Summary table and Stats Dashboard.
 
 #### `resetSlotToAuto(day, slotIndex)`
-*   **Responsibility**: Clears a manual override. Deletes the key from `manualOverrides[day][slotIndex]`, updates the cell's UI immediately, and triggers the solver to recalculate the slot.
+*   **Responsibility**: Clears a manual override. Deletes the key from `manualOverrides[day][slotIndex]`, updates the cell's UI immediately, and automatically recalculates/renders the Individual Duty Summary table and Stats Dashboard.
 
 ---
 
@@ -378,7 +381,7 @@ Instead of relying purely on dropdowns, the layout leverages HTML5 DataTransfer 
 Because clicking and dragging can occasionally result in accidental mistakes, the engine wraps manual mutations inside a tracker:
 - Before any change to `manualOverrides` (e.g. `updateDoctorAssignment`, `resetSlotToAuto`), `pushToUndoStack()` executes.
 - `pushToUndoStack()` deeply clones (`JSON.parse(JSON.stringify(...))`) the current state tree into an array capped at a depth of 20.
-- When `undoLastAction()` fires via `Ctrl+Z`, the engine pops the tail state, overwrites the active reference, and instantly repaints the dependent UI elements (`renderTableView`, `recalculateCounts`).
+- When `undoLastAction()` fires via `Ctrl+Z`, the engine pops the tail state, overwrites the active reference, and instantly repaints the dependent UI elements and auto-updates the Individual Duty Summary table and Stats Dashboard.
 
 ---
 
@@ -494,7 +497,6 @@ During the recent test suite expansion and auditing phase, several significant l
 - **Continuous Date Increments Across Spanning Months**: Custom date ranges crossing month boundaries generated continuous day index numbers (e.g., "32 Sat") on the Calendar and Person views instead of resetting. Day labels now correctly reset at month boundaries to show actual dates.
 - **Swallowed Validation Fail-Safe Messages**: Synchronous UI config validation errors (like quota mismatches) were logged to console but swallowed in the UI under a generic fallback message. The actual validation messages are now fully propagated to the UI toast.
 - **Test Harness Decoupling**: Fixed the `quotaSinglePool` test file regexes which were using rigid replacements, resolving mock evaluation failures.
-
-### Remaining Logic Anomalies (Known Bugs)
-- **Type mismatch for `offMap`**: The manual override verification (`explainSlotFailure` and `updateDayNote`) mistakenly interacts with `offMap` / `offToday` dynamically, sometimes resulting in a `TypeError: offMap.has is not a function` when evaluating override validity.
+- **Type mismatch for `offMap`**: The manual override verification (`explainSlotFailure` and `updateDayNote`) mistakenly interacted with `offMap` / `offToday` dynamically, sometimes resulting in a `TypeError: offMap.has is not a function` when evaluating override validity. This has been resolved by correctly querying the inner `Set` using `offMap[dayKey].has(doc)`.
+- **Auto-Updating Summary Table**: Re-rendering and counts recalculation are now automatically executed upon manual edits in List or Calendar views, cell auto-resets, and undo actions.
 

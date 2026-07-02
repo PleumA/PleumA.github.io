@@ -1539,13 +1539,141 @@ function parseUIConfig() {
         }
     }
 
-    return {
+    const configObj = {
         year, month, numDays, holidaySet, noDutySet, offMap,
         roleBased, doctorRoles, quota, hasQuotas,
         useSpecialRule, specialDocs, specialRuleDays,
         preventConsecutiveAll, preventLongGaps, balanceShifts, allowBlankDays,
         getRoleSlotsForDay, areConflicting, specialHols
     };
+
+    if (hasQuotas) {
+        const violations = checkQuotaFeasibility(configObj);
+        if (violations.length > 0) {
+            const errorMessagesTH = [];
+            const errorMessagesEN = [];
+            
+            violations.forEach(v => {
+                const gapTH = v.restGap > 1 ? ` (เว้นช่วง ${v.restGap - 1} วัน)` : '';
+                const gapEN = v.restGap > 1 ? ` (with ${v.restGap - 1}-day gap)` : '';
+                
+                if (v.isRoleShare) {
+                    errorMessagesTH.push(`นพ./พญ. ${v.name} (กลุ่ม ${v.role}): โควต้าเฉลี่ย ${v.required} เกินกว่าที่เป็นไปได้ — มีวันว่าง ${v.availableDays} วัน สามารถทำเวรได้สูงสุด ${v.maxShifts} เวร${gapTH}`);
+                    errorMessagesEN.push(`Dr. ${v.name} (Role ${v.role}): Quota share ${v.required} is impossible — ${v.availableDays} available days, max achievable ${v.maxShifts} shifts${gapEN}`);
+                } else {
+                    errorMessagesTH.push(`นพ./พญ. ${v.name}: โควต้า ${v.required} เกินกว่าที่เป็นไปได้ — มีวันว่าง ${v.availableDays} วัน สามารถทำเวรได้สูงสุด ${v.maxShifts} เวร${gapTH}`);
+                    errorMessagesEN.push(`Dr. ${v.name}: Quota ${v.required} is impossible — ${v.availableDays} available days, max achievable ${v.maxShifts} shifts${gapEN}`);
+                }
+            });
+
+            const msgTH = errorMessagesTH.join('\n');
+            const msgEN = errorMessagesEN.join('\n');
+            const finalMsg = typeof currentLang !== 'undefined' && currentLang === 'th' ? msgTH : msgEN;
+
+            if (!allowBlankDays) {
+                throw new Error(finalMsg);
+            } else {
+                if (typeof showToast === 'function') {
+                    showToast(finalMsg, "warning");
+                }
+            }
+        }
+    }
+
+    return configObj;
+}
+
+function getRestDaysForDoctor(doctorName, config) {
+    if (!config.preventConsecutiveAll) return 1;
+    return config.minRestDays !== undefined ? config.minRestDays : 2;
+}
+
+function checkQuotaFeasibility(config) {
+    const violations = [];
+    const { offMap, roleBased, doctorRoles, quota, numDays } = config;
+    
+    Object.keys(quota).forEach(key => {
+        const required = quota[key];
+        if (required <= 0) return;
+
+        if (roleBased) {
+            const role = key;
+            const doctorsInRole = typeof doctors !== 'undefined' ? doctors.filter(doc => (doctorRoles[doc] || 'Default') === role) : [];
+            if (doctorsInRole.length === 0) return;
+
+            const perDoctorShare = Math.ceil(required / doctorsInRole.length);
+            
+            doctorsInRole.forEach(docName => {
+                let docOffCount = 0;
+                for (let d = 1; d <= numDays; d++) {
+                    let dayKey = d;
+                    if (typeof isCustomDateRange !== 'undefined' && isCustomDateRange && typeof scheduleDates !== 'undefined' && scheduleDates.length > 0) {
+                        const dateObj = scheduleDates[d - 1];
+                        const dd = String(dateObj.getDate()).padStart(2, '0');
+                        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const yyyy = dateObj.getFullYear();
+                        dayKey = `${dd}/${mm}/${yyyy}`;
+                    }
+                    const offSet = offMap[dayKey] || new Set();
+                    if (offSet.has(docName)) {
+                        docOffCount++;
+                    }
+                }
+                
+                const docAvailDays = numDays - docOffCount;
+                const restGap = getRestDaysForDoctor(docName, config);
+                const maxShifts = docAvailDays > 0 ? Math.floor((docAvailDays + restGap - 1) / restGap) : 0;
+                
+                if (perDoctorShare > maxShifts) {
+                    violations.push({
+                        name: docName,
+                        required: perDoctorShare,
+                        maxShifts: maxShifts,
+                        availableDays: docAvailDays,
+                        offCount: docOffCount,
+                        restGap: restGap,
+                        isRoleShare: true,
+                        role: role
+                    });
+                }
+            });
+            
+        } else {
+            const doctorName = key;
+            let offCount = 0;
+            for (let d = 1; d <= numDays; d++) {
+                let dayKey = d;
+                if (typeof isCustomDateRange !== 'undefined' && isCustomDateRange && typeof scheduleDates !== 'undefined' && scheduleDates.length > 0) {
+                    const dateObj = scheduleDates[d - 1];
+                    const dd = String(dateObj.getDate()).padStart(2, '0');
+                    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const yyyy = dateObj.getFullYear();
+                    dayKey = `${dd}/${mm}/${yyyy}`;
+                }
+                const offSet = offMap[dayKey] || new Set();
+                if (offSet.has(doctorName)) {
+                    offCount++;
+                }
+            }
+
+            const availableDays = numDays - offCount;
+            const restGap = getRestDaysForDoctor(doctorName, config);
+            const maxShifts = availableDays > 0 ? Math.floor((availableDays + restGap - 1) / restGap) : 0;
+
+            if (required > maxShifts) {
+                violations.push({
+                    name: doctorName,
+                    required,
+                    maxShifts,
+                    availableDays,
+                    offCount,
+                    restGap
+                });
+            }
+        }
+    });
+
+    return violations;
 }
 
 // Single trial of greedy scheduling with added randomness
@@ -1587,7 +1715,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
     }
 
     // Sort doctors by workload counters, with random perturbation for exploring alternatives
-    const sortDoctors = (docsList, isHol) => {
+    const sortDoctors = (docsList, isHol, currentDay) => {
         const noise = {};
         docsList.forEach(doc => {
             noise[doc] = (Math.random() - 0.5) * randomness;
@@ -1610,7 +1738,31 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                 if (aNeedsQuota && bNeedsQuota) {
                     const diffQuotaA = quotaA - tCounts[a];
                     const diffQuotaB = quotaB - tCounts[b];
-                    if (diffQuotaA !== diffQuotaB) return diffQuotaB - diffQuotaA;
+                    
+                    const getRemainingAvailableDays = (doc) => {
+                        let count = 0;
+                        for (let d = currentDay; d <= numDays; d++) {
+                            let dayKey = d;
+                            if (isCustomDateRange) {
+                                const dateObj = scheduleDates[d - 1];
+                                const dd = String(dateObj.getDate()).padStart(2, '0');
+                                const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                                const yyyy = dateObj.getFullYear();
+                                dayKey = `${dd}/${mm}/${yyyy}`;
+                            }
+                            const offSet = offMap[dayKey] || new Set();
+                            if (!offSet.has(doc)) {
+                                count++;
+                            }
+                        }
+                        return count;
+                    };
+                    const availA = getRemainingAvailableDays(a);
+                    const availB = getRemainingAvailableDays(b);
+                    const densityA = availA > 0 ? diffQuotaA / availA : 0;
+                    const densityB = availB > 0 ? diffQuotaB / availB : 0;
+                    
+                    if (densityA !== densityB) return densityB - densityA;
                 }
             }
 
@@ -1698,7 +1850,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                 });
 
                 if (availableSpecial.length > 0) {
-                    sortDoctors(availableSpecial, isHoliday);
+                    sortDoctors(availableSpecial, isHoliday, day);
                     chosenSpecial = availableSpecial[0];
                     specialRole = doctorRoles[chosenSpecial] || 'Default';
                 }
@@ -1807,7 +1959,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                     }
 
                     if (availableDocs.length > 0) {
-                        sortDoctors(availableDocs, isHoliday);
+                        sortDoctors(availableDocs, isHoliday, day);
                         const chosenDoc = availableDocs[0];
                         selected.push(chosenDoc);
                         chosenToday.push(chosenDoc);
@@ -2484,6 +2636,9 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
 
     const config = parseUIConfig();
     explainSlotFailure(day, newDoctor, config);
+    recalculateCounts(config);
+    renderSummaryTable(config);
+    updateStatsDashboard();
 };
 
 // Explain why a manual swap might violate a constraint
@@ -2492,7 +2647,18 @@ window.explainSlotFailure = function (day, doc, config) {
     const { preventConsecutiveAll, offMap } = config;
     let reasons = [];
 
-    if (offMap.has(`${doc}_${day}`)) {
+    let dayKey = day;
+    if (config.isCustomDateRange && typeof scheduleDates !== 'undefined' && scheduleDates.length > 0) {
+        const dateObj = scheduleDates[day - 1];
+        if (dateObj) {
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const yyyy = dateObj.getFullYear();
+            dayKey = `${dd}/${mm}/${yyyy}`;
+        }
+    }
+    const offSet = offMap[dayKey];
+    if (offSet && offSet.has(doc)) {
         reasons.push(currentLang === 'th' ? `ขอพัก/ลาในวันนี้` : `requested off today`);
     }
 
@@ -2541,6 +2707,11 @@ window.resetSlotToAuto = function (day, slotIndex) {
 
         const btnConfirm = document.getElementById('btnConfirmChanges');
         if (btnConfirm) btnConfirm.classList.remove('hidden');
+
+        const config = parseUIConfig();
+        recalculateCounts(config);
+        renderSummaryTable(config);
+        updateStatsDashboard();
     }
     showToast(currentLang === 'th' ? `คืนค่าระบบคำนวณ วันที่ ${day} สำเร็จ!` : `Reset Day ${day} to automatic solver`);
 };
@@ -3480,7 +3651,9 @@ window.undoLastAction = function () {
             renderPersonCentricView(config);
         }
 
-        recalculateCounts();
+        const config = parseUIConfig();
+        recalculateCounts(config);
+        renderSummaryTable(config);
         updateStatsDashboard();
         showToast(currentLang === 'th' ? "เลิกทำ (Undo) สำเร็จ" : "Undo successful");
     } else {
