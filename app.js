@@ -120,17 +120,17 @@ const translations = {
         manualTitle: "คู่มือการใช้งานระบบจัดตารางเวร",
         manualIntro: "ระบบจัดตารางเวรนี้ คำนวณด้วยอัลกอริทึม Smart Solver (Monte Carlo Simulation) 300 รอบ เพื่อหาการกระจายเวรที่ดีที่สุด พร้อมทั้งรองรับเงื่อนไขหลากหลายรูปแบบดังนี้:",
         manualSection1Title: "1. การจัดการแพทย์และบทบาท (Roles)",
-        manualSection1Body: "ระบุรายชื่อแพทย์ในรูปแบบ Tag และกำหนดบทบาทในกล่องข้อความ (เช่น <code>A:R1, B:R2</code>) ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน (หากต้องการกำหนดโควตาที่จำนวนไม่พอดีกับช่องเวร โปรดเปิดใช้งาน Allow Blank Days)",
+        manualSection1Body: "เพิ่มชื่อแพทย์และกำหนดบทบาทผ่านระบบ Tag และ Dropdown (Interactive UI) ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน (หากต้องการกำหนดโควตาที่จำนวนไม่พอดีกับช่องเวร โปรดเปิดใช้งาน Allow Blank Days)",
         manualSection2Title: "2. จำนวนเวรตามบทบาท (Slots)",
-        manualSection2Body: "กำหนดจำนวนผู้ปฏิบัติงานต่อวัน เช่น <code>R1:1, R2:1</code> (หมายถึงต้องการ R1 1 คน และ R2 1 คน) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'",
+        manualSection2Body: "กำหนดจำนวนผู้ปฏิบัติงานต่อวันผ่านปุ่มเพิ่ม/ลด (Stepper) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'",
         manualSection3Title: "3. แพทย์ที่ขัดแย้งกัน (Conflict List)",
-        manualSection3Body: "ระบุแพทย์ที่ไม่สามารถอยู่เวรร่วมกันในวันเดียวกันได้ เช่น <code>A:B</code> หรือ <code>C conflicts with D</code> อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ",
+        manualSection3Body: "เลือกคู่แพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ผ่าน Dropdown อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ",
         manualSection4Title: "4. วันหยุดและวันพัก (Off Requests)",
         manualSection4Body: "ระบบห้ามจัดเวรซ้อนทับวัน Off หรือก่อนหน้าวัน Off 1 วัน และห้ามอยู่เวรวันหยุด (ส.-อา. + นักขัตฤกษ์) ติดกันเด็ดขาด (สามารถระบุวันเป็นวันเดี่ยว คั่นด้วยคอมมา หรือระบุเป็นช่วงวันที่ เช่น <code>5, 12</code> หรือ <code>2-10</code> และในโหมดกำหนดช่วงวันที่สามารถกรอกเป็น <code>25/02/2026-04/03/2026</code> ได้)",
         manualSection5Title: "5. การแก้ไขและตรวจสอบตาราง",
-        manualSection5Body: "ท่านสามารถคลิกที่ชื่อแพทย์ในตารางหรือปฏิทินเพื่อเลือกสลับตัวแพทย์ด้วยตนเอง ระบบจะคำนวณสถิติใหม่พร้อมแสดงป้ายเตือนความขัดแย้ง (Conflict) หรือผิดบทบาท (Role Mismatch) ทันที",
+        manualSection5Body: "ท่านสามารถลากและวาง (Drag & Drop) ชื่อแพทย์ในตาราง ปฏิทิน และมุมมองบุคคล (รองรับการสลับข้ามวัน) เพื่อสลับตัวแพทย์ด้วยตนเอง ระบบจะคำนวณสถิติใหม่พร้อมแสดงป้ายเตือนความขัดแย้ง (Conflict) ทันที",
         manualSection6Title: "6. การบันทึก/โหลดและการอัปเดตสถิติ",
-        manualSection6Body: "ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ และเมื่อมีการแก้ไขเวรด้วยตนเอง กรุณากดปุ่ม 'ยืนยันการเปลี่ยนแปลง' เพื่อเริ่มคำนวณสรุปสถิติใหม่",
+        manualSection6Body: "ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ ระบบจะอัปเดตสถิติโดยอัตโนมัติทันทีที่มีการแก้ไขเวรด้วยตนเองหรือกดย้อนกลับ (Undo)",
         manualSection7Title: "7. โหมดช่วงวันที่กำหนดเอง (Custom Date Range)",
         manualSection7Body: "คุณสามารถสลับเปิด 'ใช้ช่วงวันที่กำหนดเอง' เพื่อจัดเวรตามวันที่ต้องการ (สูงสุด 90 วัน) แทนการจัดเวรตามเดือนปกติ โดยกรอกวันที่ในรูปแบบ DD/MM/YYYY",
         customDateRangeToggle: "ใช้ช่วงวันที่กำหนดเอง",
@@ -244,17 +244,17 @@ const translations = {
         manualTitle: "User Manual & Guide",
         manualIntro: "This scheduler uses a Smart Solver algorithm (Monte Carlo Simulation) running 300 iterations to find the fairest workload distribution, satisfying these criteria:",
         manualSection1Title: "1. Doctors & Roles Setup",
-        manualSection1Body: "Add doctors as tags, then map them to roles (e.g., <code>A:R1, B:R2</code>). The system allocates duties within each role pool independently. (If you want to use unbalanced exact quotas, please turn on Allow Blank Days).",
+        manualSection1Body: "Add doctors and assign roles using the interactive UI tags and dropdowns. The system allocates duties within each role pool independently. (If you want to use unbalanced exact quotas, please turn on Allow Blank Days).",
         manualSection2Title: "2. Slots & Daily Demands",
-        manualSection2Body: "Set daily needs like <code>R1:1, R2:1</code> (requiring 1 R1 and 1 R2). Define date-specific overrides in 'Custom Daily Slots'.",
+        manualSection2Body: "Set daily needs using the numeric steppers. Define date-specific overrides in 'Custom Daily Slots'.",
         manualSection3Title: "3. Conflict / Hate List",
-        manualSection3Body: "Define doctors who cannot work on the same shift (e.g., <code>A:B</code> or <code>C conflicts with D</code>). The solver automatically excludes them from matching pools.",
+        manualSection3Body: "Select doctors who cannot work on the same shift using the conflict dropdowns. The solver automatically excludes them from matching pools.",
         manualSection4Title: "4. Holidays & Off Requests",
         manualSection4Body: "The scheduler enforces strict rules: no shifts on Off days or the day prior, and no consecutive holiday/weekend duties. Off requests can be entered as single days, comma-separated lists, or date ranges (e.g., <code>5, 12</code>, <code>2-10</code>, or <code>25/02/2026-04/03/2026</code>).",
         manualSection5Title: "5. Manual Overrides & Warnings",
-        manualSection5Body: "Click any doctor's name in Table or Calendar to manually override. The system updates workload stats and displays real-time warning badges for conflicts or role mismatches.",
+        manualSection5Body: "Use Drag and Drop to move doctors in the Table, Calendar, and Person views (including cross-day swaps) for manual overrides. The system instantly auto-updates workload stats and displays real-time warning badges.",
         manualSection6Title: "6. Save/Load Config & Stats Sync",
-        manualSection6Body: "Export configuration state as a JSON backup file to instantly reload later. When making manual overrides, click 'Confirm Changes' to sync and recalculate summary reports.",
+        manualSection6Body: "Export configuration state as a JSON backup file to instantly reload later. The UI auto-recalculates summary stats immediately when manual edits, resets, or undo actions occur.",
         manualSection7Title: "7. Custom Date Range Mode",
         manualSection7Body: "Toggle 'Use Custom Date Range' to schedule duties across any arbitrary dates (up to 90 days) instead of rigid months. Dates should be formatted as DD/MM/YYYY.",
         customDateRangeToggle: "Use Custom Date Range",
@@ -2721,6 +2721,7 @@ window.resetSlotToAuto = function (day, slotIndex) {
         recalculateCounts(config);
         renderSummaryTable(config);
         updateStatsDashboard();
+        if (typeof renderPersonCentricView === 'function') renderPersonCentricView(config);
     }
     showToast(currentLang === 'th' ? `คืนค่าระบบคำนวณ วันที่ ${day} สำเร็จ!` : `Reset Day ${day} to automatic solver`);
 };
@@ -3003,10 +3004,16 @@ function renderTableView(config) {
             if (row.isNoDuty) {
                 colsHtml += `<td class="py-3.5 px-4 text-slate-300 dark:text-slate-700 font-medium">-</td>`;
             } else {
+                let docIndexToPass = -2;
+                if (d === SHORTAGE_MARKER) docIndexToPass = -1;
+                else if (doctors.includes(d)) docIndexToPass = doctors.indexOf(d);
+
                 colsHtml += `
                     <td class="py-3.5 px-4">
                         <div class="relative group/cell inline-block min-w-[110px]">
-                            <button id="btn-day-${row.day}-slot-${i}" aria-label="Day ${row.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." onclick="openCellDropdown(event, 'tablecelldropdown-${row.day}-${i}')" class="w-full text-left text-xs px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm">
+                            <button id="btn-day-${row.day}-slot-${i}" aria-label="Day ${row.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." 
+                                draggable="true" ondragstart="handleDragStart(event, ${row.day}, ${i}, ${docIndexToPass})" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${row.day}, ${i}, ${docIndexToPass})"
+                                onclick="openCellDropdown(event, 'tablecelldropdown-${row.day}-${i}')" class="w-full text-left text-xs px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing">
                                 <span class="truncate" aria-hidden="true">${displayDoc}</span>
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 opacity-0 group-hover/cell:opacity-60 transition-opacity"><path d="m6 9 6 6 6-6"/></svg>
                             </button>
@@ -3724,6 +3731,91 @@ window.handleDrop = function (e, targetDay, targetSlotIndex, targetDocIndex) {
     }
 };
 
+window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotIndex = -1) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (!data) return;
+        const srcDay = data.day;
+        const srcSlot = data.slotIndex;
+        const srcDoc = data.docName;
+        const srcDocIdx = doctors.indexOf(srcDoc);
+
+        if (srcDay === targetDay) {
+            if (srcDocIdx === targetDocIndex) return; // Same doc
+
+            window.pushToUndoStack();
+            window.isDragAndDropOperation = true;
+            
+            if (targetSlotIndex !== -1 && targetSlotIndex !== srcSlot) {
+                // Swap the two slots on the same day
+                window.updateDoctorAssignment(srcDay, srcSlot, targetDocIndex);
+                window.updateDoctorAssignment(srcDay, targetSlotIndex, srcDocIdx);
+            } else {
+                // Just reassign the source slot to the new doctor
+                window.updateDoctorAssignment(srcDay, srcSlot, targetDocIndex);
+            }
+            
+            window.isDragAndDropOperation = false;
+            
+            renderTableView();
+            renderCalendarView();
+            if (typeof renderPersonCentricView === 'function') renderPersonCentricView(parseUIConfig());
+            
+            showToast(currentLang === 'th' ? 'เปลี่ยนผู้เข้าเวรสำเร็จ' : 'Reassignment successful');
+        } else {
+            // Across day swap
+            if (targetSlotIndex === -1) {
+                // Dropped on cell. If the doctor has a shift, swap with their first shift.
+                const targetDayRow = globalResult.schedule[targetDay - 1];
+                let foundSlot = -1;
+                
+                // 1. Try to swap with target doctor's shift
+                for (let i = 0; i < targetDayRow.selectedDocs.length; i++) {
+                    if (targetDayRow.selectedDocs[i] && targetDayRow.selectedDocs[i].name === doctors[targetDocIndex]) {
+                        foundSlot = i;
+                        break;
+                    }
+                }
+                
+                // 2. Try to swap with a shortage slot
+                if (foundSlot === -1) {
+                    for (let i = 0; i < targetDayRow.selectedDocs.length; i++) {
+                        if (targetDayRow.selectedDocs[i] && targetDayRow.selectedDocs[i].name === SHORTAGE_MARKER) {
+                            foundSlot = i;
+                            break;
+                        }
+                    }
+                }
+                
+                if (foundSlot !== -1) {
+                    targetSlotIndex = foundSlot;
+                } else {
+                    showToast(currentLang === 'th' ? 'ไม่สามารถย้ายได้ เนื่องจากไม่มีเวรว่างให้สลับในวันเป้าหมาย' : 'Cannot move shift. Target day has no empty slots to swap with.', 'error');
+                    return;
+                }
+            }
+            
+            window.pushToUndoStack();
+            window.isDragAndDropOperation = true;
+            
+            window.updateDoctorAssignment(srcDay, srcSlot, targetDocIndex);
+            window.updateDoctorAssignment(targetDay, targetSlotIndex, srcDocIdx);
+            
+            window.isDragAndDropOperation = false;
+            
+            renderTableView();
+            renderCalendarView();
+            if (typeof renderPersonCentricView === 'function') renderPersonCentricView(parseUIConfig());
+            
+            showToast(currentLang === 'th' ? 'สลับเวรข้ามวันสำเร็จ' : 'Cross-day swap successful');
+        }
+    } catch (err) {
+        console.error("Person drag and drop failed:", err);
+    }
+};
+
 // Render Person-Centric View
 function renderPersonCentricView(config) {
     const head = document.getElementById('personViewHeader');
@@ -3804,6 +3896,8 @@ function renderPersonCentricView(config) {
                 if (sd && sd.name === doc) slotIndices.push(sIdx + 1);
             });
 
+            let docIndexToPass = isShortage ? -1 : doctors.indexOf(doc);
+
             if (slotIndices.length > 0) {
                 let bgClass = "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400";
                 if (isShortage) {
@@ -3818,12 +3912,16 @@ function renderPersonCentricView(config) {
                         "bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-400",
                         "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400"
                     ];
-                    bgClass = colors[doctors.indexOf(doc) % colors.length];
+                    bgClass = colors[docIndexToPass % colors.length];
                 }
 
-                bodyHtml += `<td class="border-b ${borderClass} p-0.5 text-center"><div class="rounded w-full h-full text-[10px] font-bold flex items-center justify-center py-1 ${bgClass}">${slotIndices.join(',')}</div></td>`;
+                let badgesHtml = slotIndices.map(sIdx => 
+                    `<div draggable="true" ondragstart="handleDragStart(event, ${d}, ${sIdx - 1}, ${docIndexToPass})" ondrop="handlePersonDrop(event, ${d}, ${docIndexToPass}, ${sIdx - 1})" class="rounded w-full text-[10px] font-bold flex items-center justify-center py-1 cursor-grab active:cursor-grabbing mb-0.5 last:mb-0 ${bgClass}">${sIdx}</div>`
+                ).join('');
+
+                bodyHtml += `<td class="border-b ${borderClass} p-0.5 text-center align-top" ondragover="handleDragOver(event)" ondrop="handlePersonDrop(event, ${d}, ${docIndexToPass})">${badgesHtml}</td>`;
             } else {
-                bodyHtml += `<td class="border-b ${borderClass}"></td>`;
+                bodyHtml += `<td class="border-b ${borderClass}" ondragover="handleDragOver(event)" ondrop="handlePersonDrop(event, ${d}, ${docIndexToPass})"></td>`;
             }
         }
         bodyHtml += `</tr>`;

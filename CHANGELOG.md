@@ -6,11 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [1.3.0] - 2026-07-02
 ### Added
+- **Person-Centric Drag and Drop**: Implemented drag-and-drop shift reassignment for the Person-Centric View. Users can intuitively click and drag a doctor's shift badge to another doctor on the same day, or drop it on a different day to swap shifts across days or fill a shortage.
 - **F8 Structured UI Inputs**: Replaced all 6 legacy free-text comma-separated string inputs (Doctor Roles, Slots Per Role, Exact Monthly Quota, Conflict List, Special Holidays, No-Duty Days) with structured, interactive UI components. This eliminates syntax errors (like missing commas or typos) by providing dropdowns, chips, and stepper buttons for configuration.
 - **Quota Density Sorting Heuristic**: Implemented a density-based sorting heuristic in the solver (`sortDoctors`) to prioritize doctors with higher `remainingQuota / remainingAvailableDays`, preventing late-month shortages for doctors with off requests (e.g. the `failed_case` configuration).
 - **UI Auto-Updating**: Enabled immediate auto-recalculation and re-rendering of the Individual Duty Summary table and Stats Dashboard when manual edits, cell auto-resets, or undo actions occur.
 
 ### Fixed
+- **Reset All Overrides Button Overlap**: Fixed a layout bug in the schedule header where the "Reset All Overrides" action button overlapped with the view switching tabs on narrower desktop screens by applying flexible container wrapping.
+- **Reset Button View Synchronization**: Fixed an issue where resetting a manually assigned cell back to the automatic solver failed to instantly re-render the Person-Centric view.
 - **Lexical Scoping Bug in sortDoctors**: Fixed a bug where `sortDoctors` (defined outside the scheduling loop) read the block-scoped loop variable `day` resulting in `undefined`. It now correctly receives `day` as `currentDay`.
 - **Manual Override Constraint Checking Crash**: Fixed a `TypeError: offMap.has is not a function` crash during manual cell assignment updates by correctly querying the inner `Set` using `offMap[dayKey].has(doc)`.
 
