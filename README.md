@@ -5,7 +5,7 @@
 
 📖 **[How the algorithm works (Technical Logic Report)](logic_report.md)** — A detailed, deep-dive technical reference on the Monte Carlo solver engine, constraint cascades, scoring metrics, and system architecture. Essential reading for anyone auditing or extending this medical scheduling tool.
 
-Link to web "pleuma.github.io/"
+[GitHub](pleuma.github.io/ "Link to web")
 
 ## 🌟 Core Features
 
