@@ -49,7 +49,7 @@ global.localStorage = {
     setItem: (key, val) => { storage[key] = val; }
 };
 
-let appJsCode = fs.readFileSync('./app.js', 'utf8');
+let appJsCode = fs.readFileSync('./translations.js', 'utf8') + '\n' + fs.readFileSync('./app.js', 'utf8');
 
 function loadApp() {
     const window = global.window;

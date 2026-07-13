@@ -77,7 +77,7 @@ function resetMocks() {
 }
 
 // Load app.js code
-let appJsCode = fs.readFileSync('./app.js', 'utf8');
+let appJsCode = fs.readFileSync('./translations.js', 'utf8') + '\n' + fs.readFileSync('./app.js', 'utf8');
 
 // Strip 'let' so app.js uses our global variables
 appJsCode = appJsCode.replace(/let doctors = /g, 'global.doctors = ');

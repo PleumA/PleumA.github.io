@@ -69,7 +69,7 @@ function resetMocks() {
     }
     lastToast = null;
 }
-let appJsCode = fs.readFileSync('./app.js', 'utf8');
+let appJsCode = fs.readFileSync('./translations.js', 'utf8') + '\n' + fs.readFileSync('./app.js', 'utf8');
 // Mock showToast by renaming the original function so it doesn't conflict
 appJsCode = appJsCode.replace('function showToast(msg, isError = false) {', 'function original_showToast_disabled(msg, isError = false) {');
 

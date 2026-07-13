@@ -38,7 +38,7 @@ Or run individual test files separately (e.g., `node tests/solver.test.js`).
 - Keep the application serverless. All logic should run locally on the client thread.
 - Avoid introducing heavy npm packages or build configurations unless absolutely necessary.
 - Follow modern JavaScript best practices (clean async loops, $O(1)$ lookups with `Set`, defensive cloning of state).
-- **Internationalization (i18n)**: All new UI elements must support dual-language toggling via `data-i18n` attributes. Do not hardcode Thai or English text into the HTML structure. Always add translation keys to the `translations` map in `app.js`.
+- **Internationalization (i18n)**: All new UI elements must support dual-language toggling via `data-i18n` attributes. Do not hardcode Thai or English text into the HTML structure. Always add translation keys to the `translations` map in `translations.js`.
 - **Date Handling**: Respect the `isCustomDateRange` global state. Avoid assuming a rigid 1-to-31 day iteration loop; instead, resolve real calendar `Date` objects using the `scheduleDates` array if custom mode is active, and always output dates in `DD/MM/YYYY` format using `formatShortDate`. Ensure that day labels in views reset at month boundaries when spanning across multiple calendar months.
 
 ### UX/UI & Mobile First

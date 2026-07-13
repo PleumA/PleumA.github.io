@@ -444,7 +444,7 @@ Defines the metadata configuration for the PWA:
 ### 2. Cache-First Service Worker (`sw.js`)
 Handles offline asset delivery and state synchronization:
 - **Pre-Caching Lifecycle**: During the `install` phase, download and cache core application assets:
-  - Local documents: `./`, `./index.html`, `./app.js`, `./manifest.json`
+  - Local documents: `./`, `./index.html`, `./translations.js`, `./app.js`, `./manifest.json`
   - External CDNs: Tailwind CSS, SheetJS (XLSX export), Lucide Icons, and Google Fonts (Sarabun).
 - **Offline Fallback Route**: Listens to `fetch` events, attempting to retrieve resources directly from the local Cache storage first. If the cache misses, it falls back to the network.
 - **Versioned Cache Invalidation**: Listens to the `activate` event, automatically wiping old versions of caches when updating CACHE_NAME to prevent serving stale client-side logic.
@@ -479,7 +479,7 @@ Since `app.js` runs in the browser, the Node.js test harness mocks:
 
 ## 🧪 Test Suite & Quality Assurance
 
-The system employs a comprehensive, zero-dependency Node.js test suite (`tests/*.test.js`). Rather than relying on heavy frameworks like Jest or Mocha, the suite uses a lightweight, decoupled mock-DOM pattern. The test runner uses `fs.readFileSync` combined with `eval()` to inject `app.js` into an isolated Node environment while strategically mocking `global.document`, `global.window`, and specific browser behaviors.
+The system employs a comprehensive, zero-dependency Node.js test suite (`tests/*.test.js`). Rather than relying on heavy frameworks like Jest or Mocha, the suite uses a lightweight, decoupled mock-DOM pattern. The test runner uses `fs.readFileSync` combined with `eval()` to inject `translations.js` and `app.js` into an isolated Node environment while strategically mocking `global.document`, `global.window`, and specific browser behaviors.
 
 ### Covered Domains
 1. **Core Solver Logic (`solver.test.js`)**: Validates the Monte Carlo engine's mathematical properties, such as precise quota summing, circular conflict resolution, and constraint fallback safety.
@@ -499,4 +499,3 @@ During the recent test suite expansion and auditing phase, several significant l
 - **Test Harness Decoupling**: Fixed the `quotaSinglePool` test file regexes which were using rigid replacements, resolving mock evaluation failures.
 - **Type mismatch for `offMap`**: The manual override verification (`explainSlotFailure` and `updateDayNote`) mistakenly interacted with `offMap` / `offToday` dynamically, sometimes resulting in a `TypeError: offMap.has is not a function` when evaluating override validity. This has been resolved by correctly querying the inner `Set` using `offMap[dayKey].has(doc)`.
 - **Auto-Updating Summary Table**: Re-rendering and counts recalculation are now automatically executed upon manual edits in List or Calendar views, cell auto-resets, and undo actions.
-

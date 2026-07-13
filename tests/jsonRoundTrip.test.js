@@ -73,7 +73,7 @@ function resetMocks() {
     document.getElementById('monthYearContainer').classList.add = () => {};
 }
 
-let appJsCode = fs.readFileSync('./app.js', 'utf8');
+let appJsCode = fs.readFileSync('./translations.js', 'utf8') + '\n' + fs.readFileSync('./app.js', 'utf8');
 appJsCode = appJsCode.replace(/let doctors = /g, 'global.doctors = ');
 appJsCode = appJsCode.replace(/let offData = /g, 'global.offData = ');
 appJsCode = appJsCode.replace(/let extraSlotsData = /g, 'global.extraSlotsData = ');

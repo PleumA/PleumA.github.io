@@ -64,7 +64,7 @@ function resetMocks() {
     global.isCalculating = false;
 }
 
-let appJsCode = fs.readFileSync('app.js', 'utf8');
+let appJsCode = fs.readFileSync('translations.js', 'utf8') + '\n' + fs.readFileSync('app.js', 'utf8');
 appJsCode = appJsCode.replace(/document\.addEventListener\('DOMContentLoaded',\s*\(\)\s*=>\s*\{/g, 'function dummyInit() {');
 appJsCode = appJsCode.replace(/\}\);\s*\n\/\/ Toggle Role-Based/, '}\n// Toggle Role-Based');
 appJsCode = appJsCode.replace(/let doctors = \[\];/g, '');

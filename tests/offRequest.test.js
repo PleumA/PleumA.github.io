@@ -48,7 +48,7 @@ global.scheduleDates = [];
 global.isCustomDateRange = false;
 global.offData = [];
 
-let appJsCode = fs.readFileSync('./app.js', 'utf8');
+let appJsCode = fs.readFileSync('./translations.js', 'utf8') + '\n' + fs.readFileSync('./app.js', 'utf8');
 appJsCode = appJsCode.replace(/let doctors = /g, 'global.doctors = ');
 appJsCode = appJsCode.replace(/let globalResult = /g, 'global.globalResult = ');
 appJsCode = appJsCode.replace(/let viewMode = /g, 'global.viewMode = ');

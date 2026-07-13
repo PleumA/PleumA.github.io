@@ -5,6 +5,7 @@
 
 📖 **[How the algorithm works (Technical Logic Report)](logic_report.md)** — A detailed, deep-dive technical reference on the Monte Carlo solver engine, constraint cascades, scoring metrics, and system architecture. Essential reading for anyone auditing or extending this medical scheduling tool.
 
+Link to web "pleuma.github.io/"
 
 ## 🌟 Core Features
 
@@ -84,7 +85,8 @@ Built for high reliability, clean execution, and security:
 ## 📂 Architecture
 
 - **`index.html`**: Structures the dashboard layout using Tailwind CSS, including settings for basic config, advanced constraints, role management, and the interactive manual instruction modal. Links `manifest.json` and registers the service worker.
-- **`app.js`**: Contains the scheduling state, Monte Carlo solver search loops, dynamic HTML renderers, and the dual-language translation dictionaries.
+- **`app.js`**: Contains the scheduling state, Monte Carlo solver search loops, and dynamic HTML renderers.
+- **`translations.js`**: Houses the dual-language (Thai/English) translation dictionaries to neatly isolate localization data from core scheduling logic.
 - **`manifest.json`**: Standard web app manifest defining PWA configuration, installable setups, and colors.
 - **`sw.js`**: Service worker script caching key assets for reliable offline performance.
 - **`tests/*.test.js`**: A comprehensive, lightweight Node.js unit testing suite (11 test files, 66+ tests) that verifies corner-case solver behaviors (e.g., circular conflicts, quota sums, and impossible constraints in `solver.test.js`), UI DOM interactions (JSON export/import in `jsonRoundTrip.test.js`), state management (undo stacks in `manualOverrides.test.js`), Lock Special Duty scheduling logic — including Every Weekday mode, custom start day range, and consecutive shift enforcement — in `lockSpecialDuty.test.js`, and security (XSS assertions in `xss.test.js`). The tests utilize a custom decoupled mock-DOM evaluation pattern to run without requiring heavy frameworks like Jest, reporting clean outputs in a unified `PASSED: X, FAILED: Y` format.

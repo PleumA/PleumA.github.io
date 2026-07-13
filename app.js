@@ -1,280 +1,4 @@
-// Multi-language translation dictionaries
-let currentLang = 'th';
-try {
-    currentLang = localStorage.getItem('schedule_lang');
-    if (!currentLang || (currentLang !== 'th' && currentLang !== 'en')) {
-        const nav = typeof window !== 'undefined' ? window.navigator : (typeof navigator !== 'undefined' ? navigator : null);
-        const navLang = nav ? (nav.language || (nav.languages && nav.languages[0]) || '') : '';
-        currentLang = navLang.toLowerCase().startsWith('th') ? 'th' : 'en';
-        localStorage.setItem('schedule_lang', currentLang);
-    }
-} catch (e) {
-    currentLang = 'en'; // Safe fallback if localStorage is disabled
-}
-
-const SHORTAGE_MARKER = "__SHORTAGE__";
-const esc = (str) => {
-    if (typeof str !== 'string') return str;
-    return str.replace(/[&<>"']/g, function (m) {
-        switch (m) {
-            case '&': return '&amp;';
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '"': return '&quot;';
-            case "'": return '&#39;';
-        }
-    });
-};
-const translations = {
-    th: {
-        title: "ระบบจัดตารางเวรอัตโนมัติ",
-        subtitle: "คำนวณอย่างชาญฉลาดด้วย Smart Solver • ปรับปรุงตารางด้วยตนเองได้",
-        calcBtn: "คำนวณตารางใหม่",
-        basicSettings: "ตั้งค่าพื้นฐาน",
-        monthLabel: "เดือน (1-12)",
-        yearLabel: "ปี (พ.ศ. / ค.ศ.)",
-        docListLabel: "รายชื่อแพทย์",
-        docInputPlaceholder: "พิมพ์ชื่อแล้วกด Enter หรือจุลภาค (,)",
-        specialHolsLabel: "วันหยุดพิเศษ (คั่นด้วย ,)",
-        noDutyLabel: "วันที่งดเวร (ไม่ต้องมีคนอยู่)",
-        docsPerDay: "จำนวนแพทย์ต่อวัน",
-        defaultSlots: "จำนวนคน (ค่าเริ่มต้น)",
-        customSlots: "กำหนดจำนวนคนเฉพาะวัน",
-        addBtn: "เพิ่ม",
-        addConflictBtn: "เพิ่มคู่ขัดแย้ง",
-        noDocsWarning: "โปรดเพิ่มรายชื่อแพทย์ก่อน",
-        addDatePlaceholder: "เพิ่มวัน...",
-        customSlotsDesc: "ระบุจำนวนคนที่ต้องการใช้เฉพาะบางวันได้",
-        offRequests: "วันขอพัก (Off)",
-        offRequestsSelect: "เลือกแพทย์...",
-        advSettings: "เงื่อนไขการจัดเวรขั้นสูง",
-        strictRules: "กฎเหล็กบังคับ (ปิดไม่ได้)",
-        ruleHoliday: "ห้ามอยู่เวรวันหยุดติดกัน (ส.-อา. + หยุดพิเศษ)",
-        ruleOffDay: "ก่อนหน้าวัน Off 1 วัน จะต้องไม่มีเวรเสมอ",
-        ruleConsecutive: "ห้ามอยู่เวรติดกันทุกกรณี",
-        ruleConsecutiveDesc: "เว้นอย่างน้อย 1 วัน (รวมวันธรรมดา)",
-        ruleGaps: "รักษาระยะห่างของเวร",
-        ruleGapsDesc: "กระจายเวรไม่ให้เกิดช่องว่างที่นานเกินไป",
-        ruleBalance: "เฉลี่ยภาระงานของแพทย์ (Balance Workload)",
-        ruleBalanceDesc: "จัดตารางเวรโดยเฉลี่ยจำนวนเวรรวมของทุกคนให้เท่ากันที่สุด",
-        ruleBlankDays: "อนุญาตให้เว้นว่าง (Allow Blank Days)",
-        ruleBlankDaysDesc: "หากไม่มีแพทย์เพียงพอตามเงื่อนไข ระบบจะปล่อยวันนั้นว่างแทนที่จะบังคับลง",
-        roleToggle: "โหมดแยกบทบาท (Role-Based)",
-        lockSpecial: "ล็อครายชื่อเวรพิเศษ",
-        lockDays: "ในช่วงกี่วันแรก?",
-        lockDaysStart: "เริ่มวันที่",
-        lockDaysTo: "ถึง",
-        lockDocs: "รายชื่อแพทย์ 1 ในนี้",
-        lockDesc: "*ระบบจะจับคู่คนในกลุ่มนี้ลงเวรทุกวัน โดยห้ามอยู่คู่กันเอง",
-        docRolesLabel: "บทบาทของแพทย์ (เช่น A:R1, B:R2)",
-        defaultRoleSlotsLabel: "จำนวนคนแยกตามบทบาท (เช่น R1:1, R2:1)",
-        roleQuotasLabel: "กำหนดโควตาเวรแบบระบุจำนวน (เช่น R1:12, R2:10)",
-        singlePoolQuotasLabel: "โควต้าต่อแพทย์ (เช่น A:12, B:10)",
-        singlePoolQuotasPlaceholder: "เช่น A:12, B:10",
-        singlePoolQuotasDesc: "ถ้าไม่ระบุ จะไม่มีการจำกัดโควต้า",
-        conflictListLabel: "แพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict List)",
-        conflictDesc: "*ระบุคู่ที่ขัดแย้งกัน เช่น A:B, C:D หรือ A conflicts with B",
-        emptyStateTitle: "พร้อมสำหรับการจัดตาราง",
-        emptyStateDesc: "กรอกชื่อแพทย์ให้ครบถ้วน จากนั้นคลิก \"คำนวณตารางใหม่\" เพื่อดูผลลัพธ์",
-        statsTotal: "เวรรวมทั้งหมด",
-        statsShortages: "เวรขาดแคลน",
-        statsAvg: "เฉลี่ยเวร/คน",
-        statsSpread: "ความต่างเวร",
-        summaryTitle: "สรุปจำนวนเวรรายบุคคล",
-        copySummaryBtn: "คัดลอกสรุป",
-        totalShiftsLabel: "รวมทั้งหมด",
-        shiftsUnit: "กะ",
-        tableHeaderDoctors: "แพทย์",
-        tableHeaderWorkdays: "ทำการ (จ-ศ)",
-        tableHeaderHolidays: "หยุด (ส-อา, พิเศษ)",
-        tableHeaderTotal: "รวมทั้งหมด",
-        scheduleTitle: "ตารางเวรปฏิบัติงานจริง",
-        tabTable: "รายการ",
-        tabCalendar: "ปฏิทิน",
-        tabPerson: "บุคคล",
-        resetAllBtn: "คืนค่าระบบคำนวณทั้งหมด",
-        copyExcelBtn: "คัดลอกตาราง (Excel)",
-        exportExcelBtn: "โหลด .xlsx",
-        tableDateCol: "วันที่",
-        tableDayCol: "วัน",
-        tableDutyCol: "เวร",
-        tableNoteCol: "หมายเหตุ",
-        resetCellBtn: "คืนค่าระบบคำนวณ",
-        emptySlot: "- ว่าง",
-        shortageSlot: "⚠️ ขาดคน",
-        holidayLabel: "วันหยุด",
-        specialHolidayLabel: "วันหยุดพิเศษ",
-        noDutyBadge: "งดเวร",
-        shortageWarning: "⚠️ ขาดคนลงเวร",
-        offWarning: "⚠️ {name} ขอพัก (Off)",
-        lockedBadge: "[ล็อคคิว: {name}]",
-        noDutyNote: "[งดเวร]",
-        daySun: "อา.",
-        dayMon: "จ.",
-        dayTue: "อ.",
-        dayWed: "พ.",
-        dayThu: "พฤ.",
-        dayFri: "ศ.",
-        daySat: "ส.",
-        manualBtn: "คู่มือ",
-        manualTitle: "คู่มือการใช้งานระบบจัดตารางเวร",
-        manualIntro: "ระบบจัดตารางเวรนี้ คำนวณด้วยอัลกอริทึม Smart Solver (Monte Carlo Simulation) 300 รอบ เพื่อหาการกระจายเวรที่ดีที่สุด พร้อมทั้งรองรับเงื่อนไขหลากหลายรูปแบบดังนี้:",
-        manualSection1Title: "1. การจัดการแพทย์และบทบาท (Roles)",
-        manualSection1Body: "เพิ่มชื่อแพทย์และกำหนดบทบาทผ่านระบบ Tag และ Dropdown (Interactive UI) ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน (หากต้องการกำหนดโควตาที่จำนวนไม่พอดีกับช่องเวร โปรดเปิดใช้งาน Allow Blank Days)",
-        manualSection2Title: "2. จำนวนเวรตามบทบาท (Slots)",
-        manualSection2Body: "กำหนดจำนวนผู้ปฏิบัติงานต่อวันผ่านปุ่มเพิ่ม/ลด (Stepper) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'",
-        manualSection3Title: "3. แพทย์ที่ขัดแย้งกัน (Conflict List)",
-        manualSection3Body: "เลือกคู่แพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ผ่าน Dropdown อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ",
-        manualSection4Title: "4. วันหยุดและวันพัก (Off Requests)",
-        manualSection4Body: "ระบบห้ามจัดเวรซ้อนทับวัน Off หรือก่อนหน้าวัน Off 1 วัน และห้ามอยู่เวรวันหยุด (ส.-อา. + นักขัตฤกษ์) ติดกันเด็ดขาด (สามารถระบุวันเป็นวันเดี่ยว คั่นด้วยคอมมา หรือระบุเป็นช่วงวันที่ เช่น <code>5, 12</code> หรือ <code>2-10</code> และในโหมดกำหนดช่วงวันที่สามารถกรอกเป็น <code>25/02/2026-04/03/2026</code> ได้)",
-        manualSection5Title: "5. การแก้ไขและตรวจสอบตาราง",
-        manualSection5Body: "ท่านสามารถลากและวาง (Drag & Drop) ชื่อแพทย์ในตาราง ปฏิทิน และมุมมองบุคคล (รองรับการสลับข้ามวัน) เพื่อสลับตัวแพทย์ด้วยตนเอง ระบบจะคำนวณสถิติใหม่พร้อมแสดงป้ายเตือนความขัดแย้ง (Conflict) ทันที",
-        manualSection6Title: "6. การบันทึก/โหลดและการอัปเดตสถิติ",
-        manualSection6Body: "ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ ระบบจะอัปเดตสถิติโดยอัตโนมัติทันทีที่มีการแก้ไขเวรด้วยตนเองหรือกดย้อนกลับ (Undo)",
-        manualSection7Title: "7. โหมดช่วงวันที่กำหนดเอง (Custom Date Range)",
-        manualSection7Body: "คุณสามารถสลับเปิด 'ใช้ช่วงวันที่กำหนดเอง' เพื่อจัดเวรตามวันที่ต้องการ (สูงสุด 90 วัน) แทนการจัดเวรตามเดือนปกติ โดยกรอกวันที่ในรูปแบบ DD/MM/YYYY",
-        customDateRangeToggle: "ใช้ช่วงวันที่กำหนดเอง",
-        startDateLabel: "เริ่ม",
-        endDateLabel: "สิ้นสุด",
-        offRequestCustomNoteText: "ในโหมดช่วงวันที่กำหนดเอง กรุณาระบุวันในรูปแบบ DD/MM/YYYY เช่น 20/05/2026 (หรือ ค.ศ.)",
-        roleSlotsPlaceholder: "เช่น R1:1, R2:1",
-        roleQuotasPlaceholder: "เช่น R1:12, R2:10",
-        csvPlaceholder1: "เช่น 13, 14, 15",
-        csvPlaceholder2: "เช่น 15, 16",
-        docRolesPlaceholder: "เช่น A:R1, B:R2, C:Staff",
-        offRequestsNoDocs: "ไม่มีรายชื่อแพทย์",
-        offRequestsNone: "ยังไม่มีการกำหนดวันขอพัก",
-        customSlotsNone: "ยังไม่มีการระบุจำนวนแพทย์เฉพาะวัน",
-        lockConditionTypeLabel: "ประเภทการล็อก",
-        firstNDaysOpt: "ช่วงแรก N วัน",
-        everyWeekdayOpt: "ทุกวัน",
-        lockWeekdayLabel: "วันที่ต้องการล็อก"
-    },
-    en: {
-        title: "Automatic On-Call Scheduler",
-        subtitle: "Smart calculations with Solver • Manual schedule overrides supported",
-        calcBtn: "Calculate Schedule",
-        basicSettings: "Basic Settings",
-        monthLabel: "Month (1-12)",
-        yearLabel: "Year (AD / BE)",
-        docListLabel: "Doctor List",
-        docInputPlaceholder: "Type name and press Enter or comma (,)",
-        specialHolsLabel: "Special Holidays (comma separated)",
-        noDutyLabel: "No-Duty Days (no staff assigned)",
-        docsPerDay: "Doctors per Day",
-        defaultSlots: "Default Slots (default count)",
-        customSlots: "Custom Daily Slots",
-        addBtn: "Add",
-        addConflictBtn: "Add Conflict Pair",
-        noDocsWarning: "Please add doctors first",
-        addDatePlaceholder: "Add date...",
-        customSlotsDesc: "Specify slot count for specific dates",
-        offRequests: "Off Requests",
-        offRequestsSelect: "Select doctors...",
-        advSettings: "Advanced Constraints",
-        strictRules: "Strict Rules (always active)",
-        ruleHoliday: "No consecutive holiday duties (Sat-Sun + Special)",
-        ruleOffDay: "No duty the day before requested Off day",
-        ruleConsecutive: "Prevent consecutive duties",
-        ruleConsecutiveDesc: "At least 1 day gap (includes weekdays)",
-        ruleGaps: "Maintain gap spacing",
-        ruleGapsDesc: "Distribute duties to avoid long rest gaps",
-        ruleBalance: "Balance Workload",
-        ruleBalanceDesc: "Distribute shifts equally among all doctors",
-        ruleBlankDays: "Allow Blank Days",
-        ruleBlankDaysDesc: "If no eligible doctor is available, leave the slot blank instead of forcing",
-        roleToggle: "Role-Based Mode",
-        lockSpecial: "Lock Special Duty",
-        lockDays: "During the first N days?",
-        lockDaysStart: "Start Day",
-        lockDaysTo: "to",
-        lockDocs: "List of locked doctors",
-        lockDesc: "*System assigns exactly 1 doctor from this group daily, preventing them from pairing together.",
-        docRolesLabel: "Doctor Roles (e.g. A:R1, B:R2)",
-        defaultRoleSlotsLabel: "Slots per Role (e.g. R1:1, R2:1)",
-        roleQuotasLabel: "Exact Monthly Quota (e.g. R1:12, R2:10)",
-        singlePoolQuotasLabel: "Exact Quota Per Doctor (e.g. A:12, B:10)",
-        singlePoolQuotasPlaceholder: "e.g. A:12, B:10",
-        singlePoolQuotasDesc: "Leave blank to disable",
-        conflictListLabel: "Conflict / Hate List (Cannot be on shift together)",
-        conflictDesc: "*Enter pairs e.g. A:B, C:D or A conflicts with B",
-        emptyStateTitle: "Ready to Schedule",
-        emptyStateDesc: "Enter doctor names, then click \"Calculate Schedule\" to view results",
-        statsTotal: "Total Duties",
-        statsShortages: "Shortages",
-        statsAvg: "Avg Duties/Doctor",
-        statsSpread: "Workload Spread",
-        summaryTitle: "Individual Duty Summary",
-        copySummaryBtn: "Copy Summary",
-        totalShiftsLabel: "Total",
-        shiftsUnit: "shifts",
-        tableHeaderDoctors: "Doctor",
-        tableHeaderWorkdays: "Weekdays (Mon-Fri)",
-        tableHeaderHolidays: "Holidays (Sat-Sun, Special)",
-        tableHeaderTotal: "Total shifts",
-        scheduleTitle: "Official Duty Schedule",
-        tabTable: "List",
-        tabCalendar: "Calendar",
-        tabPerson: "Person",
-        resetAllBtn: "Reset All Overrides",
-        copyExcelBtn: "Copy Schedule (Excel)",
-        exportExcelBtn: "Export .xlsx",
-        tableDateCol: "Date",
-        tableDayCol: "Day",
-        tableDutyCol: "Duty",
-        tableNoteCol: "Notes",
-        resetCellBtn: "Reset to Auto",
-        emptySlot: "- Open",
-        shortageSlot: "⚠️ Shortage",
-        holidayLabel: "Weekend / Holiday",
-        specialHolidayLabel: "Special Holiday",
-        noDutyBadge: "No Duty",
-        shortageWarning: "⚠️ Shortage of doctors",
-        offWarning: "⚠️ {name} requested Off",
-        lockedBadge: "[Locked: {name}]",
-        noDutyNote: "[No Duty]",
-        daySun: "Sun",
-        dayMon: "Mon",
-        dayTue: "Tue",
-        dayWed: "Wed",
-        dayThu: "Thu",
-        dayFri: "Fri",
-        daySat: "Sat",
-        manualBtn: "Manual",
-        manualTitle: "User Manual & Guide",
-        manualIntro: "This scheduler uses a Smart Solver algorithm (Monte Carlo Simulation) running 300 iterations to find the fairest workload distribution, satisfying these criteria:",
-        manualSection1Title: "1. Doctors & Roles Setup",
-        manualSection1Body: "Add doctors and assign roles using the interactive UI tags and dropdowns. The system allocates duties within each role pool independently. (If you want to use unbalanced exact quotas, please turn on Allow Blank Days).",
-        manualSection2Title: "2. Slots & Daily Demands",
-        manualSection2Body: "Set daily needs using the numeric steppers. Define date-specific overrides in 'Custom Daily Slots'.",
-        manualSection3Title: "3. Conflict / Hate List",
-        manualSection3Body: "Select doctors who cannot work on the same shift using the conflict dropdowns. The solver automatically excludes them from matching pools.",
-        manualSection4Title: "4. Holidays & Off Requests",
-        manualSection4Body: "The scheduler enforces strict rules: no shifts on Off days or the day prior, and no consecutive holiday/weekend duties. Off requests can be entered as single days, comma-separated lists, or date ranges (e.g., <code>5, 12</code>, <code>2-10</code>, or <code>25/02/2026-04/03/2026</code>).",
-        manualSection5Title: "5. Manual Overrides & Warnings",
-        manualSection5Body: "Use Drag and Drop to move doctors in the Table, Calendar, and Person views (including cross-day swaps) for manual overrides. The system instantly auto-updates workload stats and displays real-time warning badges.",
-        manualSection6Title: "6. Save/Load Config & Stats Sync",
-        manualSection6Body: "Export configuration state as a JSON backup file to instantly reload later. The UI auto-recalculates summary stats immediately when manual edits, resets, or undo actions occur.",
-        manualSection7Title: "7. Custom Date Range Mode",
-        manualSection7Body: "Toggle 'Use Custom Date Range' to schedule duties across any arbitrary dates (up to 90 days) instead of rigid months. Dates should be formatted as DD/MM/YYYY.",
-        customDateRangeToggle: "Use Custom Date Range",
-        startDateLabel: "Start Date",
-        endDateLabel: "End Date",
-        offRequestCustomNoteText: "In custom date range mode, please enter date as DD/MM/YYYY e.g., 20/05/2026 (AD year)",
-        roleSlotsPlaceholder: "e.g. R1:1, R2:1",
-        roleQuotasPlaceholder: "e.g. R1:12, R2:10",
-        csvPlaceholder1: "e.g. 13, 14, 15",
-        csvPlaceholder2: "e.g. 15, 16",
-        docRolesPlaceholder: "e.g. A:R1, B:R2, C:Staff",
-        offRequestsNoDocs: "No doctors in list",
-        offRequestsNone: "No off requests set",
-        customSlotsNone: "No custom slots set",
-        lockConditionTypeLabel: "Lock Condition Type",
-        firstNDaysOpt: "First N Days",
-        everyWeekdayOpt: "Everyday",
-        lockWeekdayLabel: "Day to Lock"
-    }
-};
+// Multi-language translation dictionaries and initialization logic have been moved to translations.js
 
 // Default doctors populated to give a stunning starting look
 let doctors = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -443,6 +167,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (allowBlankDaysInput) {
         allowBlankDaysInput.addEventListener('change', () => generateSchedule());
     }
+    const softAlternateInput = document.getElementById('chkSoftAlternate');
+    if (softAlternateInput) {
+        softAlternateInput.addEventListener('change', (e) => {
+            const container = document.getElementById('alternateStrengthContainer');
+            if (container) {
+                if (e.target.checked) {
+                    container.classList.remove('hidden');
+                } else {
+                    container.classList.add('hidden');
+                }
+            }
+            generateSchedule();
+        });
+    }
+    const alternateStrengthInput = document.getElementById('selectAlternateStrength');
+    if (alternateStrengthInput) {
+        alternateStrengthInput.addEventListener('change', () => generateSchedule());
+    }
     const roleBasedInput = document.getElementById('chkRoleBased');
     if (roleBasedInput) {
         roleBasedInput.addEventListener('change', () => {
@@ -496,6 +238,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sync roles mapping input
     syncDoctorRolesInput();
     toggleRoleBasedUI();
+
+    // Sync alternate strength container visibility
+    const softAlternateInputInit = document.getElementById('chkSoftAlternate');
+    if (softAlternateInputInit) {
+        const container = document.getElementById('alternateStrengthContainer');
+        if (container) {
+            if (softAlternateInputInit.checked) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+    }
 
     // Start automatic calculation
     setTimeout(() => {
@@ -1192,6 +947,19 @@ function parseUIConfig() {
     const allowBlankDays = document.getElementById('chkAllowBlankDays')?.checked;
     const roleBased = document.getElementById('chkRoleBased')?.checked;
 
+    const chkSoftAlternate = document.getElementById('chkSoftAlternate')?.checked ?? true;
+    const selectAlternateStrength = document.getElementById('selectAlternateStrength')?.value || 'medium';
+
+    let windowPenalty = 150;
+    let pairPenalty = 300;
+    if (selectAlternateStrength === 'low') {
+        windowPenalty = 50;
+        pairPenalty = 100;
+    } else if (selectAlternateStrength === 'high') {
+        windowPenalty = 300;
+        pairPenalty = 600;
+    }
+
     const calcYear = year > 2500 ? year - 543 : year;
     const specialHols = specialHolidaysInput.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
     const noDutyDays = noDutyDaysInput.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
@@ -1553,8 +1321,31 @@ function parseUIConfig() {
         roleBased, doctorRoles, quota, hasQuotas,
         useSpecialRule, specialDocs, specialRuleDays,
         preventConsecutiveAll, preventLongGaps, balanceShifts, allowBlankDays,
-        getRoleSlotsForDay, areConflicting, specialHols
+        getRoleSlotsForDay, areConflicting, specialHols,
+        chkSoftAlternate, selectAlternateStrength, windowPenalty, pairPenalty
     };
+
+    // Warning: With 2 slots but only 2 doctors, the same pair is forced to repeat
+    if (chkSoftAlternate && typeof showToast === 'function') {
+        if (roleBased) {
+            const roles = Object.keys(defaultRoleSlots);
+            roles.forEach(role => {
+                const count = defaultRoleSlots[role];
+                const docsInRole = doctors.filter(doc => (doctorRoles[doc] || 'Default') === role);
+                if (count === 2 && docsInRole.length === 2) {
+                    const msgTH = `คำเตือน: มีแพทย์เพียง 2 คนสำหรับบทบาท "${role}" ซึ่งต้องจัด 2 เวรต่อวัน ทำให้ต้องจัดคู่เดิมซ้ำเสมอ`;
+                    const msgEN = `Warning: Only 2 doctors available for role "${role}" requiring 2 slots per day. The same pair will always repeat.`;
+                    showToast(currentLang === 'th' ? msgTH : msgEN, true);
+                }
+            });
+        } else {
+            if (doctors.length === 2 && defaultSlots === 2) {
+                const msgTH = "คำเตือน: มีแพทย์เพียง 2 คนสำหรับ 2 เวรต่อวัน ทำให้ต้องจัดคู่เดิมซ้ำเสมอ";
+                const msgEN = "Warning: Only 2 doctors available for 2 slots per day. The same pair will always repeat.";
+                showToast(currentLang === 'th' ? msgTH : msgEN, true);
+            }
+        }
+    }
 
     if (hasQuotas) {
         const violations = checkQuotaFeasibility(configObj);
@@ -2042,7 +1833,18 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
         total: tCounts[doc] || 0
     }));
 
-    return { schedule: scheduleData, summary: summaryData, wCounts, hCounts, tCounts, maxSlots: maxSlotsFound };
+    return {
+        schedule: scheduleData,
+        summary: summaryData,
+        wCounts,
+        hCounts,
+        tCounts,
+        maxSlots: maxSlotsFound,
+        config: config,
+        chkSoftAlternate: config ? config.chkSoftAlternate : true,
+        windowPenalty: config ? config.windowPenalty : 150,
+        pairPenalty: config ? config.pairPenalty : 300
+    };
 }
 
 // Wrap the solver candidate generation function to reset proxy counter
@@ -2105,7 +1907,81 @@ function scoreSchedule(candidate) {
         }
     });
 
-    return score;
+    // 4. Soft alternate penalty
+    let windowScore = 0;
+    let pairScore = 0;
+
+    const chkSoftAlternate = candidate.chkSoftAlternate !== undefined 
+        ? candidate.chkSoftAlternate 
+        : (candidate.config ? candidate.config.chkSoftAlternate : true);
+    const windowPenalty = candidate.windowPenalty !== undefined 
+        ? candidate.windowPenalty 
+        : (candidate.config ? candidate.config.windowPenalty : 150);
+    const pairPenalty = candidate.pairPenalty !== undefined 
+        ? candidate.pairPenalty 
+        : (candidate.config ? candidate.config.pairPenalty : 300);
+
+    if (chkSoftAlternate) {
+        // PENALTY TERM A — Solo Repeat Window
+        let windowExcess = 0;
+        const numDays = candidate.schedule.length;
+        doctors.forEach(doc => {
+            for (let d = 3; d <= numDays; d++) {
+                let count = 0;
+                for (let dayOffset = d - 2; dayOffset <= d; dayOffset++) {
+                    const dayData = candidate.schedule[dayOffset - 1];
+                    if (dayData && dayData.selectedDocs.some(o => o.name === doc)) {
+                        count++;
+                    }
+                }
+                if (count > 1) {
+                    windowExcess += (count - 1);
+                }
+            }
+        });
+        windowScore = windowExcess * windowPenalty;
+
+        // PENALTY TERM B — Pair/Group Repeat
+        const roleBased = (candidate.config && candidate.config.roleBased !== undefined)
+            ? candidate.config.roleBased
+            : (typeof isRoleBased !== 'undefined' ? isRoleBased : (document.getElementById('chkRoleBased')?.checked || false));
+
+        let pairCounts = {};
+        candidate.schedule.forEach(day => {
+            if (day.isNoDuty) return;
+
+            let assigned = [];
+            day.selectedDocs.forEach((docObj, idx) => {
+                const docName = docObj.name;
+                if (doctors.includes(docName)) {
+                    if (roleBased) {
+                        assigned.push(`slot${idx}:${docName}`);
+                    } else {
+                        assigned.push(docName);
+                    }
+                }
+            });
+            if (assigned.length >= 2) {
+                assigned.sort();
+                const key = assigned.join('|');
+                pairCounts[key] = (pairCounts[key] || 0) + 1;
+            }
+        });
+
+        let pairExcess = 0;
+        Object.keys(pairCounts).forEach(key => {
+            const count = pairCounts[key];
+            if (count > 1) {
+                pairExcess += (count - 1);
+            }
+        });
+        pairScore = pairExcess * pairPenalty;
+    }
+
+    candidate.windowScore = windowScore;
+    candidate.pairScore = pairScore;
+
+    return score - windowScore - pairScore;
 }
 
 let isCalculating = false;
@@ -3531,7 +3407,8 @@ window.exportConfigJSON = function () {
             inputSpecialDocs: document.getElementById('inputSpecialDocs')?.value || '',
             inputSpecialStartDay: document.getElementById('inputSpecialStartDay')?.value || '1',
             lockConditionType: document.getElementById('lockConditionType')?.value || 'firstNDays',
-            selectLockWeekday: document.getElementById('selectLockWeekday')?.value || '0'
+            selectLockWeekday: document.getElementById('selectLockWeekday')?.value || '0',
+            selectAlternateStrength: document.getElementById('selectAlternateStrength')?.value || 'medium'
         },
         checkboxes: {
             chkCustomDateRange: document.getElementById('chkCustomDateRange')?.checked || false,
@@ -3540,7 +3417,8 @@ window.exportConfigJSON = function () {
             chkPreventLongGaps: document.getElementById('chkPreventLongGaps')?.checked || false,
             chkBalanceShifts: document.getElementById('chkBalanceShifts')?.checked || false,
             chkAllowBlankDays: document.getElementById('chkAllowBlankDays')?.checked || false,
-            chkUseSpecialRule: document.getElementById('chkUseSpecialRule')?.checked || false
+            chkUseSpecialRule: document.getElementById('chkUseSpecialRule')?.checked || false,
+            chkSoftAlternate: document.getElementById('chkSoftAlternate')?.checked ?? true
         }
     };
 
@@ -3611,6 +3489,25 @@ window.importConfigJSON = function (event) {
             const specialStartDayEl = document.getElementById('inputSpecialStartDay');
             if (specialStartDayEl && (!config.inputs || !config.inputs.hasOwnProperty('inputSpecialStartDay'))) {
                 specialStartDayEl.value = '1';
+            }
+
+            // Set defaults for Soft Alternate if missing
+            const chkSoftAlternateEl = document.getElementById('chkSoftAlternate');
+            if (chkSoftAlternateEl && (!config.checkboxes || !config.checkboxes.hasOwnProperty('chkSoftAlternate'))) {
+                chkSoftAlternateEl.checked = true;
+            }
+            const selectAlternateStrengthEl = document.getElementById('selectAlternateStrength');
+            if (selectAlternateStrengthEl && (!config.inputs || !config.inputs.hasOwnProperty('selectAlternateStrength'))) {
+                selectAlternateStrengthEl.value = 'medium';
+            }
+            // Sync visibility of Soft Alternate strength container
+            const altStrengthContainer = document.getElementById('alternateStrengthContainer');
+            if (altStrengthContainer && chkSoftAlternateEl) {
+                if (chkSoftAlternateEl.checked) {
+                    altStrengthContainer.classList.remove('hidden');
+                } else {
+                    altStrengthContainer.classList.add('hidden');
+                }
             }
 
             // Explicitly trigger the custom date range toggle logic

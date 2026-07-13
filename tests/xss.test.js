@@ -64,7 +64,7 @@ function resetMocks() {
     }
 }
 
-let appJsCode = fs.readFileSync('./app.js', 'utf8');
+let appJsCode = fs.readFileSync('./translations.js', 'utf8') + '\n' + fs.readFileSync('./app.js', 'utf8');
 
 appJsCode = appJsCode.replace(/let doctors = /g, 'global.doctors = ');
 appJsCode = appJsCode.replace(/let globalResult = /g, 'global.globalResult = ');

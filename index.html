@@ -493,6 +493,33 @@
                                 class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
                         </div>
                     </div>
+                    <div class="flex items-center justify-between p-2">
+                        <div>
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleSoftAlternate">
+                                สลับเวรอัตโนมัติ / Auto-Alternate Doctors</h4>
+                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
+                                data-i18n="ruleSoftAlternateDesc">
+                                ลดการทำงานร่วมกันซ้ำๆ ของกลุ่มเดิม / Reduces repeated same-group scheduling</p>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
+                            <input type="checkbox" id="chkSoftAlternate" checked
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
+                            <label for="chkSoftAlternate"
+                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
+                        </div>
+                    </div>
+                    <div id="alternateStrengthContainer" class="p-2">
+                        <label for="selectAlternateStrength"
+                            class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                            data-i18n="alternateStrengthLabel">ความเข้มของการสลับ / Alternation Strength</label>
+                        <select id="selectAlternateStrength"
+                            class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-teal-500 font-semibold text-slate-800 dark:text-slate-100">
+                            <option value="low" data-i18n="strengthLow">Low (ต่ำ)</option>
+                            <option value="medium" selected data-i18n="strengthMedium">Medium (กลาง)</option>
+                            <option value="high" data-i18n="strengthHigh">High (สูง)</option>
+                        </select>
+                    </div>
                     <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
                         <label
                             class="block text-xs font-bold text-slate-650 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
@@ -985,6 +1012,7 @@
 
     <!-- Application Logic -->
     <script src="structuredInputs.js"></script>
+    <script src="translations.js"></script>
     <script src="app.js"></script>
 </body>
 

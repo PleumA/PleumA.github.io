@@ -20,7 +20,7 @@ function runTest(name, testFn) {
 
 console.log("Setting up JSDOM for F8: Structured Inputs...");
 let indexHtml = fs.readFileSync('index.html', 'utf8');
-const appJs = fs.readFileSync('app.js', 'utf8');
+const appJs = fs.readFileSync('translations.js', 'utf8') + '\n' + fs.readFileSync('app.js', 'utf8');
 const structuredInputsJs = fs.readFileSync('structuredInputs.js', 'utf8');
 
 // Strip tailwind config script to prevent "tailwind is not defined" error during JSDOM parsing

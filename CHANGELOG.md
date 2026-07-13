@@ -4,6 +4,11 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-07-13
+### Added
+- **Auto-Alternate Doctors (Soft Constraint)**: Added a new toggleable scheduling rule to reduce repeated same-group scheduling. Includes three configurable strength levels (Low, Medium, High). Integrated into the solver via solo repeat window penalties and pair/group combination penalties.
+- **Translation Module Extraction**: Decoupled the dual-language (Thai/English) translation dictionary from `app.js` into its own dedicated `translations.js` file, improving maintainability and code readability.
+
 ## [1.3.0] - 2026-07-02
 ### Added
 - **Person-Centric Drag and Drop**: Implemented drag-and-drop shift reassignment for the Person-Centric View. Users can intuitively click and drag a doctor's shift badge to another doctor on the same day, or drop it on a different day to swap shifts across days or fill a shortage.
