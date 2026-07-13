@@ -133,6 +133,7 @@
         .mobile-view-btn {
             display: none;
         }
+
         @media (max-width: 1023px) {
             body:has(#resultsContainer:not(.hidden)) .mobile-view-btn {
                 display: flex;
@@ -193,7 +194,8 @@
     <main class="max-w-7xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:overflow-hidden">
 
         <!-- Left Column: Config -->
-        <section class="lg:col-span-4 flex flex-col gap-6 lg:block lg:space-y-6 lg:h-[calc(100vh-150px)] lg:overflow-y-auto lg:flex-shrink-0">
+        <section
+            class="lg:col-span-4 flex flex-col gap-6 lg:block lg:space-y-6 lg:h-[calc(100vh-150px)] lg:overflow-y-auto lg:flex-shrink-0">
 
             <!-- Basic Config -->
             <div
@@ -308,7 +310,8 @@
                                 <label
                                     class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                                     data-i18n="docRolesLabel">บทบาทของแพทย์</label>
-                                <input type="text" id="inputDoctorRoles" value="A:R1, B:R2, C:R1, D:R2, E:R1, F:R2" class="hidden">
+                                <input type="text" id="inputDoctorRoles" value="A:R1, B:R2, C:R1, D:R2, E:R1, F:R2"
+                                    class="hidden">
                                 <div id="structuredDoctorRolesContainer" class="space-y-2">
                                     <!-- Structured rows will be injected here by app.js -->
                                 </div>
@@ -338,19 +341,26 @@
                         <label
                             class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide"
                             data-i18n="specialHolsLabel">วันหยุดพิเศษ</label>
-                        <div id="structuredSpecialHolsContainer" class="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl min-h-[50px] focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 outline-none transition-all cursor-text">
-                            <input type="text" id="inputSpecialHolsUI" data-i18n="addDatePlaceholder" placeholder="เพิ่มวัน..." class="flex-1 bg-transparent border-none outline-none text-sm min-w-[140px] py-0.5 text-slate-800 dark:text-slate-100">
+                        <div id="structuredSpecialHolsContainer"
+                            class="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl min-h-[50px] focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 outline-none transition-all cursor-text">
+                            <input type="text" id="inputSpecialHolsUI" data-i18n="addDatePlaceholder"
+                                placeholder="เพิ่มวัน..."
+                                class="flex-1 bg-transparent border-none outline-none text-sm min-w-[140px] py-0.5 text-slate-800 dark:text-slate-100">
                         </div>
                         <input type="text" id="inputSpecialHols" class="hidden">
                     </div>
-                    <div class="space-y-2 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div
+                        class="space-y-2 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                         <label
                             class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                             <i data-lucide="coffee" class="w-4 h-4 text-slate-400"></i>
                             <span data-i18n="noDutyLabel">วันที่งดเวร</span>
                         </label>
-                        <div id="structuredNoDutyContainer" class="flex flex-wrap gap-2 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[50px] focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 outline-none transition-all cursor-text">
-                            <input type="text" id="inputNoDutyUI" data-i18n="addDatePlaceholder" placeholder="เพิ่มวัน..." class="flex-1 bg-transparent border-none outline-none text-sm min-w-[140px] py-0.5 text-slate-800 dark:text-slate-100">
+                        <div id="structuredNoDutyContainer"
+                            class="flex flex-wrap gap-2 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg min-h-[50px] focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 outline-none transition-all cursor-text">
+                            <input type="text" id="inputNoDutyUI" data-i18n="addDatePlaceholder"
+                                placeholder="เพิ่มวัน..."
+                                class="flex-1 bg-transparent border-none outline-none text-sm min-w-[140px] py-0.5 text-slate-800 dark:text-slate-100">
                         </div>
                         <input type="text" id="inputNoDuty" class="hidden">
                     </div>
@@ -382,8 +392,8 @@
                         <div id="structuredSinglePoolQuotasContainer" class="space-y-2">
                             <!-- Stepper rows will be injected here by app.js -->
                         </div>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2"
-                            data-i18n="singlePoolQuotasDesc">ถ้าไม่ระบุ จะไม่มีการจำกัดโควต้า / Leave blank to disable</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2" data-i18n="singlePoolQuotasDesc">
+                            ถ้าไม่ระบุ จะไม่มีการจำกัดโควต้า / Leave blank to disable</p>
                     </div>
                     <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
                         <div class="flex justify-between items-center mb-2">
@@ -479,22 +489,6 @@
                     </div>
                     <div class="flex items-center justify-between p-2">
                         <div>
-                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleBlankDays">
-                                อนุญาตให้เว้นว่าง (Allow Blank Days)</h4>
-                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
-                                data-i18n="ruleBlankDaysDesc">
-                                หากไม่มีแพทย์เพียงพอตามเงื่อนไข ระบบจะปล่อยวันนั้นว่างแทนที่จะบังคับลง</p>
-                        </div>
-                        <div
-                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
-                            <input type="checkbox" id="chkAllowBlankDays"
-                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
-                            <label for="chkAllowBlankDays"
-                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between p-2">
-                        <div>
                             <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleSoftAlternate">
                                 สลับเวรอัตโนมัติ / Auto-Alternate Doctors</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
@@ -520,16 +514,35 @@
                             <option value="high" data-i18n="strengthHigh">High (สูง)</option>
                         </select>
                     </div>
+                    <div class="flex items-center justify-between p-2">
+                        <div>
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleBlankDays">
+                                อนุญาตให้เว้นว่าง (Allow Blank Days)</h4>
+                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
+                                data-i18n="ruleBlankDaysDesc">
+                                หากไม่มีแพทย์เพียงพอตามเงื่อนไข ระบบจะปล่อยวันนั้นว่างแทนที่จะบังคับลง</p>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
+                            <input type="checkbox" id="chkAllowBlankDays"
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
+                            <label for="chkAllowBlankDays"
+                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
+                        </div>
+                    </div>
                     <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
                         <label
                             class="block text-xs font-bold text-slate-650 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                            data-i18n="conflictListLabel">รายชื่อแพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict List)</label>
+                            data-i18n="conflictListLabel">รายชื่อแพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict
+                            List)</label>
                         <textarea id="inputConflicts" class="hidden"></textarea>
                         <div id="structuredConflictsContainer" class="space-y-2 mt-2">
                             <!-- Pair rows will be injected here by app.js -->
                         </div>
-                        <button type="button" onclick="addStructuredConflictPair()" class="mt-3 text-xs bg-teal-100 dark:bg-teal-950/50 text-teal-700 dark:text-teal-400 px-3 py-2 rounded-lg font-bold hover:bg-teal-200 dark:hover:bg-teal-900/60 transition-colors flex items-center gap-1 min-h-[44px]">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span data-i18n="addConflictBtn">เพิ่มคู่ขัดแย้ง</span>
+                        <button type="button" onclick="addStructuredConflictPair()"
+                            class="mt-3 text-xs bg-teal-100 dark:bg-teal-950/50 text-teal-700 dark:text-teal-400 px-3 py-2 rounded-lg font-bold hover:bg-teal-200 dark:hover:bg-teal-900/60 transition-colors flex items-center gap-1 min-h-[44px]">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span
+                                data-i18n="addConflictBtn">เพิ่มคู่ขัดแย้ง</span>
                         </button>
                         <p class="text-[11px] text-slate-400 dark:text-slate-550 mt-2 leading-relaxed"
                             data-i18n="conflictDesc">
@@ -564,7 +577,8 @@
                         <select id="lockConditionType" onchange="toggleLockConditionUI(); generateSchedule();"
                             class="w-full bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 font-semibold text-slate-800 dark:text-slate-100">
                             <option value="firstNDays" data-i18n="firstNDaysOpt">ช่วงแรก N วัน / First N Days</option>
-                            <option value="everyWeekday" data-i18n="everyWeekdayOpt">ทุกวัน [weekday] / Every [Weekday]</option>
+                            <option value="everyWeekday" data-i18n="everyWeekdayOpt">ทุกวัน [weekday] / Every [Weekday]
+                            </option>
                         </select>
                     </div>
                     <div id="lockFirstNDaysContainer">
@@ -614,7 +628,8 @@
 
             <!-- Mobile View Schedule Button -->
             <div class="sticky bottom-4 z-40 mobile-view-btn justify-center lg:hidden">
-                <a href="#resultsContainer" class="bg-teal-600 text-white px-6 py-3 rounded-full shadow-xl font-bold flex items-center gap-2 active:scale-95 transition-transform">
+                <a href="#resultsContainer"
+                    class="bg-teal-600 text-white px-6 py-3 rounded-full shadow-xl font-bold flex items-center gap-2 active:scale-95 transition-transform">
                     📋 ดูตาราง / View Schedule
                 </a>
             </div>
@@ -622,7 +637,8 @@
         </section>
 
         <!-- Right Column: Results -->
-        <section class="lg:col-span-8 flex flex-col gap-6 lg:sticky lg:top-[86px] lg:h-[calc(100vh-150px)] lg:overflow-y-auto">
+        <section
+            class="lg:col-span-8 flex flex-col gap-6 lg:sticky lg:top-[86px] lg:h-[calc(100vh-150px)] lg:overflow-y-auto">
 
             <!-- Empty State -->
             <div id="emptyState"
@@ -743,7 +759,8 @@
                 <!-- Schedule Table & Calendar Panel -->
                 <div
                     class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden flex flex-col min-h-[600px]">
-                    <div class="bg-slate-50 dark:bg-slate-800/40 px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-800/40 px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                             <h3 class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 shrink-0">
                                 <span class="text-lg">🗓️</span> <span
