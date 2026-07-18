@@ -4,6 +4,16 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-07-18
+### Added
+- **Multi-Shift and Role-Based Mode Compatibility**: Enabled Shift-Based Mode (Morning, Afternoon, Night) and Role-Based Mode to run concurrently. The scheduling engine now maps role slot configurations (e.g. `R1:1, R2:1`) sequentially onto the shift slots ($M+A+N$).
+- **Shift Alternation & Rotation Penalty**: Introduced a shift type variance penalty in the scoring algorithm (`scoreSchedule`). This penalizes schedules where a doctor is stuck working only one type of shift (e.g. only Morning shifts), forcing the solver to choose schedules that rotate and alternate shifts fairly for every doctor.
+- **Detailed Summary Table for Shift-Based Mode**: Upgraded the "Individual Duty Summary" table to dynamically display Morning (M), Afternoon (A), and Night (N) shift breakdowns for each doctor under Shift-Based Mode. Supported this in web rendering, clipboard copying (`copySummary`), and Excel exports (`exportToExcel`).
+- **Shift-Based UI & Layout Refinements**: Removed suffix numbers (e.g., displaying simple `M`/`A`/`N` instead of `M1`/`A1`/`N1`) from table headers, clipboard copies, Excel sheets, and person-centric view badges. Added `min-w-0` and set select widths on doctor roles rows to prevent layout elements from overflowing on narrow sidebars.
+
+### Fixed
+- **Summary Recalculation bug**: Fixed a bug where `recalculateCounts` (called after manual overrides) failed to calculate shift-specific counts, wiping out the morning, afternoon, and night shift totals.
+
 ## [1.5.0] - 2026-07-18
 ### Added
 - **Configurable Off-Duty Period**: Replaced the binary "Prevent Consecutive Shifts" toggle with a numeric stepper (`inputOffDutyPeriod`). This allows configuring a minimum rest gap between shifts from 1 to 7 days (default is 2 days, equivalent to a 1-day rest gap). 

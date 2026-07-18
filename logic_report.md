@@ -127,11 +127,12 @@ During standard selection (Cascade Level 1), the solver filters out doctors usin
 1.  **Hard Quota Cap**: If `tCounts[doc] >= quota`, the doctor is excluded.
 2.  **Role Isolation**: If the slot is designated for role `R2`, only doctors mapped to `R2` are allowed.
 3.  **Double Shift Rule**: A doctor already assigned to a slot on `day` cannot be assigned to another slot on the same `day`.
-4.  **Off Requests**: Excludes doctors who requested `day` off, or requested `day + 1` off (to prevent working a night shift right before a rest day).
-5.  **Consecutive Shifts**: Excludes a doctor if they worked on `day - 1`.
-6.  **Holiday Spacing**: If `day` is a holiday/weekend, excludes doctors who worked on the previous holiday/weekend.
-7.  **Gap Spacing**: If possible, excludes doctors who worked on `day - 2` to maintain a 2-day recovery gap.
-8.  **Conflict List**: Excludes doctor `A` if doctor `B` is already scheduled on the same day and `A` is in `B`'s conflict list.
+4.  **Off Requests**: Excludes doctors who requested `day` off. Under standard mode, it also excludes doctors who requested `day + 1` off. Under Shift-Based mode, the day-before-off rule only blocks the doctor from **Night shift slots** on `day - 1` (allowing them to work Morning and Afternoon shifts).
+5.  **Night-to-Morning Spacing (Shift-Based Mode)**: Under Shift-Based mode, a doctor assigned to any Night shift slot on `day - 1` is strictly excluded from all Morning shift slots on `day`.
+6.  **Consecutive Shifts**: Excludes a doctor if they worked on `day - 1`.
+7.  **Holiday Spacing**: If `day` is a holiday/weekend, excludes doctors who worked on the previous holiday/weekend.
+8.  **Gap Spacing**: If possible, excludes doctors who worked on `day - 2` to maintain a 2-day recovery gap.
+9.  **Conflict List**: Excludes doctor `A` if doctor `B` is already scheduled on the same day and `A` is in `B`'s conflict list.
 
 #### B. The Must-Fill Cascade (Fallback Levels)
 If all doctors are filtered out and the slot is empty:
@@ -159,6 +160,7 @@ graph TD
     1.  **Hard Quotas**: A doctor who hit their limit is never picked.
     2.  **Role Isolation**: An `R1` slot will never receive an `R2` doctor.
     3.  **Uniqueness**: A doctor will never work two slots on the same day.
+    4.  **Night-to-Morning Spacing (Shift-Based Mode)**: Under Shift-Based mode, a doctor assigned to any Night shift slot on Day $d-1$ is never allowed to work a Morning shift slot on Day $d$.
 
 9.  **Heuristic Workload Balancing (`balanceShifts`)**: When enabled, the sorting of candidate doctors dynamically prioritizes those with the lowest shift counts (total, workday, or holiday) by resolving any non-zero workload difference during candidate generation instead of relying on a broad `0.4` tolerance. This ensures tighter, more balanced shift allocation across the pool.
 10. **Quota Density Sorting Heuristic**: To prevent late-month shortages for doctors with off requests, the sorting of candidate doctors dynamically prioritizes doctors with higher **Quota Density**:
@@ -171,19 +173,14 @@ graph TD
 
 Once a candidate schedule is built, the solver evaluates its quality by calculating a **Penalty Score**. 
 
-$$Score = (S \times 100000) + (G \times 80) + (\sigma \times 600)$$
+$$Score = (S \times 150000) + (G \times 80) + (\sigma_{total} \times 600) + (\sigma_{holiday} \times 1200) + (\sigma_{workday} \times 300) + V_{shift}$$
 
 Where:
 *   **$S$ (Shortages)**: Number of unfilled slots (`ขาดคน`).
 *   **$G$ (Gap Spacing Violations)**: Proportional penalty for gaps shorter than the configured `offDutyPeriod`.
-*   **$\sigma$ (Workload Variance)**: The Standard Deviation of shifts allocated to the active doctor pool.
-
-#### Workload Variance Standard Deviation Formula:
-$$\sigma = \sqrt{\frac{1}{N}\sum_{i=1}^{N}(X_i - \mu)^2}$$
-Where:
-*   $N$ is the number of active doctors.
-*   $X_i$ is the number of shifts assigned to doctor $i$.
-*   $\mu$ is the mean shift count ($\text{Total Shifts} / N$).
+*   **$\sigma_{total}, \sigma_{holiday}, \sigma_{workday}$ (Workload Variances)**: Standard deviations of total shifts assigned, holiday/weekend shifts assigned, and workday shifts assigned across the active doctor pool.
+*   **$V_{shift}$ (Shift Alternation Variance Penalty)**: Under Shift-Based mode, a variance penalty is calculated for each doctor based on the distribution of their Morning, Afternoon, and Night shifts to encourage fair rotation:
+    $$V_{shift} = \sum_{doc \in doctors} \text{Variance}(\text{Morning}_{doc}, \text{Afternoon}_{doc}, \text{Night}_{doc}) \times 600$$
 
 A schedule with a **lower penalty score** is more balanced and contains fewer rule violations. The solver tracks the candidate with the lowest score across all 300 runs.
 

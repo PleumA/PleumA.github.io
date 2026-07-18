@@ -9,7 +9,7 @@ As this project is currently maintained by two core contributors—**Arnun Polsu
 The application is built entirely on the client side with a minimal, zero-build tech stack:
 - **Structure:** HTML5 (`index.html`)
 - **Styling:** Tailwind CSS (loaded via CDN)
-- **Logic:** Vanilla JavaScript (`app.js`)
+- **Logic:** Vanilla JavaScript (`app.js`, `structuredInputs.js`, `translations.js`)
 - **Excel Exports:** SheetJS (`xlsx.full.min.js` via CDN)
 - **Icons:** Lucide Icons (via CDN)
 

@@ -395,7 +395,7 @@
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2" data-i18n="singlePoolQuotasDesc">
                             ถ้าไม่ระบุ จะไม่มีการจำกัดโควต้า / Leave blank to disable</p>
                     </div>
-                    <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+                    <div id="customSlotsContainer" class="border-t border-slate-200 dark:border-slate-800 pt-4">
                         <div class="flex justify-between items-center mb-2">
                             <label
                                 class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide"
@@ -509,6 +509,38 @@
                             <option value="medium" selected data-i18n="strengthMedium">Medium (กลาง)</option>
                             <option value="high" data-i18n="strengthHigh">High (สูง)</option>
                         </select>
+                    </div>
+                    <div class="flex items-center justify-between p-2">
+                        <div>
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleShiftBased">
+                                โหมดจัดเวร 3 ผลัด / Shift-Based Mode</h4>
+                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
+                                data-i18n="ruleShiftBasedDesc">
+                                จัดตารางเวร 3 ผลัดต่อวัน (เช้า: 08:00-16:00, บ่าย: 16:00-24:00, ดึก: 24:00-08:00)</p>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
+                            <input type="checkbox" id="chkShiftBased"
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
+                            <label for="chkShiftBased"
+                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
+                        </div>
+                    </div>
+                    <div id="shiftSlotsCountsContainer" class="hidden p-3 bg-slate-100/50 dark:bg-slate-900/40 rounded-xl space-y-3 mt-2 mx-2">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center" data-i18n="morningSlotsLabel">เวรเช้า (Morning)</label>
+                                <input type="number" id="inputMorningSlots" value="1" min="0" max="10" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs outline-none text-center font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center" data-i18n="afternoonSlotsLabel">เวรบ่าย (Afternoon)</label>
+                                <input type="number" id="inputAfternoonSlots" value="1" min="0" max="10" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs outline-none text-center font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center" data-i18n="nightSlotsLabel">เวรดึก (Night)</label>
+                                <input type="number" id="inputNightSlots" value="1" min="0" max="10" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs outline-none text-center font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+                            </div>
+                        </div>
                     </div>
                     <div class="flex items-center justify-between p-2">
                         <div>
@@ -732,7 +764,7 @@
                     </div>
                     <div class="overflow-x-auto p-2">
                         <table class="w-full text-center text-sm">
-                            <thead>
+                            <thead id="summaryTableHeader">
                                 <tr
                                     class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[12px] uppercase tracking-wider rounded-t-lg">
                                     <th class="py-3 px-4 text-left font-bold rounded-tl-lg"
@@ -998,6 +1030,17 @@
                         <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection7Body">
                             คุณสามารถสลับเปิด 'ใช้ช่วงวันที่กำหนดเอง' เพื่อจัดเวรตามวันที่ต้องการ (สูงสุด 90 วัน)
                             แทนการจัดเวรตามเดือนปกติ โดยกรอกวันที่ในรูปแบบ DD/MM/YYYY
+                        </p>
+                    </div>
+                    <!-- Section 8 -->
+                    <div
+                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span data-i18n="manualSection8Title">8. โหมดจัดเวร 3 ผลัด (Shift-Based Mode)</span>
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection8Body">
+                            จัดตารางเวร 3 ผลัดต่อวัน (เช้า บ่าย ดึก) โดยสามารถระบุจำนวนคนในแต่ละผลัดได้อย่างอิสระ ระบบมีกฎห้ามอยู่เวรเช้าต่อจากเวรดึก (Night-to-Morning Spacing) และจะห้ามอยู่เวรดึกในวันก่อนวันหยุดของผู้ปฏิบัติงานนั้นๆ เท่านั้น (เวรเช้า/บ่ายของวันก่อนวันหยุดยังสามารถทำได้) พร้อมสถิติสรุปแบ่งตามแต่ละกะเวร
                         </p>
                     </div>
                 </div>

@@ -193,6 +193,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const shiftBasedInput = document.getElementById('chkShiftBased');
+    if (shiftBasedInput) {
+        shiftBasedInput.addEventListener('change', () => {
+            toggleShiftBasedUI();
+            generateSchedule();
+        });
+    }
+    const morningSlotsInput = document.getElementById('inputMorningSlots');
+    if (morningSlotsInput) {
+        morningSlotsInput.addEventListener('change', () => generateSchedule());
+    }
+    const afternoonSlotsInput = document.getElementById('inputAfternoonSlots');
+    if (afternoonSlotsInput) {
+        afternoonSlotsInput.addEventListener('change', () => generateSchedule());
+    }
+    const nightSlotsInput = document.getElementById('inputNightSlots');
+    if (nightSlotsInput) {
+        nightSlotsInput.addEventListener('change', () => generateSchedule());
+    }
+
     const defaultSlotsInput = document.getElementById('inputDefaultSlots');
     if (defaultSlotsInput) {
         defaultSlotsInput.addEventListener('change', () => generateSchedule());
@@ -238,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sync roles mapping input
     syncDoctorRolesInput();
     toggleRoleBasedUI();
+    toggleShiftBasedUI();
 
     // Sync alternate strength container visibility
     const softAlternateInputInit = document.getElementById('chkSoftAlternate');
@@ -267,8 +288,9 @@ function toggleRoleBasedUI() {
         panel.style.display = isOn ? '' : 'none';
     }
     const defaultSlotsContainer = document.getElementById('defaultSlotsContainer');
+    const isShiftActive = document.getElementById('chkShiftBased')?.checked;
     if (defaultSlotsContainer) {
-        if (isOn) {
+        if (isOn || isShiftActive) {
             defaultSlotsContainer.classList.add('hidden');
         } else {
             defaultSlotsContainer.classList.remove('hidden');
@@ -280,6 +302,36 @@ function toggleRoleBasedUI() {
             singlePoolQuotaContainer.classList.add('hidden');
         } else {
             singlePoolQuotaContainer.classList.remove('hidden');
+        }
+    }
+}
+
+// Toggle Shift-Based settings visibility
+function toggleShiftBasedUI() {
+    const isShiftBased = document.getElementById('chkShiftBased')?.checked;
+    const shiftSlotsCountsContainer = document.getElementById('shiftSlotsCountsContainer');
+    const defaultSlotsContainer = document.getElementById('defaultSlotsContainer');
+    const customSlotsContainer = document.getElementById('customSlotsContainer');
+    const chkRoleBased = document.getElementById('chkRoleBased');
+    const isRoleActive = chkRoleBased?.checked;
+    
+    if (shiftSlotsCountsContainer) {
+        if (isShiftBased) {
+            shiftSlotsCountsContainer.classList.remove('hidden');
+        } else {
+            shiftSlotsCountsContainer.classList.add('hidden');
+        }
+    }
+    
+    if (isShiftBased) {
+        if (defaultSlotsContainer) defaultSlotsContainer.classList.add('hidden');
+        if (customSlotsContainer) customSlotsContainer.classList.add('hidden');
+    } else {
+        if (defaultSlotsContainer && !isRoleActive) {
+            defaultSlotsContainer.classList.remove('hidden');
+        }
+        if (customSlotsContainer) {
+            customSlotsContainer.classList.remove('hidden');
         }
     }
 }
@@ -947,6 +999,16 @@ function parseUIConfig() {
     const allowBlankDays = document.getElementById('chkAllowBlankDays')?.checked;
     const roleBased = document.getElementById('chkRoleBased')?.checked;
 
+    const isShiftBased = document.getElementById('chkShiftBased')?.checked || false;
+    let morningSlots = Math.max(0, Math.min(10, parseInt(document.getElementById('inputMorningSlots')?.value) ?? 1));
+    let afternoonSlots = Math.max(0, Math.min(10, parseInt(document.getElementById('inputAfternoonSlots')?.value) ?? 1));
+    let nightSlots = Math.max(0, Math.min(10, parseInt(document.getElementById('inputNightSlots')?.value) ?? 1));
+    if (isShiftBased && morningSlots === 0 && afternoonSlots === 0 && nightSlots === 0) {
+        morningSlots = 1;
+        afternoonSlots = 1;
+        nightSlots = 1;
+    }
+
     const chkSoftAlternate = document.getElementById('chkSoftAlternate')?.checked ?? true;
     const selectAlternateStrength = document.getElementById('selectAlternateStrength')?.value || 'medium';
 
@@ -1249,6 +1311,50 @@ function parseUIConfig() {
             const yyyy = dateObj.getFullYear();
             key = `${dd}/${mm}/${yyyy}`;
         }
+
+        if (isShiftBased) {
+            if (roleBased) {
+                let rawSlots = {};
+                const slotsVal = extraSlotsMap[key];
+                if (slotsVal !== undefined) {
+                    const slotsStr = String(slotsVal).trim();
+                    if (/^\d+$/.test(slotsStr)) {
+                        rawSlots['Default'] = Math.min(parseInt(slotsStr), 50);
+                    } else {
+                        slotsStr.split(/[\n,]+/).forEach(part => {
+                            const pair = part.split(':');
+                            if (pair.length === 2) {
+                                const role = pair[0].trim();
+                                const count = Math.min(parseInt(pair[1].trim()), 50);
+                                if (role && !isNaN(count) && count > 0) rawSlots[role] = count;
+                            }
+                        });
+                    }
+                } else {
+                    rawSlots = { ...defaultRoleSlots };
+                }
+                if (Object.keys(rawSlots).length === 0) rawSlots['Default'] = 1;
+
+                const rolesSeq = [];
+                Object.keys(rawSlots).forEach(role => {
+                    const count = rawSlots[role];
+                    for (let i = 0; i < count; i++) {
+                        rolesSeq.push(role);
+                    }
+                });
+
+                const dayRoleSlots = {};
+                const totalShifts = morningSlots + afternoonSlots + nightSlots;
+                for (let i = 0; i < totalShifts; i++) {
+                    const role = rolesSeq[i % rolesSeq.length] || 'Default';
+                    dayRoleSlots[role] = (dayRoleSlots[role] || 0) + 1;
+                }
+                return dayRoleSlots;
+            } else {
+                return { 'Default': morningSlots + afternoonSlots + nightSlots };
+            }
+        }
+
         const slotsVal = extraSlotsMap[key];
         if (slotsVal === undefined) return { ...defaultRoleSlots };
         let dayRoleSlots = {};
@@ -1322,7 +1428,8 @@ function parseUIConfig() {
         useSpecialRule, specialDocs, specialRuleDays,
         offDutyPeriod, preventLongGaps, balanceShifts, allowBlankDays,
         getRoleSlotsForDay, areConflicting, specialHols,
-        chkSoftAlternate, selectAlternateStrength, windowPenalty, pairPenalty
+        chkSoftAlternate, selectAlternateStrength, windowPenalty, pairPenalty,
+        isShiftBased, morningSlots, afternoonSlots, nightSlots
     };
 
     // Warning: With 2 slots but only 2 doctors, the same pair is forced to repeat
@@ -1389,7 +1496,8 @@ function getRestDaysForDoctor(doctorName, config) {
 
 function checkQuotaFeasibility(config) {
     const violations = [];
-    const { offMap, roleBased, doctorRoles, quota, numDays } = config;
+    const { offMap, roleBased, doctorRoles, quota, numDays, isShiftBased, morningSlots, afternoonSlots, nightSlots } = config;
+    const multiplier = isShiftBased ? (morningSlots + afternoonSlots + nightSlots) : 1;
     
     Object.keys(quota).forEach(key => {
         const required = quota[key];
@@ -1421,7 +1529,7 @@ function checkQuotaFeasibility(config) {
                 
                 const docAvailDays = numDays - docOffCount;
                 const restGap = getRestDaysForDoctor(docName, config);
-                const maxShifts = docAvailDays > 0 ? Math.floor((docAvailDays + restGap - 1) / restGap) : 0;
+                const maxShifts = (docAvailDays > 0 ? Math.floor((docAvailDays + restGap - 1) / restGap) : 0) * multiplier;
                 
                 if (perDoctorShare > maxShifts) {
                     violations.push({
@@ -1457,7 +1565,7 @@ function checkQuotaFeasibility(config) {
 
             const availableDays = numDays - offCount;
             const restGap = getRestDaysForDoctor(doctorName, config);
-            const maxShifts = availableDays > 0 ? Math.floor((availableDays + restGap - 1) / restGap) : 0;
+            const maxShifts = (availableDays > 0 ? Math.floor((availableDays + restGap - 1) / restGap) : 0) * multiplier;
 
             if (required > maxShifts) {
                 violations.push({
@@ -1482,11 +1590,16 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
         roleBased, doctorRoles, quota, hasQuotas,
         useSpecialRule, specialDocs, specialRuleDays,
         offDutyPeriod, preventLongGaps, balanceShifts, allowBlankDays,
-        getRoleSlotsForDay, areConflicting, month, year, specialHols
+        getRoleSlotsForDay, areConflicting, month, year, specialHols,
+        isShiftBased, morningSlots, afternoonSlots, nightSlots
     } = config;
 
     const wCounts = {}; const hCounts = {}; const tCounts = {}; const lastShift = {};
-    doctors.forEach(doc => { wCounts[doc] = 0; hCounts[doc] = 0; tCounts[doc] = 0; lastShift[doc] = -99; });
+    const mCounts = {}; const aCounts = {}; const nCounts = {};
+    doctors.forEach(doc => {
+        wCounts[doc] = 0; hCounts[doc] = 0; tCounts[doc] = 0; lastShift[doc] = -99;
+        mCounts[doc] = 0; aCounts[doc] = 0; nCounts[doc] = 0;
+    });
 
     const scheduleData = [];
     const scheduleMap = {};
@@ -1612,6 +1725,28 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
         const offToday = offMap[offKeyToday] || new Set();
         const offTomorrow = (offKeyTomorrow !== null && offMap[offKeyTomorrow]) ? offMap[offKeyTomorrow] : new Set();
 
+        const isBlockedByOffRequest = (doc, slotIdx) => {
+            if (offToday.has(doc)) return true;
+            if (offTomorrow.has(doc)) {
+                if (isShiftBased) {
+                    return slotIdx >= (morningSlots + afternoonSlots);
+                } else {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        const isBlockedByNightToMorning = (doc, slotIdx) => {
+            if (isShiftBased && slotIdx < morningSlots && day > 1) {
+                const prevDayDocs = scheduleMap[day - 1] || [];
+                for (let s = morningSlots + afternoonSlots; s < morningSlots + afternoonSlots + nightSlots; s++) {
+                    if (prevDayDocs[s] === doc) return true;
+                }
+            }
+            return false;
+        };
+
         let slotsPerDay = 0;
         let dayRoleSlots = getRoleSlotsForDay(day);
         let daySlotsList = [];
@@ -1644,7 +1779,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                         const qVal = quota[key];
                         if (tCounts[doc] >= qVal) return false;
                     }
-                    if (offToday.has(doc) || offTomorrow.has(doc)) return false;
+                    if (isBlockedByOffRequest(doc, 0) || isBlockedByNightToMorning(doc, 0)) return false;
                     return true;
                 });
 
@@ -1688,7 +1823,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                     // Cascade Level 1: Strict Constraints (Ideal Case)
                     availableDocs = roleDocs.filter(doc => {
                         if (chosenToday.includes(doc)) return false;
-                        if (offToday.has(doc) || offTomorrow.has(doc)) return false;
+                        if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i)) return false;
                         // Sliding window rest period check
                         if (offDutyPeriod > 1) {
                             for (let lookBack = 1; lookBack < offDutyPeriod; lookBack++) {
@@ -1710,7 +1845,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                         // Cascade Level 2: Relax spacing / consecutive rules
                         availableDocs = roleDocs.filter(doc => {
                             if (chosenToday.includes(doc)) return false;
-                            if (offToday.has(doc) || offTomorrow.has(doc)) return false;
+                            if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i)) return false;
                             if (chosenToday.some(otherDoc => areConflicting(doc, otherDoc))) return false;
                             if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial) return false;
                             return true;
@@ -1721,7 +1856,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                         // Cascade Level 3: Relax conflict rules
                         availableDocs = roleDocs.filter(doc => {
                             if (chosenToday.includes(doc)) return false;
-                            if (offToday.has(doc) || offTomorrow.has(doc)) return false;
+                            if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i)) return false;
                             if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial) return false;
                             return true;
                         });
@@ -1731,7 +1866,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                         // Cascade Level 4: Relax Off Requests
                         availableDocs = roleDocs.filter(doc => {
                             if (chosenToday.includes(doc)) return false;
-                            if (offToday.has(doc)) return false;
+                            if (offToday.has(doc) || isBlockedByNightToMorning(doc, i)) return false;
                             if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial) return false;
                             return true;
                         });
@@ -1739,7 +1874,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
 
                     if (availableDocs.length === 0 && !allowBlankDays) {
                         // Cascade Level 5: Absolute fallback (Any doctor with matching role, but not already working today)
-                        availableDocs = roleDocs.filter(doc => !chosenToday.includes(doc) && !offToday.has(doc));
+                        availableDocs = roleDocs.filter(doc => !chosenToday.includes(doc) && !offToday.has(doc) && !isBlockedByNightToMorning(doc, i));
                     }
 
                     // Final assignment
@@ -1796,11 +1931,20 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                 }
             }
 
-            selected.forEach(doc => {
+            selected.forEach((doc, slotIdx) => {
                 if (doctors.includes(doc)) {
                     if (isHoliday) hCounts[doc]++; else wCounts[doc]++;
                     tCounts[doc]++;
                     lastShift[doc] = day;
+                    if (isShiftBased) {
+                        if (slotIdx < morningSlots) {
+                            mCounts[doc]++;
+                        } else if (slotIdx < morningSlots + afternoonSlots) {
+                            aCounts[doc]++;
+                        } else {
+                            nCounts[doc]++;
+                        }
+                    }
                 }
             });
 
@@ -1837,7 +1981,10 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
         name: doc,
         workdays: wCounts[doc] || 0,
         holidays: hCounts[doc] || 0,
-        total: tCounts[doc] || 0
+        total: tCounts[doc] || 0,
+        morning: mCounts[doc] || 0,
+        afternoon: aCounts[doc] || 0,
+        night: nCounts[doc] || 0
     }));
 
     return {
@@ -1916,6 +2063,46 @@ function scoreSchedule(candidate) {
             }
         }
     });
+
+    // 3.5. Shift alternation/rotation variance penalty (under Shift-Based Mode)
+    const isShiftBased = (candidate.config && candidate.config.isShiftBased);
+    if (isShiftBased) {
+        const M = candidate.config.morningSlots || 0;
+        const A = candidate.config.afternoonSlots || 0;
+        const N = candidate.config.nightSlots || 0;
+        
+        const activeShiftsCount = (M > 0 ? 1 : 0) + (A > 0 ? 1 : 0) + (N > 0 ? 1 : 0);
+        if (activeShiftsCount > 1) {
+            doctors.forEach(doc => {
+                let mCount = 0;
+                let aCount = 0;
+                let nCount = 0;
+                
+                candidate.schedule.forEach(day => {
+                    day.selectedDocs.forEach((docObj, idx) => {
+                        if (docObj.name === doc) {
+                            if (idx < M) mCount++;
+                            else if (idx < M + A) aCount++;
+                            else nCount++;
+                        }
+                    });
+                });
+                
+                const totalShifts = mCount + aCount + nCount;
+                if (totalShifts > 1) {
+                    const avg = totalShifts / activeShiftsCount;
+                    let varianceSum = 0;
+                    if (M > 0) varianceSum += Math.pow(mCount - avg, 2);
+                    if (A > 0) varianceSum += Math.pow(aCount - avg, 2);
+                    if (N > 0) varianceSum += Math.pow(nCount - avg, 2);
+                    
+                    const variance = varianceSum / activeShiftsCount;
+                    // Apply a penalty to encourage even distribution (alternating shifts)
+                    score -= variance * 600;
+                }
+            });
+        }
+    }
 
     // 4. Soft alternate penalty
     let windowScore = 0;
@@ -2246,14 +2433,24 @@ function recalculateCounts(config = null) {
     const wCounts = {};
     const hCounts = {};
     const tCounts = {};
-    doctors.forEach(doc => { wCounts[doc] = 0; hCounts[doc] = 0; tCounts[doc] = 0; });
+    const mCounts = {};
+    const aCounts = {};
+    const nCounts = {};
+    doctors.forEach(doc => {
+        wCounts[doc] = 0;
+        hCounts[doc] = 0;
+        tCounts[doc] = 0;
+        mCounts[doc] = 0;
+        aCounts[doc] = 0;
+        nCounts[doc] = 0;
+    });
 
-    const { holidaySet } = config;
+    const { holidaySet, isShiftBased, morningSlots, afternoonSlots } = config;
 
     globalResult.schedule.forEach(row => {
         if (row.isNoDuty) return;
         const isHoliday = holidaySet.has(row.day);
-        row.selectedDocs.forEach(docObj => {
+        row.selectedDocs.forEach((docObj, slotIdx) => {
             const docName = docObj.name;
             if (doctors.includes(docName)) {
                 if (isHoliday) {
@@ -2262,6 +2459,16 @@ function recalculateCounts(config = null) {
                     wCounts[docName] = (wCounts[docName] || 0) + 1;
                 }
                 tCounts[docName] = (tCounts[docName] || 0) + 1;
+                
+                if (isShiftBased) {
+                    if (slotIdx < morningSlots) {
+                        mCounts[docName] = (mCounts[docName] || 0) + 1;
+                    } else if (slotIdx < morningSlots + afternoonSlots) {
+                        aCounts[docName] = (aCounts[docName] || 0) + 1;
+                    } else {
+                        nCounts[docName] = (nCounts[docName] || 0) + 1;
+                    }
+                }
             }
         });
     });
@@ -2270,7 +2477,10 @@ function recalculateCounts(config = null) {
         name: doc,
         workdays: wCounts[doc] || 0,
         holidays: hCounts[doc] || 0,
-        total: tCounts[doc] || 0
+        total: tCounts[doc] || 0,
+        morning: mCounts[doc] || 0,
+        afternoon: aCounts[doc] || 0,
+        night: nCounts[doc] || 0
     }));
 }
 
@@ -2557,6 +2767,86 @@ window.explainSlotFailure = function (day, doc, config) {
         reasons.push(currentLang === 'th' ? `ขอพัก/ลาในวันนี้` : `requested off today`);
     }
 
+    let tomorrowKey = day + 1;
+    if (config.isCustomDateRange && typeof scheduleDates !== 'undefined' && scheduleDates.length > 0) {
+        if (day < scheduleDates.length) {
+            const tomorrowObj = scheduleDates[day];
+            if (tomorrowObj) {
+                const dd = String(tomorrowObj.getDate()).padStart(2, '0');
+                const mm = String(tomorrowObj.getMonth() + 1).padStart(2, '0');
+                const yyyy = tomorrowObj.getFullYear();
+                tomorrowKey = `${dd}/${mm}/${yyyy}`;
+            }
+        } else {
+            tomorrowKey = null;
+        }
+    }
+    const offTomorrowSet = (tomorrowKey !== null && offMap[tomorrowKey]) ? offMap[tomorrowKey] : null;
+    if (offTomorrowSet && offTomorrowSet.has(doc)) {
+        if (config.isShiftBased) {
+            const dayRow = globalResult.schedule[day - 1];
+            const M = config.morningSlots || 0;
+            const A = config.afternoonSlots || 0;
+            let assignedToNight = false;
+            if (dayRow) {
+                dayRow.selectedDocs.forEach((s, sIdx) => {
+                    if (s && s.name === doc && sIdx >= M + A) assignedToNight = true;
+                });
+            }
+            if (assignedToNight) {
+                reasons.push(currentLang === 'th' ? `ลงเวรดึกในวันก่อนขอพัก` : `assigned to Night shift before off day`);
+            }
+        } else {
+            reasons.push(currentLang === 'th' ? `ขอพัก/ลาในวันพรุ่งนี้` : `requested off tomorrow`);
+        }
+    }
+
+    if (config.isShiftBased) {
+        const M = config.morningSlots || 0;
+        const A = config.afternoonSlots || 0;
+        const dayRow = globalResult.schedule[day - 1];
+        
+        let assignedToMorning = false;
+        if (dayRow) {
+            dayRow.selectedDocs.forEach((s, sIdx) => {
+                if (s && s.name === doc && sIdx < M) assignedToMorning = true;
+            });
+        }
+        
+        if (assignedToMorning && day > 1) {
+            const prevDayRow = globalResult.schedule[day - 2];
+            let workedNightYesterday = false;
+            if (prevDayRow) {
+                prevDayRow.selectedDocs.forEach((s, sIdx) => {
+                    if (s && s.name === doc && sIdx >= M + A) workedNightYesterday = true;
+                });
+            }
+            if (workedNightYesterday) {
+                reasons.push(currentLang === 'th' ? `ต่อเวรเช้าหลังเวรดึกเมื่อวาน` : `worked Night shift yesterday and Morning shift today`);
+            }
+        }
+        
+        let assignedToNight = false;
+        if (dayRow) {
+            dayRow.selectedDocs.forEach((s, sIdx) => {
+                if (s && s.name === doc && sIdx >= M + A) assignedToNight = true;
+            });
+        }
+        
+        if (assignedToNight && day < globalResult.schedule.length) {
+            const nextDayRow = globalResult.schedule[day];
+            let worksMorningTomorrow = false;
+            if (nextDayRow) {
+                nextDayRow.selectedDocs.forEach((s, sIdx) => {
+                    if (s && s.name === doc && sIdx < M) worksMorningTomorrow = true;
+                });
+            }
+            if (worksMorningTomorrow) {
+                reasons.push(currentLang === 'th' ? `ต่อเวรดึกก่อนเวรเช้าพรุ่งนี้` : `assigned to Night shift today and Morning shift tomorrow`);
+            }
+        }
+    }
+
     if (offDutyPeriod > 1) {
         for (let lookBack = 1; lookBack < offDutyPeriod; lookBack++) {
             const prevDayIdx = day - 1 - lookBack;
@@ -2706,9 +2996,36 @@ function renderSummaryTable(config = null) {
     if (!globalResult) return;
 
     if (!config) config = parseUIConfig();
-    const { doctorRoles, quota, roleBased } = config;
+    const { doctorRoles, quota, roleBased, isShiftBased } = config;
 
-    // Draw summary section
+    // Draw header section dynamically
+    const sumHeader = document.getElementById('summaryTableHeader');
+    if (sumHeader) {
+        if (isShiftBased) {
+            sumHeader.innerHTML = `
+                <tr class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[12px] uppercase tracking-wider rounded-t-lg">
+                    <th class="py-3 px-4 text-left font-bold rounded-tl-lg">${currentLang === 'th' ? 'แพทย์' : 'Doctor'}</th>
+                    <th class="py-3 px-4 font-bold text-teal-600 dark:text-teal-400">${currentLang === 'th' ? 'เช้า (M)' : 'Morning (M)'}</th>
+                    <th class="py-3 px-4 font-bold text-indigo-600 dark:text-indigo-400">${currentLang === 'th' ? 'บ่าย (A)' : 'Afternoon (A)'}</th>
+                    <th class="py-3 px-4 font-bold text-purple-600 dark:text-purple-400">${currentLang === 'th' ? 'ดึก (N)' : 'Night (N)'}</th>
+                    <th class="py-3 px-4 font-bold text-teal-700 dark:text-teal-400">${currentLang === 'th' ? 'ทำการ (จ-ศ)' : 'Weekday'}</th>
+                    <th class="py-3 px-4 font-bold text-orange-700 dark:text-orange-400">${currentLang === 'th' ? 'หยุด (ส-อา, พิเศษ)' : 'Weekend/Hol'}</th>
+                    <th class="py-3 px-4 font-bold bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-350 rounded-tr-lg">${currentLang === 'th' ? 'รวมทั้งหมด' : 'Grand Total'}</th>
+                </tr>
+            `;
+        } else {
+            sumHeader.innerHTML = `
+                <tr class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[12px] uppercase tracking-wider rounded-t-lg">
+                    <th class="py-3 px-4 text-left font-bold rounded-tl-lg">${currentLang === 'th' ? 'แพทย์' : 'Doctor'}</th>
+                    <th class="py-3 px-4 font-bold text-teal-700 dark:text-teal-400">${currentLang === 'th' ? 'ทำการ (จ-ศ)' : 'Weekday'}</th>
+                    <th class="py-3 px-4 font-bold text-orange-700 dark:text-orange-400">${currentLang === 'th' ? 'หยุด (ส-อา, พิเศษ)' : 'Weekend/Hol'}</th>
+                    <th class="py-3 px-4 font-bold bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-350 rounded-tr-lg">${currentLang === 'th' ? 'รวมทั้งหมด' : 'Grand Total'}</th>
+                </tr>
+            `;
+        }
+    }
+
+    // Draw summary body rows
     const sumBody = document.getElementById('summaryTableBody');
     if (!sumBody) return;
     sumBody.innerHTML = '';
@@ -2730,14 +3047,28 @@ function renderSummaryTable(config = null) {
             }
         }
 
-        sumBody.innerHTML += `
-            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                <td class="py-3 px-6 text-left font-bold text-slate-700 dark:text-slate-200 flex items-center">${displayName}${quotaIndicator}</td>
-                <td class="py-3 px-4 text-teal-600 dark:text-teal-400 font-bold bg-teal-50/30 dark:bg-teal-950/20">${sum.workdays}</td>
-                <td class="py-3 px-4 text-orange-600 dark:text-orange-400 font-bold bg-orange-50/30 dark:bg-orange-950/20">${sum.holidays}</td>
-                <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100 bg-slate-200/50 dark:bg-slate-800/80 text-[15px]">${sum.total}</td>
-            </tr>
-        `;
+        if (isShiftBased) {
+            sumBody.innerHTML += `
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <td class="py-3 px-6 text-left font-bold text-slate-700 dark:text-slate-200 flex items-center">${displayName}${quotaIndicator}</td>
+                    <td class="py-3 px-4 text-slate-600 dark:text-slate-400 bg-slate-50/20 dark:bg-slate-900/10 font-bold">${sum.morning || 0}</td>
+                    <td class="py-3 px-4 text-slate-600 dark:text-slate-400 bg-slate-50/20 dark:bg-slate-900/10 font-bold">${sum.afternoon || 0}</td>
+                    <td class="py-3 px-4 text-slate-600 dark:text-slate-400 bg-slate-50/20 dark:bg-slate-900/10 font-bold">${sum.night || 0}</td>
+                    <td class="py-3 px-4 text-teal-600 dark:text-teal-400 font-bold bg-teal-50/30 dark:bg-teal-950/20">${sum.workdays}</td>
+                    <td class="py-3 px-4 text-orange-600 dark:text-orange-400 font-bold bg-orange-50/30 dark:bg-orange-950/20">${sum.holidays}</td>
+                    <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100 bg-slate-200/50 dark:bg-slate-800/80 text-[15px]">${sum.total}</td>
+                </tr>
+            `;
+        } else {
+            sumBody.innerHTML += `
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <td class="py-3 px-6 text-left font-bold text-slate-700 dark:text-slate-200 flex items-center">${displayName}${quotaIndicator}</td>
+                    <td class="py-3 px-4 text-teal-600 dark:text-teal-400 font-bold bg-teal-50/30 dark:bg-teal-950/20">${sum.workdays}</td>
+                    <td class="py-3 px-4 text-orange-600 dark:text-orange-400 font-bold bg-orange-50/30 dark:bg-orange-950/20">${sum.holidays}</td>
+                    <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100 bg-slate-200/50 dark:bg-slate-800/80 text-[15px]">${sum.total}</td>
+                </tr>
+            `;
+        }
     });
 
     const sumTotalCount = document.getElementById('sumTotalCount');
@@ -2810,10 +3141,27 @@ function renderTableView(config) {
             <th class="py-3.5 px-6 border-b border-slate-200 dark:border-slate-800 font-bold w-16">${translations[currentLang].tableDateCol}</th>
             <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-800 font-bold w-24">${translations[currentLang].tableDayCol}</th>
     `;
-    const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
+    if (!config) config = parseUIConfig();
+    const isShiftBased = config.isShiftBased;
+    const M = config.morningSlots || 0;
+    const A = config.afternoonSlots || 0;
+    const N = config.nightSlots || 0;
+    const isRoleBasedEnabled = config.roleBased;
+
     for (let i = 1; i <= globalResult.maxSlots; i++) {
         let subHeader = '';
-        if (isRoleBasedEnabled) {
+        let headerTitle = `${translations[currentLang].tableDutyCol} ${i}`;
+        
+        if (isShiftBased) {
+            const idx = i - 1;
+            if (idx < M) {
+                headerTitle = translations[currentLang].shiftMorning;
+            } else if (idx < M + A) {
+                headerTitle = translations[currentLang].shiftAfternoon;
+            } else {
+                headerTitle = translations[currentLang].shiftNight;
+            }
+        } else if (isRoleBasedEnabled) {
             const role = getSlotRole(i - 1);
             if (role && role !== 'Default') {
                 const colorClass = roleColors[role] || 'text-slate-500 dark:text-slate-400';
@@ -2822,7 +3170,7 @@ function renderTableView(config) {
         }
         headerHtml += `
             <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-800 font-bold">
-                <div>${translations[currentLang].tableDutyCol} ${i}</div>
+                <div>${headerTitle}</div>
                 ${subHeader}
             </th>
         `;
@@ -2931,6 +3279,7 @@ function renderTableView(config) {
 
 // Render Calendar Layout View
 function renderCalendarView(config) {
+    if (!config) config = parseUIConfig();
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
 
@@ -3025,6 +3374,20 @@ function renderCalendarView(config) {
                 } else if (doctors.includes(doc)) {
                     displayDoc = esc(doc);
                     docIndexToPass = doctors.indexOf(doc);
+                }
+
+                if (config && config.isShiftBased) {
+                    const M = config.morningSlots || 0;
+                    const A = config.afternoonSlots || 0;
+                    let prefix = "";
+                    if (i < M) {
+                        prefix = currentLang === 'th' ? "ช: " : "M: ";
+                    } else if (i < M + A) {
+                        prefix = currentLang === 'th' ? "บ: " : "A: ";
+                    } else {
+                        prefix = currentLang === 'th' ? "ด: " : "N: ";
+                    }
+                    displayDoc = prefix + displayDoc;
                 }
 
                 docsHtml += `
@@ -3217,9 +3580,24 @@ window.copyScheduleForExcel = function () {
 
     let tsvData = currentLang === 'th' ? "วันที่\tวัน\t" : "Date\tDay\t";
     const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
+    const config = parseUIConfig();
+    const isShiftBased = config.isShiftBased;
+    const M = config.morningSlots || 0;
+    const A = config.afternoonSlots || 0;
+    const N = config.nightSlots || 0;
+
     for (let i = 1; i <= globalResult.maxSlots; i++) {
         let dutyHeader = currentLang === 'th' ? `เวรคนที่ ${i}` : `Duty ${i}`;
-        if (isRoleBasedEnabled) {
+        if (isShiftBased) {
+            const idx = i - 1;
+            if (idx < M) {
+                dutyHeader = translations[currentLang].shiftMorning;
+            } else if (idx < M + A) {
+                dutyHeader = translations[currentLang].shiftAfternoon;
+            } else {
+                dutyHeader = translations[currentLang].shiftNight;
+            }
+        } else if (isRoleBasedEnabled) {
             const role = getSlotRole(i - 1);
             if (role && role !== 'Default') {
                 dutyHeader += ` (${role})`;
@@ -3254,9 +3632,19 @@ window.copyScheduleForExcel = function () {
 
 window.copySummary = function () {
     if (!globalResult) return;
-    let text = currentLang === 'th' ?
-        `📊 สรุปจำนวนเวร เดือน ${globalResult.month}/${globalResult.year}\n---------------------------------\nชื่อ      | ทำการ | วันหยุด | รวม\n---------------------------------\n` :
-        `📊 On-call Summary Month ${globalResult.month}/${globalResult.year}\n---------------------------------\nName     | Weekdays | Holidays | Total\n---------------------------------\n`;
+    const config = parseUIConfig();
+    const isShiftBased = config.isShiftBased;
+
+    let text = "";
+    if (isShiftBased) {
+        text = currentLang === 'th' ?
+            `📊 สรุปจำนวนเวร เดือน ${globalResult.month}/${globalResult.year}\n---------------------------------------------------------------\nชื่อ      | เช้า(M) | บ่าย(A) | ดึก(N) | ทำการ | วันหยุด | รวม\n---------------------------------------------------------------\n` :
+            `📊 On-call Summary Month ${globalResult.month}/${globalResult.year}\n---------------------------------------------------------------\nName     | Morning | Afternoon | Night | Weekdays | Holidays | Total\n---------------------------------------------------------------\n`;
+    } else {
+        text = currentLang === 'th' ?
+            `📊 สรุปจำนวนเวร เดือน ${globalResult.month}/${globalResult.year}\n---------------------------------\nชื่อ      | ทำการ | วันหยุด | รวม\n---------------------------------\n` :
+            `📊 On-call Summary Month ${globalResult.month}/${globalResult.year}\n---------------------------------\nName     | Weekdays | Holidays | Total\n---------------------------------\n`;
+    }
 
     let totalShifts = 0;
     globalResult.summary.forEach(s => {
@@ -3264,10 +3652,23 @@ window.copySummary = function () {
         let w = String(s.workdays).padStart(3, ' ');
         let h = String(s.holidays).padStart(3, ' ');
         let t = String(s.total).padStart(3, ' ');
-        text += `${name} | ${w}  |  ${h}  | ${t}\n`;
+        
+        if (isShiftBased) {
+            let m = String(s.morning || 0).padStart(3, ' ');
+            let a = String(s.afternoon || 0).padStart(3, ' ');
+            let n = String(s.night || 0).padStart(3, ' ');
+            text += `${name} |  ${m}   |  ${a}   |  ${n}  | ${w}  |  ${h}  | ${t}\n`;
+        } else {
+            text += `${name} | ${w}  |  ${h}  | ${t}\n`;
+        }
         totalShifts += s.total;
     });
-    text += `---------------------------------\n${currentLang === 'th' ? 'รวมทั้งหมด' : 'Total shifts'}: ${totalShifts} ${translations[currentLang].shiftsUnit}\n`;
+    
+    if (isShiftBased) {
+        text += `---------------------------------------------------------------\n${currentLang === 'th' ? 'รวมทั้งหมด' : 'Total shifts'}: ${totalShifts} ${translations[currentLang].shiftsUnit}\n`;
+    } else {
+        text += `---------------------------------\n${currentLang === 'th' ? 'รวมทั้งหมด' : 'Total shifts'}: ${totalShifts} ${translations[currentLang].shiftsUnit}\n`;
+    }
 
     navigator.clipboard.writeText(text).then(() => {
         showToast(translations[currentLang].copySummaryBtn + " copy success!");
@@ -3282,9 +3683,24 @@ window.exportToExcel = function () {
     try {
         const headers = [translations[currentLang].tableDateCol, translations[currentLang].tableDayCol];
         const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
+        const config = parseUIConfig();
+        const isShiftBased = config.isShiftBased;
+        const M = config.morningSlots || 0;
+        const A = config.afternoonSlots || 0;
+        const N = config.nightSlots || 0;
+
         for (let i = 1; i <= globalResult.maxSlots; i++) {
             let headerText = `${translations[currentLang].tableDutyCol} ${i}`;
-            if (isRoleBasedEnabled) {
+            if (isShiftBased) {
+                const idx = i - 1;
+                if (idx < M) {
+                    headerText = translations[currentLang].shiftMorning;
+                } else if (idx < M + A) {
+                    headerText = translations[currentLang].shiftAfternoon;
+                } else {
+                    headerText = translations[currentLang].shiftNight;
+                }
+            } else if (isRoleBasedEnabled) {
                 const role = getSlotRole(i - 1);
                 if (role && role !== 'Default') {
                     headerText += ` (${role})`;
@@ -3317,12 +3733,23 @@ window.exportToExcel = function () {
         window.XLSX.utils.book_append_sheet(wb, ws, `Schedule Month ${globalResult.month}`);
 
         // Add Individual Duty Summary to a second sheet
-        const summaryHeaders = currentLang === 'th' ?
-            ["ชื่อแพทย์", "เวรวันทำการ (จ-ศ)", "เวรวันหยุด (ส-อา, พิเศษ)", "รวมทั้งหมด"] :
-            ["Doctor Name", "Weekdays (Mon-Fri)", "Holidays (Sat-Sun, Special)", "Total Shifts"];
+        let summaryHeaders = [];
+        if (isShiftBased) {
+            summaryHeaders = currentLang === 'th' ?
+                ["ชื่อแพทย์", "เวรเช้า (Morning)", "เวรบ่าย (Afternoon)", "เวรดึก (Night)", "เวรวันทำการ (จ-ศ)", "เวรวันหยุด (ส-อา, พิเศษ)", "รวมทั้งหมด"] :
+                ["Doctor Name", "Morning", "Afternoon", "Night", "Weekdays (Mon-Fri)", "Holidays (Sat-Sun, Special)", "Total Shifts"];
+        } else {
+            summaryHeaders = currentLang === 'th' ?
+                ["ชื่อแพทย์", "เวรวันทำการ (จ-ศ)", "เวรวันหยุด (ส-อา, พิเศษ)", "รวมทั้งหมด"] :
+                ["Doctor Name", "Weekdays (Mon-Fri)", "Holidays (Sat-Sun, Special)", "Total Shifts"];
+        }
         const summaryData = [summaryHeaders];
         globalResult.summary.forEach(s => {
-            summaryData.push([s.name, s.workdays, s.holidays, s.total]);
+            if (isShiftBased) {
+                summaryData.push([s.name, s.morning || 0, s.afternoon || 0, s.night || 0, s.workdays, s.holidays, s.total]);
+            } else {
+                summaryData.push([s.name, s.workdays, s.holidays, s.total]);
+            }
         });
         const summaryWs = window.XLSX.utils.aoa_to_sheet(summaryData);
         window.XLSX.utils.book_append_sheet(wb, summaryWs, currentLang === 'th' ? "สรุปจำนวนเวร" : "Summary");
@@ -3432,7 +3859,10 @@ window.exportConfigJSON = function () {
             inputOffDutyPeriod: document.getElementById('inputOffDutyPeriod')?.value || '2',
             lockConditionType: document.getElementById('lockConditionType')?.value || 'firstNDays',
             selectLockWeekday: document.getElementById('selectLockWeekday')?.value || '0',
-            selectAlternateStrength: document.getElementById('selectAlternateStrength')?.value || 'medium'
+            selectAlternateStrength: document.getElementById('selectAlternateStrength')?.value || 'medium',
+            inputMorningSlots: document.getElementById('inputMorningSlots')?.value || '1',
+            inputAfternoonSlots: document.getElementById('inputAfternoonSlots')?.value || '1',
+            inputNightSlots: document.getElementById('inputNightSlots')?.value || '1'
         },
         checkboxes: {
             chkCustomDateRange: document.getElementById('chkCustomDateRange')?.checked || false,
@@ -3441,7 +3871,8 @@ window.exportConfigJSON = function () {
             chkBalanceShifts: document.getElementById('chkBalanceShifts')?.checked || false,
             chkAllowBlankDays: document.getElementById('chkAllowBlankDays')?.checked || false,
             chkUseSpecialRule: document.getElementById('chkUseSpecialRule')?.checked || false,
-            chkSoftAlternate: document.getElementById('chkSoftAlternate')?.checked ?? true
+            chkSoftAlternate: document.getElementById('chkSoftAlternate')?.checked ?? true,
+            chkShiftBased: document.getElementById('chkShiftBased')?.checked || false
         }
     };
 
@@ -3543,6 +3974,24 @@ window.importConfigJSON = function (event) {
                 }
             }
 
+            // Set defaults for Shift-Based Mode if missing
+            const chkShiftBasedEl = document.getElementById('chkShiftBased');
+            if (chkShiftBasedEl && (!config.checkboxes || !config.checkboxes.hasOwnProperty('chkShiftBased'))) {
+                chkShiftBasedEl.checked = false;
+            }
+            const inputMorningSlotsEl = document.getElementById('inputMorningSlots');
+            if (inputMorningSlotsEl && (!config.inputs || !config.inputs.hasOwnProperty('inputMorningSlots'))) {
+                inputMorningSlotsEl.value = '1';
+            }
+            const inputAfternoonSlotsEl = document.getElementById('inputAfternoonSlots');
+            if (inputAfternoonSlotsEl && (!config.inputs || !config.inputs.hasOwnProperty('inputAfternoonSlots'))) {
+                inputAfternoonSlotsEl.value = '1';
+            }
+            const inputNightSlotsEl = document.getElementById('inputNightSlots');
+            if (inputNightSlotsEl && (!config.inputs || !config.inputs.hasOwnProperty('inputNightSlots'))) {
+                inputNightSlotsEl.value = '1';
+            }
+
             // Explicitly trigger the custom date range toggle logic
             const chkCustom = document.getElementById('chkCustomDateRange');
             if (chkCustom) {
@@ -3559,6 +4008,7 @@ window.importConfigJSON = function (event) {
             renderSpecialDocsCheckboxList();
 
             toggleRoleBasedUI();
+            toggleShiftBasedUI();
             toggleSpecialRuleUI();
 
             const importInput = document.getElementById('importConfigFile');
@@ -3845,9 +4295,23 @@ function renderPersonCentricView(config) {
                     bgClass = colors[docIndexToPass % colors.length];
                 }
 
-                let badgesHtml = slotIndices.map(sIdx => 
-                    `<div draggable="true" ondragstart="handleDragStart(event, ${d}, ${sIdx - 1}, ${docIndexToPass})" ondrop="handlePersonDrop(event, ${d}, ${docIndexToPass}, ${sIdx - 1})" class="rounded w-full text-[10px] font-bold flex items-center justify-center py-1 cursor-grab active:cursor-grabbing mb-0.5 last:mb-0 ${bgClass}">${sIdx}</div>`
-                ).join('');
+                let badgesHtml = slotIndices.map(sIdx => {
+                    let label = sIdx;
+                    if (config.isShiftBased) {
+                        const idx = sIdx - 1;
+                        const M = config.morningSlots || 0;
+                        const A = config.afternoonSlots || 0;
+                        const N = config.nightSlots || 0;
+                        if (idx < M) {
+                            label = "M";
+                        } else if (idx < M + A) {
+                            label = "A";
+                        } else {
+                            label = "N";
+                        }
+                    }
+                    return `<div draggable="true" ondragstart="handleDragStart(event, ${d}, ${sIdx - 1}, ${docIndexToPass})" ondrop="handlePersonDrop(event, ${d}, ${docIndexToPass}, ${sIdx - 1})" class="rounded w-full text-[10px] font-bold flex items-center justify-center py-1 cursor-grab active:cursor-grabbing mb-0.5 last:mb-0 ${bgClass}">${label}</div>`;
+                }).join('');
 
                 bodyHtml += `<td class="border-b ${borderClass} p-0.5 text-center align-top" ondragover="handleDragOver(event)" ondrop="handlePersonDrop(event, ${d}, ${docIndexToPass})">${badgesHtml}</td>`;
             } else {

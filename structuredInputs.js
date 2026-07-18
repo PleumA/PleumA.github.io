@@ -64,8 +64,8 @@ function renderStructuredDoctorRoles() {
         
         html += `
         <div class="flex items-center gap-2 mb-2">
-            <input type="text" class="doc-role-name flex-1 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300" value="${doc}" readonly>
-            <select class="doc-role-select bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100" onchange="handleDocRoleSelectChange(this)">
+            <input type="text" class="doc-role-name flex-1 min-w-0 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300" value="${doc}" readonly>
+            <select class="doc-role-select w-[100px] flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100" onchange="handleDocRoleSelectChange(this)">
                 ${roleOptions}
             </select>
         </div>

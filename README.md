@@ -35,6 +35,13 @@
 - **Queue Locking**: Supports locking a specific group of doctors to cover special slots in two modes:
   - **First N Days (default)**: Locks the group to a contiguous day range. A configurable *Start Day* allows partial-month windows (e.g. days 7 – 14) — not just "from day 1". Locked doctors are exempt from off-duty period constraints so they work every day in the range without gaps.
   - **Every [Weekday]**: Locks the group onto every occurrence of a chosen weekday (e.g. every Sunday) within the schedule range, correctly spanning custom multi-month ranges. A warning toast is displayed if no matching weekdays exist.
+- **Shift-Based Mode (Morning, Afternoon, Night)**: Organizes the daily schedule into three distinct, consecutive shifts with adjustable slot counts (Morning: 08:00 - 16:00, Afternoon: 16:00 - 24:00, and Night: 24:00 - 08:00).
+  - **Night-to-Morning Spacing Safeguard**: Strictly prevents a doctor assigned to any Night shift slot on Day $d-1$ from working a Morning shift slot on Day $d$.
+  - **Off Requests (Off Period) Integration**: If a doctor has Day $d$ off, they are blocked from all slots on Day $d$, and blocked from **Night shift slots only** on Day $d-1$ (permitting Morning and Afternoon shifts on the day before requested off).
+  - **Shift Alternation & Rotation**: Employs a shift type variance penalty to ensure that doctors rotate and alternate shifts fairly rather than getting stuck on a single type.
+  - **Concurrency & Role-Based Compatibility**: Shift-Based Mode and Role-Based Mode can run concurrently, mapping role requirements onto the shifts.
+  - **Detailed Individual Summary Table**: Displays Morning (M), Afternoon (A), and Night (N) counts for each doctor under Shift-Based Mode. Supported in exports and copy commands.
+  - **No Numbers in Table**: Shift slot suffix numbers (e.g. `1`, `2`) are removed from headers and badges to keep layout cells clean.
 
 ### 3. Interactive UI & Customization
 - **Structured Interactive Inputs**: All configuration settings (Doctor Roles, Quotas, Conflict Lists, Holidays, Off Requests) use intuitive structured components (steppers, dropdowns, and chips) to eliminate formatting errors, syncing seamlessly to the internal scheduling engine.
@@ -86,6 +93,7 @@ Built for high reliability, clean execution, and security:
 
 - **`index.html`**: Structures the dashboard layout using Tailwind CSS, including settings for basic config, advanced constraints, role management, and the interactive manual instruction modal. Links `manifest.json` and registers the service worker.
 - **`app.js`**: Contains the scheduling state, Monte Carlo solver search loops, and dynamic HTML renderers.
+- **`structuredInputs.js`**: Implements dynamic structured components (chips, dropdowns, steppers) for Doctor Roles, Quotas, Holidays, Conflict Lists, and No-Duty Days to prevent syntax errors.
 - **`translations.js`**: Houses the dual-language (Thai/English) translation dictionaries to neatly isolate localization data from core scheduling logic.
 - **`manifest.json`**: Standard web app manifest defining PWA configuration, installable setups, and colors.
 - **`sw.js`**: Service worker script caching key assets for reliable offline performance.
