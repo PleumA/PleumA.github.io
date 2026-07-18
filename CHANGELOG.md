@@ -4,6 +4,12 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-07-18
+### Added
+- **Configurable Off-Duty Period**: Replaced the binary "Prevent Consecutive Shifts" toggle with a numeric stepper (`inputOffDutyPeriod`). This allows configuring a minimum rest gap between shifts from 1 to 7 days (default is 2 days, equivalent to a 1-day rest gap). 
+- **Rest Gap Penalty Scoring**: The solver's scoring logic dynamically penalizes schedules containing shift gaps shorter than the configured `offDutyPeriod`, proactively selecting candidates with appropriate rest periods.
+- **Smart Migration**: Older configuration `.json` files seamlessly auto-migrate `chkPreventConsecutive: true/false` to `offDutyPeriod = 2` or `1` respectively.
+
 ## [1.4.0] - 2026-07-13
 ### Added
 - **Auto-Alternate Doctors (Soft Constraint)**: Added a new toggleable scheduling rule to reduce repeated same-group scheduling. Includes three configurable strength levels (Low, Medium, High). Integrated into the solver via solo repeat window penalties and pair/group combination penalties.

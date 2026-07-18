@@ -87,19 +87,25 @@ try {
 
 // TEST 3: Gap Penalty
 try {
-    doctors = ["A", "B"];
+    doctors = ["A", "B", "C", "D"];
     
-    // Candidate Good Gap: A works day 1 and day 4 (gap = 3)
+    // Candidate Good Gap: [A, B, C, D, A, B, C, D]
+    // Gaps = 4 for all doctors
     let candGoodGap = createCandidate(
-        [["A"], ["B"], ["B"], ["A"]],
-        { A: 2, B: 2 }, { A: 0, B: 0 }, { A: 2, B: 2 }
+        [["A"], ["B"], ["C"], ["D"], ["A"], ["B"], ["C"], ["D"]],
+        { A: 2, B: 2, C: 2, D: 2 }, { A: 0, B: 0, C: 0, D: 0 }, { A: 2, B: 2, C: 2, D: 2 }
     );
+    candGoodGap.config = { offDutyPeriod: 3 };
+    candGoodGap.chkSoftAlternate = false;
     
-    // Candidate Bad Gap: A works day 1 and day 3 (gap = 2, i.e. 1 day rest)
+    // Candidate Bad Gap: [A, B, A, B, C, D, C, D]
+    // Gaps = 2 for all doctors (1 day rest)
     let candBadGap = createCandidate(
-        [["A"], ["B"], ["A"], ["B"]],
-        { A: 2, B: 2 }, { A: 0, B: 0 }, { A: 2, B: 2 }
+        [["A"], ["B"], ["A"], ["B"], ["C"], ["D"], ["C"], ["D"]],
+        { A: 2, B: 2, C: 2, D: 2 }, { A: 0, B: 0, C: 0, D: 0 }, { A: 2, B: 2, C: 2, D: 2 }
     );
+    candBadGap.config = { offDutyPeriod: 3 };
+    candBadGap.chkSoftAlternate = false;
     
     let scoreGoodGap = scoreSchedule(candGoodGap);
     let scoreBadGap = scoreSchedule(candBadGap);

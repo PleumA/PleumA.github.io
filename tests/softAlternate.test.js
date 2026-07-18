@@ -91,7 +91,8 @@ function resetMocks() {
     mockDOM['inputSpecialDays'] = createMockElement('inputSpecialDays');
     mockDOM['inputSpecialDays'].value = '0';
     mockDOM['chkUseSpecialRule'] = createMockElement('chkUseSpecialRule');
-    mockDOM['chkPreventConsecutive'] = createMockElement('chkPreventConsecutive');
+    mockDOM['inputOffDutyPeriod'] = createMockElement('inputOffDutyPeriod');
+    mockDOM['inputOffDutyPeriod'].value = '1';
     mockDOM['chkPreventLongGaps'] = createMockElement('chkPreventLongGaps');
     mockDOM['chkBalanceShifts'] = createMockElement('chkBalanceShifts');
     mockDOM['chkAllowBlankDays'] = createMockElement('chkAllowBlankDays');

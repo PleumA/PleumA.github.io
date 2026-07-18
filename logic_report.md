@@ -154,7 +154,7 @@ graph TD
 *   **Level 2**: Ignores 2-day gap rules and consecutive weekend/holiday rules.
 *   **Level 3**: Ignores the day-before-off request rule (still respects the actual day off).
 *   **Level 4**: Ignores the conflicts list.
-*   **Level 5**: Ignores the consecutive shift rule.
+*   **Level 5**: Ignores the off-duty period (rest gap) rule.
 *   **Absolute Safeguards (Never Disabled)**:
     1.  **Hard Quotas**: A doctor who hit their limit is never picked.
     2.  **Role Isolation**: An `R1` slot will never receive an `R2` doctor.
@@ -171,12 +171,11 @@ graph TD
 
 Once a candidate schedule is built, the solver evaluates its quality by calculating a **Penalty Score**. 
 
-$$Score = (S \times 100000) + (C \times 1000) + (G \times 100) + (\sigma \times 50)$$
+$$Score = (S \times 100000) + (G \times 80) + (\sigma \times 600)$$
 
 Where:
 *   **$S$ (Shortages)**: Number of unfilled slots (`ขาดคน`).
-*   **$C$ (Consecutive Violations)**: Number of instances where a doctor works two consecutive days.
-*   **$G$ (Gap Spacing Violations)**: Number of instances where a doctor has less than 2 days of rest between shifts.
+*   **$G$ (Gap Spacing Violations)**: Proportional penalty for gaps shorter than the configured `offDutyPeriod`.
 *   **$\sigma$ (Workload Variance)**: The Standard Deviation of shifts allocated to the active doctor pool.
 
 #### Workload Variance Standard Deviation Formula:
@@ -233,9 +232,9 @@ class EveryWeekdayLockProxy {
 2. **`arguments.callee.caller`** — tried first in sloppy mode; resolves the day from the solver's call-frame argument.
 3. **Sequential counter** (`currentDay`) — walks forward from day 1, automatically skipping no-duty days, as a fallback for environments where caller introspection is blocked.
 
-### Consecutive Shift Exemption
+### Off-Duty Period Exemption
 
-Locked doctors are **exempt** from both the consecutive-holiday check and the `preventConsecutiveAll` constraint. This is intentional: the feature's semantic contract is that the locked pool covers *every* qualifying day without interruption. All other (non-locked) doctors still respect these constraints normally.
+Locked doctors are **exempt** from both the consecutive-holiday check and the `offDutyPeriod` constraint. This is intentional: the feature's semantic contract is that the locked pool covers *every* qualifying day without interruption. All other (non-locked) doctors still respect these constraints normally.
 
 ---
 

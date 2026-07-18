@@ -444,19 +444,15 @@
                 <div class="p-5 space-y-4 text-sm">
                     <div class="flex items-center justify-between p-2">
                         <div>
-                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleConsecutive">
-                                ห้ามอยู่เวรติดกันทุกกรณี</h4>
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleOffDutyPeriod">
+                                ระยะพักหลังเวร (วัน)</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
-                                data-i18n="ruleConsecutiveDesc">เว้นอย่างน้อย 1 วัน (รวมวันธรรมดา)</p>
+                                data-i18n="ruleOffDutyPeriodDesc">จำนวนวันพักขั้นต่ำหลังอยู่เวร (1 = ไม่เว้น, 2 = เว้น 1 วัน)</p>
                         </div>
-                        <div
-                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
-                            <input type="checkbox" id="chkPreventConsecutive" checked
-                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
-                            <label for="chkPreventConsecutive"
-                                class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
-                        </div>
+                        <input type="number" id="inputOffDutyPeriod" value="2" min="1" max="7"
+                            class="w-16 bg-white dark:bg-slate-950 border border-teal-200 dark:border-slate-800 rounded-xl px-2 py-2 text-sm outline-none text-center focus:border-teal-500 font-bold text-teal-700 dark:text-teal-400">
                     </div>
+
                     <div class="flex items-center justify-between p-2">
                         <div>
                             <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleGaps">

@@ -151,9 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (conflictsInput) {
         conflictsInput.addEventListener('change', () => generateSchedule());
     }
-    const preventConsecutiveInput = document.getElementById('chkPreventConsecutive');
-    if (preventConsecutiveInput) {
-        preventConsecutiveInput.addEventListener('change', () => generateSchedule());
+    const offDutyPeriodInput = document.getElementById('inputOffDutyPeriod');
+    if (offDutyPeriodInput) {
+        offDutyPeriodInput.addEventListener('change', () => generateSchedule());
     }
     const preventLongGapsInput = document.getElementById('chkPreventLongGaps');
     if (preventLongGapsInput) {
@@ -941,7 +941,7 @@ function parseUIConfig() {
     const specialRuleDocsInput = document.getElementById('inputSpecialDocs').value;
     const lockConditionType = document.getElementById('lockConditionType')?.value || 'firstNDays';
     const selectLockWeekday = document.getElementById('selectLockWeekday')?.value !== undefined ? parseInt(document.getElementById('selectLockWeekday').value) : 0;
-    const preventConsecutiveAll = document.getElementById('chkPreventConsecutive').checked;
+    const offDutyPeriod = Math.max(1, Math.min(7, parseInt(document.getElementById('inputOffDutyPeriod')?.value) || 2));
     const preventLongGaps = document.getElementById('chkPreventLongGaps').checked;
     const balanceShifts = document.getElementById('chkBalanceShifts')?.checked;
     const allowBlankDays = document.getElementById('chkAllowBlankDays')?.checked;
@@ -1320,7 +1320,7 @@ function parseUIConfig() {
         year, month, numDays, holidaySet, noDutySet, offMap,
         roleBased, doctorRoles, quota, hasQuotas,
         useSpecialRule, specialDocs, specialRuleDays,
-        preventConsecutiveAll, preventLongGaps, balanceShifts, allowBlankDays,
+        offDutyPeriod, preventLongGaps, balanceShifts, allowBlankDays,
         getRoleSlotsForDay, areConflicting, specialHols,
         chkSoftAlternate, selectAlternateStrength, windowPenalty, pairPenalty
     };
@@ -1384,8 +1384,7 @@ function parseUIConfig() {
 }
 
 function getRestDaysForDoctor(doctorName, config) {
-    if (!config.preventConsecutiveAll) return 1;
-    return config.minRestDays !== undefined ? config.minRestDays : 2;
+    return config.offDutyPeriod !== undefined ? config.offDutyPeriod : 2;
 }
 
 function checkQuotaFeasibility(config) {
@@ -1482,7 +1481,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
         numDays, holidaySet, noDutySet, offMap,
         roleBased, doctorRoles, quota, hasQuotas,
         useSpecialRule, specialDocs, specialRuleDays,
-        preventConsecutiveAll, preventLongGaps, balanceShifts, allowBlankDays,
+        offDutyPeriod, preventLongGaps, balanceShifts, allowBlankDays,
         getRoleSlotsForDay, areConflicting, month, year, specialHols
     } = config;
 
@@ -1690,9 +1689,17 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
                     availableDocs = roleDocs.filter(doc => {
                         if (chosenToday.includes(doc)) return false;
                         if (offToday.has(doc) || offTomorrow.has(doc)) return false;
-                        const yesterdayDocs = scheduleMap[day - 1] || [];
-                        if (isHoliday && holidaySet.has(day - 1) && yesterdayDocs.includes(doc)) return false;
-                        if (preventConsecutiveAll && day > 1 && yesterdayDocs.includes(doc)) return false;
+                        // Sliding window rest period check
+                        if (offDutyPeriod > 1) {
+                            for (let lookBack = 1; lookBack < offDutyPeriod; lookBack++) {
+                                const prevDay = day - lookBack;
+                                if (prevDay >= 1) {
+                                    const prevDocs = scheduleMap[prevDay] || [];
+                                    if (prevDocs.includes(doc)) return false;
+                                }
+                            }
+                        }
+                        if (isHoliday && holidaySet.has(day - 1) && (scheduleMap[day - 1] || []).includes(doc)) return false;
                         if (chosenToday.some(otherDoc => areConflicting(doc, otherDoc))) return false;
                         if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial) return false;
                         return true;
@@ -1890,7 +1897,8 @@ function scoreSchedule(candidate) {
     score -= stdDevHol * 1200; // Holiday duties are precious, prioritize strict balance
     score -= stdDevWork * 300;
 
-    // 3. Gap distribution: penalize short gaps (working with 1 day off in between)
+    // 3. Gap distribution: penalize gaps shorter than offDutyPeriod
+    const configOffDutyPeriod = (candidate.config && candidate.config.offDutyPeriod) ? candidate.config.offDutyPeriod : 2;
     doctors.forEach(doc => {
         let dutyDays = [];
         candidate.schedule.forEach(day => {
@@ -1901,8 +1909,10 @@ function scoreSchedule(candidate) {
 
         for (let i = 1; i < dutyDays.length; i++) {
             let gap = dutyDays[i] - dutyDays[i - 1];
-            if (gap === 2) {
-                score -= 60; // slight penalty for 1 day rest spacing
+            if (gap < configOffDutyPeriod) {
+                // Proportional penalty: closer gaps get heavier penalty
+                const severity = configOffDutyPeriod - gap;
+                score -= severity * 80;
             }
         }
     });
@@ -2529,7 +2539,7 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
 // Explain why a manual swap might violate a constraint
 window.explainSlotFailure = function (day, doc, config) {
     if (!doc || doc === SHORTAGE_MARKER || doc === '-' || !config) return;
-    const { preventConsecutiveAll, offMap } = config;
+    const { offDutyPeriod, offMap } = config;
     let reasons = [];
 
     let dayKey = day;
@@ -2547,14 +2557,27 @@ window.explainSlotFailure = function (day, doc, config) {
         reasons.push(currentLang === 'th' ? `ขอพัก/ลาในวันนี้` : `requested off today`);
     }
 
-    if (preventConsecutiveAll) {
-        const yesterday = globalResult.schedule[day - 2];
-        if (yesterday && yesterday.selectedDocs.some(s => s && s.name === doc)) {
-            reasons.push(currentLang === 'th' ? `อยู่เวรติดกัน (เมื่อวาน)` : `worked yesterday`);
+    if (offDutyPeriod > 1) {
+        for (let lookBack = 1; lookBack < offDutyPeriod; lookBack++) {
+            const prevDayIdx = day - 1 - lookBack;
+            if (prevDayIdx >= 0 && globalResult.schedule[prevDayIdx]) {
+                const prevDay = globalResult.schedule[prevDayIdx];
+                if (prevDay.selectedDocs.some(s => s && s.name === doc)) {
+                    const daysAgoStr = lookBack === 1 
+                        ? (currentLang === 'th' ? 'เมื่อวาน' : 'yesterday')
+                        : (currentLang === 'th' ? `${lookBack} วันก่อน` : `${lookBack} days ago`);
+                    const restMsg = translations[currentLang].offDutyPeriodExplainer.replace('{n}', offDutyPeriod);
+                    reasons.push(`${currentLang === 'th' ? 'อยู่เวร' : 'worked'} ${daysAgoStr} (${restMsg})`);
+                    break;
+                }
+            }
         }
-        const tomorrow = globalResult.schedule[day];
-        if (tomorrow && tomorrow.selectedDocs.some(s => s && s.name === doc)) {
-            reasons.push(currentLang === 'th' ? `อยู่เวรติดกัน (พรุ่งนี้)` : `working tomorrow`);
+        const nextDayIdx = day;
+        if (nextDayIdx < globalResult.schedule.length && globalResult.schedule[nextDayIdx]) {
+            const tomorrow = globalResult.schedule[nextDayIdx];
+            if (tomorrow.selectedDocs.some(s => s && s.name === doc)) {
+                reasons.push(currentLang === 'th' ? `อยู่เวรติดกัน (พรุ่งนี้)` : `working tomorrow`);
+            }
         }
     }
 
@@ -3406,6 +3429,7 @@ window.exportConfigJSON = function () {
             inputSpecialDays: document.getElementById('inputSpecialDays')?.value || '',
             inputSpecialDocs: document.getElementById('inputSpecialDocs')?.value || '',
             inputSpecialStartDay: document.getElementById('inputSpecialStartDay')?.value || '1',
+            inputOffDutyPeriod: document.getElementById('inputOffDutyPeriod')?.value || '2',
             lockConditionType: document.getElementById('lockConditionType')?.value || 'firstNDays',
             selectLockWeekday: document.getElementById('selectLockWeekday')?.value || '0',
             selectAlternateStrength: document.getElementById('selectAlternateStrength')?.value || 'medium'
@@ -3413,7 +3437,6 @@ window.exportConfigJSON = function () {
         checkboxes: {
             chkCustomDateRange: document.getElementById('chkCustomDateRange')?.checked || false,
             chkRoleBased: document.getElementById('chkRoleBased')?.checked || false,
-            chkPreventConsecutive: document.getElementById('chkPreventConsecutive')?.checked || false,
             chkPreventLongGaps: document.getElementById('chkPreventLongGaps')?.checked || false,
             chkBalanceShifts: document.getElementById('chkBalanceShifts')?.checked || false,
             chkAllowBlankDays: document.getElementById('chkAllowBlankDays')?.checked || false,
@@ -3489,6 +3512,16 @@ window.importConfigJSON = function (event) {
             const specialStartDayEl = document.getElementById('inputSpecialStartDay');
             if (specialStartDayEl && (!config.inputs || !config.inputs.hasOwnProperty('inputSpecialStartDay'))) {
                 specialStartDayEl.value = '1';
+            }
+
+            // Migration: old JSON with chkPreventConsecutive → inputOffDutyPeriod
+            const offDutyPeriodEl = document.getElementById('inputOffDutyPeriod');
+            if (offDutyPeriodEl && (!config.inputs || !config.inputs.hasOwnProperty('inputOffDutyPeriod'))) {
+                if (config.checkboxes && config.checkboxes.hasOwnProperty('chkPreventConsecutive')) {
+                    offDutyPeriodEl.value = config.checkboxes.chkPreventConsecutive ? '2' : '1';
+                } else {
+                    offDutyPeriodEl.value = '2';
+                }
             }
 
             // Set defaults for Soft Alternate if missing

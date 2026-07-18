@@ -33,13 +33,13 @@
 - **Off Requests**: Enforces days off; no shifts are allocated on requested off days or on the day prior to an off day.
 - **Holiday Spacing**: Prevents doctors from working consecutive weekend/holiday shifts.
 - **Queue Locking**: Supports locking a specific group of doctors to cover special slots in two modes:
-  - **First N Days (default)**: Locks the group to a contiguous day range. A configurable *Start Day* allows partial-month windows (e.g. days 7 – 14) — not just "from day 1". Locked doctors are exempt from consecutive-shift constraints so they work every day in the range without gaps.
+  - **First N Days (default)**: Locks the group to a contiguous day range. A configurable *Start Day* allows partial-month windows (e.g. days 7 – 14) — not just "from day 1". Locked doctors are exempt from off-duty period constraints so they work every day in the range without gaps.
   - **Every [Weekday]**: Locks the group onto every occurrence of a chosen weekday (e.g. every Sunday) within the schedule range, correctly spanning custom multi-month ranges. A warning toast is displayed if no matching weekdays exist.
 
 ### 3. Interactive UI & Customization
 - **Structured Interactive Inputs**: All configuration settings (Doctor Roles, Quotas, Conflict Lists, Holidays, Off Requests) use intuitive structured components (steppers, dropdowns, and chips) to eliminate formatting errors, syncing seamlessly to the internal scheduling engine.
 - **Table, Calendar, & Person Views**: View duties in a clean date-list format, an interactive month calendar, or a pivoted person-centric grid.
-- **Inline Constraint Explainer**: Manual schedule overrides are proactively validated against active rules. If an administrator assigns a shift that breaks constraints (e.g. consecutive days or off requests), an exact explanation is proactively displayed.
+- **Inline Constraint Explainer**: Manual schedule overrides are proactively validated against active rules. If an administrator assigns a shift that breaks constraints (e.g. insufficient rest periods or off requests), an exact explanation is proactively displayed.
 - **Manual Overrides & Drag-and-Drop**: Easily correct schedules manually. Instead of rigid dropdown menus, you can natively **drag and drop** a doctor's name from one slot to another in the calendar to effortlessly execute 2-way shift swaps.
 - **Undo / History Stack**: Safely navigate manual corrections. The app tracks a 20-step deep memory stack allowing you to press `Ctrl+Z` to seamlessly revert accidental cell edits and resets.
 - **Targeted DOM Updates & Real-Time Sync**: The core rendering engine is optimized so that manual cell updates do not repaint the surrounding grid. The global Stats Dashboard and Individual Duty Summary table update automatically and immediately in real time, keeping the interface responsive and metrics instantly accurate.

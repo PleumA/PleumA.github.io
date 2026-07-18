@@ -128,7 +128,7 @@ function resetMocks() {
     mockDOM['inputSpecialDocs'] = { value: '' };
     mockDOM['lockConditionType'] = { value: 'firstNDays' };
     mockDOM['selectLockWeekday'] = { value: '0' };
-    mockDOM['chkPreventConsecutive'] = { checked: false };
+    mockDOM['inputOffDutyPeriod'] = { value: '1' };
     mockDOM['chkPreventLongGaps'] = { checked: false };
     mockDOM['chkBalanceShifts'] = { checked: false };
     mockDOM['chkAllowBlankDays'] = { checked: false };

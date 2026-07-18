@@ -62,7 +62,7 @@ function resetMocks() {
     mockDOM['inputSpecialDocs'] = { value: '', classList: { add: () => {}, remove: () => {} } };
     mockDOM['inputSpecialDays'] = { value: '0', classList: { add: () => {}, remove: () => {} } };
     mockDOM['chkUseSpecialRule'] = { checked: false, classList: { add: () => {}, remove: () => {} } };
-    mockDOM['chkPreventConsecutive'] = { checked: true, classList: { add: () => {}, remove: () => {} } };
+    mockDOM['inputOffDutyPeriod'] = { value: '2', classList: { add: () => {}, remove: () => {} } };
     mockDOM['chkPreventLongGaps'] = { checked: false, classList: { add: () => {}, remove: () => {} } };
     mockDOM['chkBalanceShifts'] = { checked: false, classList: { add: () => {}, remove: () => {} } };
     mockDOM['chkAllowBlankDays'] = { checked: false, classList: { add: () => {}, remove: () => {} } };
