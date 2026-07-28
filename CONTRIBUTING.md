@@ -6,9 +6,9 @@ As this project is currently maintained by two core contributors—**Arnun Polsu
 
 ## 🛠️ Tech Stack & Architecture
 
-The application is built entirely on the client side with a minimal, zero-build tech stack:
+The application is built entirely on the client side:
 - **Structure:** HTML5 (`index.html`)
-- **Styling:** Tailwind CSS (loaded via CDN)
+- **Styling:** Tailwind CSS — local build (`dist/output.css`) via PostCSS pipeline; CDN fallback during development
 - **Logic:** Vanilla JavaScript (`app.js`, `structuredInputs.js`, `translations.js`)
 - **Excel Exports:** SheetJS (`xlsx.full.min.js` via CDN)
 - **Icons:** Lucide Icons (via CDN)
@@ -17,20 +17,51 @@ For a detailed walkthrough of the Monte Carlo simulation logic and constraints, 
 
 ## 🚀 How to Run Locally & Run Tests
 
-Since there are no build steps, you can run the project instantly:
-1. Clone the repository.
-2. Open `index.html` directly in any modern browser.
-3. Alternatively, serve it using a lightweight local server:
-   ```bash
-   npx serve .
-   ```
+### Prerequisites
+- **Node.js ≥ 20** and **npm ≥ 10**. Install via [nvm](https://github.com/nvm-sh/nvm) or from [nodejs.org](https://nodejs.org).
+
+### Setup
+```bash
+# 1. Clone the repository
+git clone <repo-url> && cd Web
+
+# 2. Install all dependencies (runtime + dev)
+npm install
+```
+
+### Running locally
+```bash
+# Serve with a lightweight local server
+npx serve .
+
+# Or open index.html directly in any modern browser
+```
+
+### Building Tailwind CSS
+The production CSS is compiled from `src/input.css` → `dist/output.css`:
+```bash
+npm run build        # one-shot minified build
+npm run build:watch  # watch mode for development
+```
+After building, swap the CDN `<script>` tag in `index.html` for the local CSS link:
+```html
+<link href="./dist/output.css" rel="stylesheet">
+```
+
+### Linting & Formatting
+```bash
+npm run lint      # ESLint check
+npm run lint:fix  # ESLint auto-fix
+npm run format    # Prettier format all files
+```
 
 ### Running Tests
-The project features a local Node.js unit testing suite targeting the core solver algorithm and UI logic. You can run all test suites using the main test runner:
+The project has two test runners:
 ```bash
-node run-tests.js
+npm test          # Node.js built-in runner (run-tests.js) – fast, no config
+npm run test:jest # Jest runner (requires npm install to complete)
 ```
-Or run individual test files separately (e.g., `node tests/solver.test.js`).
+
 
 ## 📝 Guidelines
 

@@ -4,6 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ระบบจัดตารางเวรอัตโนมัติ – คำนวณและปรับแต่งตารางเวรแพทย์อย่างชาญฉลาด">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <title>ระบบจัดตารางเวรอัตโนมัติ & บันทึกตารางเวร</title>
 
     <!-- PWA Setup -->
@@ -19,8 +23,8 @@
         }
     </script>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (CDN – async for performance; replaced by local build in dist/output.css when available) -->
+    <script async src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -32,6 +36,46 @@
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Critical CSS – inlined for fastest first paint -->
+    <style id="critical-css">
+        /* Critical above-the-fold styles */
+        *,*::before,*::after{box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{
+            font-family:'Sarabun',sans-serif;
+            margin:0;
+            min-height:100vh;
+            display:flex;
+            flex-direction:column;
+            background-color:#F8FAFC;
+            color:#1e293b;
+        }
+        header{
+            background:linear-gradient(to right,#0d9488,#059669,#4f46e5);
+            color:#fff;
+            position:sticky;
+            top:0;
+            z-index:30;
+            box-shadow:0 4px 6px -1px rgb(0 0 0/.1);
+        }
+        main{flex:1}
+        /* Skip link – hidden until focused */
+        .skip-link{
+            position:absolute;
+            top:-100px;
+            left:0;
+            background:#0d9488;
+            color:#fff;
+            padding:.5rem 1rem;
+            border-radius:0 0 .5rem 0;
+            font-weight:700;
+            z-index:9999;
+            text-decoration:none;
+            transition:top .2s;
+        }
+        .skip-link:focus{top:0}
+    </style>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
@@ -144,6 +188,9 @@
 
 <body class="text-slate-800 dark:text-slate-100 selection:bg-teal-200 selection:dark:bg-teal-900/60">
 
+    <!-- Skip to main content (Accessibility) -->
+    <a href="#main-content" class="skip-link">ข้ามไปยังเนื้อหาหลัก / Skip to main content</a>
+
     <header
         class="bg-gradient-to-r from-teal-600 via-emerald-600 to-indigo-600 dark:from-teal-800 dark:via-emerald-800 dark:to-indigo-900 text-white shadow-lg sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -163,35 +210,39 @@
                 <!-- Theme Toggle Button -->
                 <button onclick="toggleDarkMode()" id="btnDarkMode"
                     class="bg-white/10 hover:bg-white/20 border border-white/10 p-2.5 rounded-xl transition-all active:scale-95 text-white flex items-center justify-center"
-                    title="Toggle Dark/Light Mode">
-                    <i data-lucide="moon" id="iconDarkMode" class="w-5 h-5"></i>
+                    title="Toggle Dark/Light Mode"
+                    aria-label="Toggle dark/light mode">
+                    <i data-lucide="moon" id="iconDarkMode" class="w-5 h-5" aria-hidden="true"></i>
                 </button>
 
                 <!-- Language Toggle Button -->
                 <button onclick="toggleLanguage()" id="btnLanguage"
                     class="bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-2.5 rounded-xl transition-all active:scale-95 text-white font-bold text-sm tracking-wide"
-                    title="Switch Language">
+                    title="Switch Language"
+                    aria-label="Switch language between Thai and English">
                     EN
                 </button>
 
                 <!-- Read Manual Button -->
                 <button onclick="openManualModal()" id="btnManual"
                     class="bg-white/10 hover:bg-white/20 border border-white/10 p-2.5 rounded-xl transition-all active:scale-95 text-white flex items-center justify-center gap-1.5 font-bold text-sm"
-                    title="Read Manual / คู่มือการใช้งาน">
-                    <i data-lucide="help-circle" class="w-5 h-5"></i>
+                    title="Read Manual / คู่มือการใช้งาน"
+                    aria-label="Open user manual">
+                    <i data-lucide="help-circle" class="w-5 h-5" aria-hidden="true"></i>
                     <span data-i18n="manualBtn">คู่มือ</span>
                 </button>
 
                 <button onclick="generateSchedule()" id="btnCalculate"
-                    class="bg-white text-teal-700 hover:bg-teal-50 dark:bg-slate-800 dark:text-teal-400 dark:hover:bg-slate-700 hover:shadow-md font-bold py-3 px-6 rounded-xl shadow-sm active:scale-95 transition-all flex-1 md:flex-initial flex items-center justify-center gap-2">
-                    <i data-lucide="sparkles" class="w-5 h-5 text-teal-500"></i>
+                    class="bg-white text-teal-700 hover:bg-teal-50 dark:bg-slate-800 dark:text-teal-400 dark:hover:bg-slate-700 hover:shadow-md font-bold py-3 px-6 rounded-xl shadow-sm active:scale-95 transition-all flex-1 md:flex-initial flex items-center justify-center gap-2"
+                    aria-label="Generate new schedule">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-teal-500" aria-hidden="true"></i>
                     <span data-i18n="calcBtn">คำนวณตารางใหม่</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:overflow-hidden">
+    <main id="main-content" class="max-w-7xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:overflow-hidden">
 
         <!-- Left Column: Config -->
         <section
@@ -1066,10 +1117,10 @@
         </div>
     </div>
 
-    <!-- Application Logic -->
-    <script src="structuredInputs.js"></script>
-    <script src="translations.js"></script>
-    <script src="app.js"></script>
+    <!-- Application Logic (defer: parse HTML first, then execute in order) -->
+    <script defer src="structuredInputs.js"></script>
+    <script defer src="translations.js"></script>
+    <script defer src="app.js"></script>
 </body>
 
 </html>

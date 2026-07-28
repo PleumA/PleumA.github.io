@@ -1,7 +1,7 @@
 # PleumA.github.io
 ## Automatic On-Call & Night Shift Doctor Scheduler
 
-> **This website was developed by Vibe Code using Antigravity model Gemini 3.1 Pro, combined with Claude Opus 4.6 version for allocating night-shift doctor duties.**
+> **This website was developed by Vibe Code using Antigravity model Gemini 3.1 Pro, combined with Claude Sonnet 4.6 (Thinking) for allocating night-shift doctor duties.**
 
 📖 **[How the algorithm works (Technical Logic Report)](logic_report.md)** — A detailed, deep-dive technical reference on the Monte Carlo solver engine, constraint cascades, scoring metrics, and system architecture. Essential reading for anyone auditing or extending this medical scheduling tool.
 
@@ -62,6 +62,21 @@
 
 ---
 
+## 🚀 Quick Start
+
+```bash
+git clone https://github.com/PleumA/PleumA.github.io
+cd PleumA.github.io
+npm install          # install all dependencies
+npm run build        # compile Tailwind CSS → dist/output.css
+npm test             # run all 20 test suites (all should pass ✅)
+npx serve .          # serve locally at http://localhost:3000
+```
+
+For a full contributor setup guide, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
+
+---
+
 ## 📱 Mobile Performance Optimizations
 
 Designed with mobile first-class support in mind to ensure zero stutters on phone browsers:
@@ -91,11 +106,29 @@ Built for high reliability, clean execution, and security:
 
 ## 📂 Architecture
 
-- **`index.html`**: Structures the dashboard layout using Tailwind CSS, including settings for basic config, advanced constraints, role management, and the interactive manual instruction modal. Links `manifest.json` and registers the service worker.
-- **`app.js`**: Contains the scheduling state, Monte Carlo solver search loops, and dynamic HTML renderers.
-- **`structuredInputs.js`**: Implements dynamic structured components (chips, dropdowns, steppers) for Doctor Roles, Quotas, Holidays, Conflict Lists, and No-Duty Days to prevent syntax errors.
-- **`translations.js`**: Houses the dual-language (Thai/English) translation dictionaries to neatly isolate localization data from core scheduling logic.
-- **`manifest.json`**: Standard web app manifest defining PWA configuration, installable setups, and colors.
-- **`sw.js`**: Service worker script caching key assets for reliable offline performance.
-- **`tests/*.test.js`**: A comprehensive, lightweight Node.js unit testing suite (11 test files, 66+ tests) that verifies corner-case solver behaviors (e.g., circular conflicts, quota sums, and impossible constraints in `solver.test.js`), UI DOM interactions (JSON export/import in `jsonRoundTrip.test.js`), state management (undo stacks in `manualOverrides.test.js`), Lock Special Duty scheduling logic — including Every Weekday mode, custom start day range, and consecutive shift enforcement — in `lockSpecialDuty.test.js`, and security (XSS assertions in `xss.test.js`). The tests utilize a custom decoupled mock-DOM evaluation pattern to run without requiring heavy frameworks like Jest, reporting clean outputs in a unified `PASSED: X, FAILED: Y` format.
-- **`run-tests.js`**: Orchestrates test suite execution and aggregates outputs and exit statuses across files.
+| File | Purpose |
+|------|---------|
+| `index.html` | Single-page app shell — layout, Tailwind classes, modals, PWA manifest link, service worker registration |
+| `app.js` | Scheduling state, Monte Carlo solver, UI handlers, focus-trap utility (~4 300 lines) |
+| `structuredInputs.js` | Dynamic structured components — chips, dropdowns, steppers |
+| `translations.js` | Dual-language (Thai / English) translation dictionaries |
+| `sw.js` | Service worker — caches key assets for offline use |
+| `manifest.json` | PWA manifest — install config, theme colour |
+| `src/input.css` | Tailwind CSS entry point (`@tailwind` directives) |
+| `dist/output.css` | **Generated** — compiled & minified Tailwind CSS (run `npm run build`) |
+| `tailwind.config.js` | Tailwind config: `darkMode: 'class'`, extended colours |
+| `postcss.config.js` | PostCSS pipeline: tailwindcss + autoprefixer |
+| `jest.config.js` | Jest config: 80% coverage threshold |
+| `babel.config.cjs` | Babel preset for Jest transforms |
+| `.eslintrc.cjs` | ESLint rules (eslint:recommended + prettier) |
+| `.prettierrc` | Prettier formatting config |
+| `.github/workflows/ci.yml` | GitHub Actions CI: lint → test → build |
+| `sitemap.xml` | Single-page sitemap for SEO |
+| `robots.txt` | Crawler permission file |
+| `tests/*.test.js` | **20 unit test suites** covering solver logic, UI DOM, quota enforcement, XSS, shift-based mode, accessibility, and more. Run with `npm test`. |
+| `run-tests.js` | Built-in test runner — no Jest required |
+| `DESIGN_SYSTEM.md` | Reusable component classes and colour tokens |
+| `DEVELOPER_GUIDE.md` | Full contributor setup, build, lint, test, and release guide |
+| `CONTRIBUTING.md` | Contribution guidelines |
+| `CHANGELOG.md` | Version history (Keep a Changelog format) |
+| `logic_report.md` | Deep-dive technical reference on the Monte Carlo solver |

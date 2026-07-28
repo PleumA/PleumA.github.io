@@ -4,6 +4,36 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-07-28
+### Added
+- **SEO & Core Performance (Phase 1)**
+  - Added `async` attribute to Tailwind CDN `<script>` for non-blocking load.
+  - Added `defer` attribute to `structuredInputs.js`, `translations.js`, and `app.js` for parse-first execution.
+  - Inlined critical CSS (`body`, `header`, `main` above-the-fold styles) for fastest first paint.
+  - Added `sitemap.xml` (single-page) and `robots.txt` (allow all).
+- **Tailwind Local Build (Phase 2)**
+  - Added `tailwind.config.js` (darkMode: class, extended colour palette) and `postcss.config.js`.
+  - Added `src/input.css` as Tailwind entry point; builds to `dist/output.css` via `npm run build`.
+  - Added `DESIGN_SYSTEM.md` documenting reusable component classes and colour tokens.
+- **Accessibility — WCAG AA (Phase 3)**
+  - Added skip-to-content link (`<a href="#main-content" class="skip-link">`) as first child of `<body>`.
+  - Added `id="main-content"` to `<main>`.
+  - Added `aria-label` to all header buttons (dark mode, language, manual, calculate).
+  - Added `aria-hidden="true"` to all decorative Lucide icons.
+  - Implemented inline `FocusTrap` utility in `app.js`; wired to manual modal open/close (Tab-cycling + Escape-to-close, focus restored on dismiss).
+- **Code Quality & Linting (Phase 4)**
+  - Added `.eslintrc.cjs` (eslint:recommended + prettier/recommended, browser + node env).
+  - Added `.prettierrc` (singleQuote, trailingComma es5, printWidth 100).
+  - Added `npm run lint`, `npm run lint:fix`, `npm run format` scripts.
+- **Testing & CI (Phase 5)**
+  - Added `jest.config.js` with 80% coverage threshold.
+  - Added `babel.config.cjs` for Jest + Babel transform.
+  - Added `.github/workflows/ci.yml` — GitHub Actions pipeline: lint → test → Tailwind build on every push/PR.
+  - Added `npm run test:jest` script.
+- **Documentation (Phase 6)**
+  - Updated `CONTRIBUTING.md` — Node setup, build, lint, test, and CI verification steps.
+  - Added `DEVELOPER_GUIDE.md` — quick-start guide for new contributors.
+
 ## [1.6.0] - 2026-07-18
 ### Added
 - **Multi-Shift and Role-Based Mode Compatibility**: Enabled Shift-Based Mode (Morning, Afternoon, Night) and Role-Based Mode to run concurrently. The scheduling engine now maps role slot configurations (e.g. `R1:1, R2:1`) sequentially onto the shift slots ($M+A+N$).

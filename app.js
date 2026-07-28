@@ -3806,6 +3806,59 @@ window.addExtraSlotRow = addExtraSlotRow;
 window.deleteExtraSlot = deleteExtraSlot;
 window.updateExtraSlot = updateExtraSlot;
 
+// ====== FOCUS TRAP (Accessibility – Phase 3) ======
+// Lightweight focus-trap utility (no external dependency needed for plain-script apps)
+const FocusTrap = {
+    _trap: null,
+    _previouslyFocused: null,
+    _focusableSelectors: [
+        'a[href]',
+        'button:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        'textarea:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])',
+    ].join(','),
+
+    activate(container) {
+        this._previouslyFocused = document.activeElement;
+        this._trap = container;
+        const focusable = container.querySelectorAll(this._focusableSelectors);
+        if (focusable.length) focusable[0].focus();
+        container.addEventListener('keydown', this._handleKeyDown);
+    },
+
+    deactivate() {
+        if (this._trap) {
+            this._trap.removeEventListener('keydown', this._handleKeyDown);
+            this._trap = null;
+        }
+        if (this._previouslyFocused && this._previouslyFocused.focus) {
+            this._previouslyFocused.focus();
+        }
+        this._previouslyFocused = null;
+    },
+
+    _handleKeyDown(e) {
+        const trap = FocusTrap._trap;
+        if (!trap) return;
+        if (e.key === 'Escape') {
+            window.closeManualModal();
+            return;
+        }
+        if (e.key !== 'Tab') return;
+        const focusable = Array.from(trap.querySelectorAll(FocusTrap._focusableSelectors));
+        if (!focusable.length) { e.preventDefault(); return; }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+            if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+            if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+    },
+};
+
 window.openManualModal = function () {
     const modal = document.getElementById('manualModal');
     if (modal) {
@@ -3816,6 +3869,9 @@ window.openManualModal = function () {
             card.classList.remove('scale-95');
             card.classList.add('scale-100');
         }
+        // Activate focus trap
+        const trapTarget = card || modal;
+        FocusTrap.activate(trapTarget);
     }
 };
 
@@ -3829,6 +3885,8 @@ window.closeManualModal = function () {
             card.classList.remove('scale-100');
             card.classList.add('scale-95');
         }
+        // Deactivate focus trap and restore focus
+        FocusTrap.deactivate();
     }
 };
 
