@@ -1,4 +1,4 @@
-# PleumA.github.io
+# Doctor Scheduler
 ## Automatic On-Call & Night Shift Doctor Scheduler
 
 > **This website was developed by Vibe Code using Antigravity model Gemini 3.1 Pro, combined with Claude Sonnet 4.6 (Thinking) for allocating night-shift doctor duties.**
