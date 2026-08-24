@@ -440,8 +440,8 @@ Defines the metadata configuration for the PWA:
 ### 2. Cache-First Service Worker (`sw.js`)
 Handles offline asset delivery and state synchronization:
 - **Pre-Caching Lifecycle**: During the `install` phase, download and cache core application assets:
-  - Local documents: `./`, `./index.html`, `./translations.js`, `./app.js`, `./manifest.json`
-  - External CDNs: Tailwind CSS, SheetJS (XLSX export), Lucide Icons, and Google Fonts (Sarabun).
+  - Local documents: `./`, `./index.html`, `./structuredInputs.js`, `./translations.js`, `./app.js`, `./dist/output.css` (the locally compiled Tailwind stylesheet), `./manifest.json`
+  - External CDNs: SheetJS (XLSX export), Lucide Icons, and Google Fonts (Sarabun).
 - **Offline Fallback Route**: Listens to `fetch` events, attempting to retrieve resources directly from the local Cache storage first. If the cache misses, it falls back to the network.
 - **Versioned Cache Invalidation**: Listens to the `activate` event, automatically wiping old versions of caches when updating CACHE_NAME to prevent serving stale client-side logic.
 
@@ -484,6 +484,7 @@ The system employs a comprehensive, zero-dependency Node.js test suite (`tests/*
 4. **Scoring Function (`scoring.test.js`)**: Injects mock schedules to calculate exact numeric penalties for shortages and unequal workload dispersion.
 5. **State Management (`manualOverrides.test.js`, `jsonRoundTrip.test.js`)**: Verifies the internal mapping logic, undo stack (LIFO behavior), and the robust serialization/deserialization of UI state to JSON.
 6. **Security (`xss.test.js`)**: Asserts that untrusted strings are properly escaped to prevent Cross-Site Scripting via the `esc()` sanitization function.
+7. **Constraint Coverage (`constraintCoverage.test.js`)**: Directly asserts individual constraint behaviours that are otherwise only exercised indirectly — the strict holiday-spacing rule (no consecutive weekend/holiday duty), the quota-density sorting heuristic (availability-constrained doctors are front-loaded onto their available days), the locked-doctor off-duty exemption (a locked doctor covers every locked day despite rest-gap rules), probabilistic blank spacing under **Allow Blank Days** (surplus slots become shortages without exceeding quotas), and the deduplication safeguard at Cascade Level 5 (a doctor is never double-booked on a day, even when the deepest fallback would otherwise duplicate the only eligible doctor).
 
 ### Resolved Logic Anomalies
 During the recent test suite expansion and auditing phase, several significant logic flaws were discovered and successfully resolved:

@@ -57,7 +57,7 @@
 - **Localization & Theme**: Supports dynamic switching between Thai (TH) and English (EN) languages, along with a sleek system-synced Dark Mode. Automatically detects browser/system language and system dark mode preferences on initial load, while strictly preserving manual user overrides via `localStorage`.
 
 ### 4. Installable PWA & Offline Support
-- **Offline Capability**: Features a service worker (`sw.js`) and a web app manifest (`manifest.json`) caching all layout resources, stylesheets, custom fonts, and third-party libraries (Tailwind CSS, SheetJS, Lucide Icons) for complete offline reliability in hospital wards with spotty Wi-Fi.
+- **Offline Capability**: Features a service worker (`sw.js`) and a web app manifest (`manifest.json`) caching all layout resources, the locally compiled stylesheet (`dist/output.css`), custom fonts, and third-party libraries (SheetJS, Lucide Icons) for complete offline reliability in hospital wards with spotty Wi-Fi.
 - **Installable App**: Fully compliant standard web app configurations allow installing the scheduler directly onto mobile and desktop home screens.
 
 ---
@@ -69,7 +69,7 @@ git clone https://github.com/PleumA/PleumA.github.io
 cd PleumA.github.io
 npm install          # install all dependencies
 npm run build        # compile Tailwind CSS → dist/output.css
-npm test             # run all 20 test suites (all should pass ✅)
+npm test             # run all 21 test suites (all should pass ✅)
 npx serve .          # serve locally at http://localhost:3000
 ```
 
@@ -118,14 +118,12 @@ Built for high reliability, clean execution, and security:
 | `dist/output.css` | **Generated** — compiled & minified Tailwind CSS (run `npm run build`) |
 | `tailwind.config.js` | Tailwind config: `darkMode: 'class'`, extended colours |
 | `postcss.config.js` | PostCSS pipeline: tailwindcss + autoprefixer |
-| `jest.config.js` | Jest config: 80% coverage threshold |
-| `babel.config.cjs` | Babel preset for Jest transforms |
 | `.eslintrc.cjs` | ESLint rules (eslint:recommended + prettier) |
 | `.prettierrc` | Prettier formatting config |
 | `.github/workflows/ci.yml` | GitHub Actions CI: lint → test → build |
 | `sitemap.xml` | Single-page sitemap for SEO |
 | `robots.txt` | Crawler permission file |
-| `tests/*.test.js` | **20 unit test suites** covering solver logic, UI DOM, quota enforcement, XSS, shift-based mode, accessibility, and more. Run with `npm test`. |
+| `tests/*.test.js` | **21 unit test suites** covering solver logic, UI DOM, quota enforcement, XSS, shift-based mode, accessibility, constraint coverage (holiday spacing, quota-density heuristic, locked-doctor exemption, blank-day spacing, dedup safeguard), and more. Run with `npm test`. |
 | `run-tests.js` | Built-in test runner — no Jest required |
 | `DESIGN_SYSTEM.md` | Reusable component classes and colour tokens |
 | `DEVELOPER_GUIDE.md` | Full contributor setup, build, lint, test, and release guide |

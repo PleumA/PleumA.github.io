@@ -4,6 +4,19 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-08-24
+### Changed
+- **Production CSS delivery — CDN → local compiled build.** `index.html` now loads the local compiled stylesheet `dist/output.css` via `<link rel="stylesheet">` instead of the runtime `https://cdn.tailwindcss.com` script. The inline `tailwind.config` runtime block was removed (its `darkMode: 'class'` and colour extensions already live in `tailwind.config.js`, which drives the compiled build). Removed the now-unused `<link rel="preconnect" href="https://cdn.tailwindcss.com">`. This makes the app fully self-hosted for CSS and removes a render-blocking third-party dependency.
+- **Service worker offline correctness (`sw.js`).** Removed `https://cdn.tailwindcss.com` from the precache list and added `./dist/output.css`. Also added the previously-missing local scripts `./structuredInputs.js` and `./translations.js` to the precache list so the PWA is fully styled and functional offline. Bumped `CACHE_NAME` from `doctor-scheduler-v1` to `doctor-scheduler-v2` to invalidate stale caches on next activation.
+
+### Removed
+- **Redundant Jest toolchain.** The project's tests are zero-dependency Node scripts executed by `run-tests.js` (`npm test`); Jest was an unused parallel runner. Deleted `jest.config.js` and `babel.config.cjs`; removed the `test:jest` script and the `jest`, `babel-jest`, and `@babel/preset-env` devDependencies from `package.json`; regenerated `package-lock.json` accordingly. All 20 `tests/*.test.js` suites still pass via `npm test`.
+
+### Notes
+- **File review outcome.** A full review classified every project file as necessary except the redundant Jest tooling above. All source (`app.js`, `structuredInputs.js`, `translations.js`), PWA (`sw.js`, `manifest.json`), build (`src/input.css`, `tailwind.config.js`, `postcss.config.js`), quality (`.eslintrc.cjs`, `.prettierrc`), SEO (`sitemap.xml`, `robots.txt`), CI (`.github/workflows/ci.yml`), the `run-tests.js` runner, and all `tests/*.test.js` were confirmed in-use and left untouched.
+- `dist/output.css` is a generated build artifact (git-ignored) and is now a required runtime asset; run `npm run build` before serving or deploying. CI (`ci.yml`) already builds and uploads it as an artifact and required no changes (it references only `npm run lint`, `npm test`, `npm run build`).
+- **Out of scope / pre-existing:** `npm run lint` was already failing on the committed codebase before this change (e.g. the original `sw.js` reported 29 prettier errors and `index.html` 1) and is a separate formatting cleanup, not addressed here. Documentation files `README.md`, `DEVELOPER_GUIDE.md`, and `CONTRIBUTING.md` still reference the removed Jest setup (`test:jest`, `jest.config.js`, `babel.config.cjs`); per the review's scope, `.md` files were intentionally not modified apart from this changelog entry, so those references are now stale and can be updated in a follow-up.
+
 ## [1.7.0] - 2026-07-28
 ### Added
 - **SEO & Core Performance (Phase 1)**

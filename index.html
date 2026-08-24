@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="ระบบจัดตารางเวรอัตโนมัติ – คำนวณและปรับแต่งตารางเวรแพทย์อย่างชาญฉลาด">
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <title>ระบบจัดตารางเวรอัตโนมัติ & บันทึกตารางเวร</title>
@@ -23,13 +22,8 @@
         }
     </script>
 
-    <!-- Tailwind CSS (CDN – async for performance; replaced by local build in dist/output.css when available) -->
-    <script async src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
+    <!-- Tailwind CSS (local compiled build; run `npm run build` to regenerate dist/output.css) -->
+    <link rel="stylesheet" href="dist/output.css">
 
     <!-- SheetJS for Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
