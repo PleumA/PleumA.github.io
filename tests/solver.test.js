@@ -108,7 +108,7 @@ mockDOM['inputDefaultSlots'].value = "3";
 mockDOM['chkAllowBlankDays'].checked = false;
 try {
     let config2 = parseUIConfig();
-    const candidate = generateSingleScheduleCandidate(0, false, config2);
+    const candidate = generateSingleScheduleCandidate(0, config2);
     if (candidate.schedule.length !== 31) {
         throw new Error("Schedule length is not 31.");
     }
@@ -128,7 +128,7 @@ mockDOM['inputDefaultRoleSlots'].value = "R1:1, R2:1";
 mockDOM['chkAllowBlankDays'].checked = false; 
 try {
     const config3 = parseUIConfig();
-    generateSingleScheduleCandidate(0, false, config3);
+    generateSingleScheduleCandidate(0, config3);
     assert.fail("Should have thrown coverage error");
 } catch (e) {
     if (e.name === 'AssertionError') {

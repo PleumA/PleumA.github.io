@@ -47,7 +47,7 @@ function renderStructuredDoctorRoles() {
 
     const activeDocs = typeof doctors !== 'undefined' ? doctors : [];
     if (activeDocs.length === 0) {
-        const msg = (typeof translations !== 'undefined' && typeof currentLang !== 'undefined' && translations[currentLang] && translations[currentLang].noDocsWarning) ? translations[currentLang].noDocsWarning : "Please add doctors first";
+        const msg = translations[currentLang]?.noDocsWarning ?? "Please add doctors first";
         container.innerHTML = `<p class="text-xs text-slate-500 italic" data-i18n="noDocsWarning">${msg}</p>`;
         // Clear input if no docs
         document.getElementById('inputDoctorRoles').value = "";
@@ -58,7 +58,7 @@ function renderStructuredDoctorRoles() {
     activeDocs.forEach((doc) => {
         const role = roleMap[doc] || availableRoles[0]; // match or default
         
-        const newRoleText = typeof currentLang !== 'undefined' && currentLang === 'th' ? '＋ บทบาทใหม่' : '＋ New role';
+        const newRoleText = currentLang === 'th' ? '＋ บทบาทใหม่' : '＋ New role';
         let roleOptions = availableRoles.map(r => `<option value="${r}" ${r === role ? 'selected' : ''}>${r}</option>`).join('');
         roleOptions += `<option value="__NEW__">${newRoleText}</option>`;
         
@@ -80,7 +80,7 @@ function renderStructuredDoctorRoles() {
 
 function handleDocRoleSelectChange(selectElem) {
     if (selectElem.value === '__NEW__') {
-        const newRole = prompt(typeof currentLang !== 'undefined' && currentLang === 'th' ? "ป้อนชื่อบทบาทใหม่ (เช่น R3)" : "Enter new role name (e.g., R3)");
+        const newRole = prompt(currentLang === 'th' ? "ป้อนชื่อบทบาทใหม่ (เช่น R3)" : "Enter new role name (e.g., R3)");
         if (newRole && newRole.trim() !== '') {
             const rName = newRole.trim();
             const selects = document.querySelectorAll('.doc-role-select');

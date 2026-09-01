@@ -103,7 +103,7 @@ function resetMocks() {
 
 // Build a candidate deterministically from parsed config (no randomness)
 function buildCandidate(config) {
-    return generateSingleScheduleCandidate(0, false, config);
+    return generateSingleScheduleCandidate(0, config);
 }
 
 async function runTest(name, testFn) {

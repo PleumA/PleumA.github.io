@@ -183,7 +183,7 @@ try {
     let bestCandidate = null;
     let bestScore = -Infinity;
     for (let i = 0; i < 50; i++) {
-        const candidate = generateSingleScheduleCandidate(0.85, false, config);
+        const candidate = generateSingleScheduleCandidate(0.85, config);
         const score = scoreSchedule(candidate);
         if (score > bestScore) {
             bestScore = score;

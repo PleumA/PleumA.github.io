@@ -56,10 +56,8 @@ npm run format    # Prettier format all files
 ```
 
 ### Running Tests
-The project has two test runners:
 ```bash
 npm test          # Node.js built-in runner (run-tests.js) – fast, no config
-npm run test:jest # Jest runner (requires npm install to complete)
 ```
 
 
@@ -69,6 +67,8 @@ npm run test:jest # Jest runner (requires npm install to complete)
 - Keep the application serverless. All logic should run locally on the client thread.
 - Avoid introducing heavy npm packages or build configurations unless absolutely necessary.
 - Follow modern JavaScript best practices (clean async loops, $O(1)$ lookups with `Set`, defensive cloning of state).
+- **Shared helpers**: Reuse the top-of-`app.js` helpers (`DOC_COLORS`, `parseKV`, `expandSlots`, `dayName`, `monthName`) instead of re-inlining colour palettes, key-value parsers, or weekday/month name arrays.
+- **Config passing**: Pass the parsed `config` object explicitly into render/recalculate functions; do not add hidden `parseUIConfig()` fallbacks inside them.
 - **Internationalization (i18n)**: All new UI elements must support dual-language toggling via `data-i18n` attributes. Do not hardcode Thai or English text into the HTML structure. Always add translation keys to the `translations` map in `translations.js`.
 - **Date Handling**: Respect the `isCustomDateRange` global state. Avoid assuming a rigid 1-to-31 day iteration loop; instead, resolve real calendar `Date` objects using the `scheduleDates` array if custom mode is active, and always output dates in `DD/MM/YYYY` format using `formatShortDate`. Ensure that day labels in views reset at month boundaries when spanning across multiple calendar months.
 

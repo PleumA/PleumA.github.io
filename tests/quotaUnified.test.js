@@ -111,7 +111,7 @@ function runTests() {
         mockDOM['inputEndDate'] = { value: '2026-01-06' };
         
         const config = parseUIConfig();
-        const candidate = generateSingleScheduleCandidate(0, false, config);
+        const candidate = generateSingleScheduleCandidate(0, config);
         
         // Assert: R1 doctors work exactly 6 shifts collectively
         let r1Count = 0;
@@ -149,7 +149,7 @@ function runTests() {
         mockDOM['inputEndDate'] = { value: '2026-01-03' };
 
         const config = parseUIConfig();
-        const candidate = generateSingleScheduleCandidate(0, false, config);
+        const candidate = generateSingleScheduleCandidate(0, config);
         
         let aCount = 0;
         let bCount = 0;
@@ -233,7 +233,7 @@ function runTests() {
         mockDOM['inputEndDate'] = { value: '2026-01-03' };
 
         const config = parseUIConfig();
-        const candidate = generateSingleScheduleCandidate(0, false, config);
+        const candidate = generateSingleScheduleCandidate(0, config);
         
         let aCount = 0;
         let bCount = 0;

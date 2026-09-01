@@ -222,10 +222,10 @@ async function runTests() {
         global.isCustomDateRange = false;
         
         const config = parseUIConfig();
-        const proxy = config.specialRuleDays;
+        const lockedDays = config.specialRuleDays;
         
         // Assert: locked day indices correspond exactly to Jul 6, 13, 20, 27 (indices 5, 12, 19, 26)
-        assert.deepStrictEqual(proxy.lockedIndices, [5, 12, 19, 26]);
+        assert.deepStrictEqual([...lockedDays].map(d => d - 1), [5, 12, 19, 26]);
 
         await window.generateSchedule();
         const res = globalResult;
@@ -280,13 +280,13 @@ async function runTests() {
         }
 
         const config = parseUIConfig();
-        const proxy = config.specialRuleDays;
+        const lockedDays = config.specialRuleDays;
 
         // Sundays in range:
         // Jul 26 is index 4
         // Aug 2 is index 11
         // Aug 9 is index 18
-        assert.deepStrictEqual(proxy.lockedIndices, [4, 11, 18]);
+        assert.deepStrictEqual([...lockedDays].map(d => d - 1), [4, 11, 18]);
 
         await window.generateSchedule();
         const res = globalResult;

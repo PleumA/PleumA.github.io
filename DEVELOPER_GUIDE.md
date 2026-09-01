@@ -56,7 +56,6 @@ To use the locally-built CSS instead of the CDN, replace the CDN `<script>` tag 
 
 ```bash
 npm test           # fast built-in runner — runs all tests/**.test.js
-npm run test:jest  # Jest runner (same files, with coverage)
 ```
 
 ### 4. Lint & format
@@ -91,12 +90,12 @@ Web/
 ├── dist/
 │   └── output.css      # ⬅ Generated — do not edit manually
 │
-├── tests/              # 20 unit test files
+│                       └── ci.yml      # GitHub Actions: lint → test → build
+│
+├── tests/              # Unit test suites (run via `npm test`)
 │
 ├── tailwind.config.js  # Tailwind config (darkMode: class, custom colours)
 ├── postcss.config.js   # PostCSS config (tailwindcss + autoprefixer)
-├── jest.config.js      # Jest config (80 % coverage threshold)
-├── babel.config.cjs    # Babel config (for Jest transform)
 ├── .eslintrc.cjs       # ESLint config
 ├── .prettierrc         # Prettier config
 │
@@ -117,9 +116,10 @@ Web/
 1. **Serverless** — All logic runs client-side. No backend, no database.
 2. **i18n** — Every UI string uses `data-i18n` attributes and a key in `translations.js`. Never hardcode Thai or English text in HTML.
 3. **Sanitisation** — Always pass user inputs through `esc()` before inserting into the DOM.
-4. **Date handling** — Use the `scheduleDates` array, not raw day numbers. Output via `formatShortDate()` → `DD/MM/YYYY`.
+4. **Date handling** — Use the `scheduleDates` array, not raw day numbers. Output via `formatShortDate()` → `DD/MM/YYYY`; day/month labels come from the shared `dayName()` / `monthName()` locale helpers.
 5. **Dark mode** — Implemented via Tailwind's `darkMode: 'class'`; toggled by `toggleDarkMode()`.
 6. **Accessibility** — All icon-only buttons need `aria-label`; all decorative icons get `aria-hidden="true"`.
+7. **Config object** — Functions that render or recalculate take the parsed `config` explicitly (from `parseUIConfig()`); they never re-parse the DOM behind the caller's back.
 
 ---
 

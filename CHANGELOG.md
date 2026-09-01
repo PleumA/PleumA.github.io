@@ -4,6 +4,21 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-09-1
+### Changed
+- **Complexity cleanup in `app.js` (~225 net lines removed; all 18 test suites pass).**
+  - Removed the `EveryWeekdayLockProxy` class (~75 lines) that sniffed `arguments.callee.caller` and `Error().stack` to guess the current day during numeric comparisons. `config.specialRuleDays` is now a plain `Set` of locked day numbers queried with `specialRuleDays.has(day)`; the monkey-patch wrapper that reset the proxy counter was deleted with it.
+  - Deduplicated 4 copies of the 7-entry doctor colour palette into shared `DOC_COLORS` / `DOC_COLOR()` constants, and replaced 3 duplicated weekday-name arrays + 2 month-name arrays with locale-aware `dayName()` / `monthName()` helpers (`toLocaleDateString`).
+  - Consolidated 5 hand-rolled `name: value` textarea parsers into shared `parseKV()` / `parseKVNum()` helpers and 3 `{role: count}` expansion loops into `expandSlots()`.
+  - Made `config` a required parameter for `applyManualOverrides`, `recalculateCounts`, `renderSummaryTable`, `renderTableView`, `renderCalendarView`, `renderPersonCentricView`, `updateDayNote`, and `getCellDropdownOptionsHtml` (removed hidden `parseUIConfig()` re-parse fallbacks); no-arg call sites now hoist a single `parseUIConfig()`.
+  - Removed dead parameters/blocks: `formatUI` in `generateSingleScheduleCandidate` (never called with `true`) and `isMobile` in `getCellDropdownOptionsHtml` (only ever default `false`).
+  - Simplified `scoreSchedule` fallback chains (`a !== undefined ? a : (config ? ...)` → `??` chains) and removed the redundant soft-alternate fields copied onto each candidate.
+  - Collapsed multi-clause `typeof` guards in `structuredInputs.js`.
+  - Two `lockSpecialDuty.test.js` assertions updated to read the new `specialRuleDays` Set (day-number expectations unchanged); solver call sites updated for the removed `formatUI` parameter.
+
+### Notes
+- Stale documentation references to the removed Jest toolchain (`test:jest`, `jest.config.js`, `babel.config.cjs`) have been cleaned from `DEVELOPER_GUIDE.md` and `CONTRIBUTING.md`; `logic_report.md` now describes the Set-based special-rule locking.
+
 ## [1.8.0] - 2026-08-24
 ### Changed
 - **Production CSS delivery — CDN → local compiled build.** `index.html` now loads the local compiled stylesheet `dist/output.css` via `<link rel="stylesheet">` instead of the runtime `https://cdn.tailwindcss.com` script. The inline `tailwind.config` runtime block was removed (its `darkMode: 'class'` and colour extensions already live in `tailwind.config.js`, which drives the compiled build). Removed the now-unused `<link rel="preconnect" href="https://cdn.tailwindcss.com">`. This makes the app fully self-hosted for CSS and removes a render-blocking third-party dependency.
@@ -15,7 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Notes
 - **File review outcome.** A full review classified every project file as necessary except the redundant Jest tooling above. All source (`app.js`, `structuredInputs.js`, `translations.js`), PWA (`sw.js`, `manifest.json`), build (`src/input.css`, `tailwind.config.js`, `postcss.config.js`), quality (`.eslintrc.cjs`, `.prettierrc`), SEO (`sitemap.xml`, `robots.txt`), CI (`.github/workflows/ci.yml`), the `run-tests.js` runner, and all `tests/*.test.js` were confirmed in-use and left untouched.
 - `dist/output.css` is a generated build artifact (git-ignored) and is now a required runtime asset; run `npm run build` before serving or deploying. CI (`ci.yml`) already builds and uploads it as an artifact and required no changes (it references only `npm run lint`, `npm test`, `npm run build`).
-- **Out of scope / pre-existing:** `npm run lint` was already failing on the committed codebase before this change (e.g. the original `sw.js` reported 29 prettier errors and `index.html` 1) and is a separate formatting cleanup, not addressed here. Documentation files `README.md`, `DEVELOPER_GUIDE.md`, and `CONTRIBUTING.md` still reference the removed Jest setup (`test:jest`, `jest.config.js`, `babel.config.cjs`); per the review's scope, `.md` files were intentionally not modified apart from this changelog entry, so those references are now stale and can be updated in a follow-up.
+- **Out of scope / pre-existing:** `npm run lint` was already failing on the committed codebase before this change (e.g. the original `sw.js` reported 29 prettier errors and `index.html` 1) and is a separate formatting cleanup, not addressed here. Documentation files `README.md`, `DEVELOPER_GUIDE.md`, and `CONTRIBUTING.md` still reference the removed Jest setup (`test:jest`, `jest.config.js`, `babel.config.cjs`); per the review's scope, `.md` files were intentionally not modified apart from this changelog entry, so those references are now stale and can be updated in a follow-up. *(Follow-up done in [Unreleased] above.)*
 
 ## [1.7.0] - 2026-07-28
 ### Added

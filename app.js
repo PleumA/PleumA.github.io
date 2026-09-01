@@ -15,6 +15,45 @@ let scheduleDates = [];
 let manualOverrides = {};
 let quota = {};
 
+// Shared doctor badge color palette (indexed by doctor order)
+const DOC_COLORS = [
+    "bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900 text-teal-700 dark:text-teal-400",
+    "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400",
+    "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400",
+    "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400",
+    "bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900 text-purple-700 dark:text-purple-400",
+    "bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-900 text-sky-700 dark:text-sky-400",
+    "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400"
+];
+const DOC_COLOR = doc => DOC_COLORS[doctors.indexOf(doc) % DOC_COLORS.length] + " font-bold";
+
+// Locale-aware day/month name helpers (replaces duplicated name arrays)
+const localeTag = () => currentLang === 'th' ? 'th-TH' : 'en-US';
+const dayName = dateObj => dateObj.toLocaleDateString(localeTag(), { weekday: 'long' });
+const monthName = dateObj => dateObj.toLocaleDateString(localeTag(), { month: 'short' });
+
+// Shared parsers for "Name: 2, Other: 3" style textarea inputs (newline or comma separated)
+const parseKV = str => {
+    const map = {};
+    (str || '').split(/[\n,]+/).forEach(part => {
+        const pair = part.split(':');
+        if (pair.length !== 2) return;
+        const key = pair[0].trim();
+        const val = pair[1].trim();
+        if (key && val) map[key] = val;
+    });
+    return map;
+};
+const parseKVNum = str => {
+    const map = {};
+    Object.entries(parseKV(str)).forEach(([k, v]) => {
+        const n = parseInt(v);
+        if (!isNaN(n)) map[k] = n;
+    });
+    return map;
+};
+const expandSlots = roleSlots => Object.entries(roleSlots).flatMap(([role, count]) => Array(count).fill(role));
+
 function getQuotaKey(doctor, config) {
     const isRoleBased = config ? config.roleBased : false;
     const docName = typeof doctor === 'string' ? doctor : doctor.name;
@@ -457,16 +496,12 @@ function updateDayNamesLanguage() {
     const month = parseInt(document.getElementById('inputMonth').value);
     const calcYear = year > 2500 ? year - 543 : year;
 
-    const thDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
-    const enDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
     globalResult.schedule.forEach(row => {
         const dateObj = new Date(calcYear, month - 1, row.day);
-        const dayIndex = dateObj.getDay();
-        row.dayName = currentLang === 'th' ? thDays[dayIndex] : enDays[dayIndex];
+        row.dayName = dayName(dateObj);
 
         // Reconstruct warning flags using active language i18n
-        updateDayNote(row);
+        updateDayNote(row, null, parseUIConfig());
     });
 }
 
@@ -909,79 +944,9 @@ window.setViewMode = function (mode) {
 
 // --- Core Smart Logic & Optimization Solver ---
 
-class EveryWeekdayLockProxy {
-    constructor(lockWeekday, numDays, calcYear, month, scheduleDates, noDutySet, customLockedDaysSet = null) {
-        this.lockWeekday = lockWeekday;
-        this.numDays = numDays;
-        this.calcYear = calcYear;
-        this.month = month;
-        this.scheduleDates = scheduleDates;
-        this.noDutySet = noDutySet;
-
-        this.lockedDays = new Set();
-        this.lockedIndices = [];
-
-        if (customLockedDaysSet) {
-            this.lockedDays = customLockedDaysSet;
-            customLockedDaysSet.forEach(d => {
-                this.lockedIndices.push(d - 1);
-            });
-        } else {
-            for (let d = 1; d <= numDays; d++) {
-                const dateObj = (scheduleDates.length > 0) ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
-                if (dateObj.getDay() === lockWeekday) {
-                    this.lockedDays.add(d);
-                    this.lockedIndices.push(d - 1);
-                }
-            }
-        }
-
-        this.activeDays = [];
-        for (let d = 1; d <= numDays; d++) {
-            if (!noDutySet.has(d)) {
-                this.activeDays.push(d);
-            }
-        }
-
-        this.currentDay = 1;
-    }
-
-    resetCounter() {
-        this.currentDay = 1;
-    }
-
-    valueOf() {
-        let day = null;
-        try {
-            const caller = arguments.callee.caller;
-            if (caller && caller.arguments && caller.arguments[0] && typeof caller.arguments[0].day === 'number') {
-                day = caller.arguments[0].day;
-            }
-        } catch (e) {
-            // Ignore
-        }
-
-        if (day === null && window.currentRenderDay !== undefined && window.currentRenderDay !== null) {
-            const stack = new Error().stack || '';
-            if (stack.includes('updateDayNote') || stack.includes('getDayNotes') || stack.includes('renderResults') || !stack.includes('generateSingleScheduleCandidate')) {
-                day = window.currentRenderDay;
-            }
-        }
-
-        if (day === null) {
-            while (this.currentDay <= this.numDays && this.noDutySet.has(this.currentDay)) {
-                this.currentDay++;
-            }
-            day = this.currentDay;
-            this.currentDay++;
-        }
-
-        if (day !== undefined && day <= this.numDays && this.lockedDays.has(day)) {
-            return 99999;
-        }
-        return -99999;
-    }
-}
+// EveryWeekdayLockProxy removed: locked days are computed directly as a plain Set.
+// The old proxy sniffed arguments.callee.caller / Error.stack to guess which day
+// was being compared; the solver now asks the Set explicitly (specialRuleDays.has(day)).
 
 function parseUIConfig() {
     const year = parseInt(document.getElementById('inputYear').value);
@@ -1035,21 +1000,19 @@ function parseUIConfig() {
     const holidaySet = new Set(specialHols);
     const noDutySet = new Set(noDutyDays);
 
-    let specialRuleDays;
-    if (lockConditionType === 'firstNDays') {
-        const startD = parseInt(document.getElementById('inputSpecialStartDay')?.value) || 1;
-        const endD = parseInt(document.getElementById('inputSpecialDays').value) || 0;
-        if (startD === 1) {
-            specialRuleDays = endD;
+    // Locked days for the special rule, as a plain Set of day numbers
+    const specialRuleDays = new Set();
+    if (useSpecialRule) {
+        if (lockConditionType === 'firstNDays') {
+            const startD = parseInt(document.getElementById('inputSpecialStartDay')?.value) || 1;
+            const endD = parseInt(document.getElementById('inputSpecialDays').value) || 0;
+            for (let d = startD; d <= endD; d++) specialRuleDays.add(d);
         } else {
-            const lockedSet = new Set();
-            for (let d = startD; d <= endD; d++) {
-                lockedSet.add(d);
+            for (let d = 1; d <= numDays; d++) {
+                const dateObj = (scheduleDates.length > 0) ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
+                if (dateObj.getDay() === selectLockWeekday) specialRuleDays.add(d);
             }
-            specialRuleDays = new EveryWeekdayLockProxy(null, numDays, calcYear, month, scheduleDates, noDutySet, lockedSet);
         }
-    } else {
-        specialRuleDays = new EveryWeekdayLockProxy(selectLockWeekday, numDays, calcYear, month, scheduleDates, noDutySet);
     }
 
     let hasMatchingWeekday = false;
@@ -1196,71 +1159,30 @@ function parseUIConfig() {
     const doctorRoles = {};
     doctors.forEach(doc => { doctorRoles[doc] = 'Default'; });
     if (roleBased) {
-        const rolesText = document.getElementById('inputDoctorRoles')?.value || '';
-        rolesText.split(/[\n,]+/).forEach(part => {
-            const pair = part.split(':');
-            if (pair.length === 2) {
-                const doc = pair[0].trim();
-                const role = pair[1].trim();
-                if (doc && role) doctorRoles[doc] = role;
-            }
+        Object.entries(parseKV(document.getElementById('inputDoctorRoles')?.value)).forEach(([doc, role]) => {
+            doctorRoles[doc] = String(role);
         });
     }
 
     const defaultRoleSlots = {};
     if (roleBased) {
-        const defaultRoleSlotsText = document.getElementById('inputDefaultRoleSlots')?.value || '';
-        if (defaultRoleSlotsText.trim()) {
-            defaultRoleSlotsText.split(/[\n,]+/).forEach(part => {
-                const pair = part.split(':');
-                if (pair.length === 2) {
-                    const role = pair[0].trim();
-                    const count = Math.min(parseInt(pair[1].trim()), 50);
-                    if (role && !isNaN(count) && count > 0) defaultRoleSlots[role] = count;
-                }
-            });
-        }
+        const parsed = parseKVNum(document.getElementById('inputDefaultRoleSlots')?.value);
+        Object.entries(parsed).forEach(([role, count]) => {
+            if (count > 0) defaultRoleSlots[role] = count;
+        });
     }
     if (Object.keys(defaultRoleSlots).length === 0) defaultRoleSlots['Default'] = defaultSlots;
 
     quota = {};
-    if (roleBased) {
-        const quotasText = document.getElementById('inputRoleQuotas')?.value || '';
-        if (quotasText.trim()) {
-            quotasText.split(/[\n,]+/).forEach(part => {
-                const pair = part.split(':');
-                if (pair.length === 2) {
-                    const role = pair[0].trim();
-                    const count = parseInt(pair[1].trim());
-                    if (role) {
-                        if (isNaN(count) || count <= 0) {
-                            showToast(currentLang === 'th' ? `ข้อผิดพลาดโควตา: ${role} ต้องมากกว่า 0` : `Quota error: ${role} must be > 0`, true);
-                        } else {
-                            quota[role] = count;
-                        }
-                    }
-                }
-            });
+    const quotaInputId = roleBased ? 'inputRoleQuotas' : 'inputSinglePoolQuota';
+    Object.entries(parseKV(document.getElementById(quotaInputId)?.value)).forEach(([key, raw]) => {
+        const count = parseInt(raw);
+        if (isNaN(count) || count <= 0) {
+            showToast(currentLang === 'th' ? `ข้อผิดพลาดโควตา: ${key} ต้องมากกว่า 0` : `Quota error: ${key} must be > 0`, true);
+        } else {
+            quota[key] = count;
         }
-    } else {
-        const quotasText = document.getElementById('inputSinglePoolQuota')?.value || '';
-        if (quotasText.trim()) {
-            quotasText.split(/[\n,]+/).forEach(part => {
-                const pair = part.split(':');
-                if (pair.length === 2) {
-                    const doc = pair[0].trim();
-                    const count = parseInt(pair[1].trim());
-                    if (doc) {
-                        if (isNaN(count) || count <= 0) {
-                            showToast(currentLang === 'th' ? `ข้อผิดพลาดโควตา: ${doc} ต้องมากกว่า 0` : `Quota error: ${doc} must be > 0`, true);
-                        } else {
-                            quota[doc] = count;
-                        }
-                    }
-                }
-            });
-        }
-    }
+    });
 
     // Filter invalid keys (Step 5: unknown key in quota -> warning toast, skip entry)
     if (Object.keys(quota).length > 0) {
@@ -1321,13 +1243,9 @@ function parseUIConfig() {
                     if (/^\d+$/.test(slotsStr)) {
                         rawSlots['Default'] = Math.min(parseInt(slotsStr), 50);
                     } else {
-                        slotsStr.split(/[\n,]+/).forEach(part => {
-                            const pair = part.split(':');
-                            if (pair.length === 2) {
-                                const role = pair[0].trim();
-                                const count = Math.min(parseInt(pair[1].trim()), 50);
-                                if (role && !isNaN(count) && count > 0) rawSlots[role] = count;
-                            }
+                        const parsed = parseKVNum(slotsStr);
+                        Object.entries(parsed).forEach(([role, count]) => {
+                            if (count > 0) rawSlots[role] = count;
                         });
                     }
                 } else {
@@ -1335,13 +1253,7 @@ function parseUIConfig() {
                 }
                 if (Object.keys(rawSlots).length === 0) rawSlots['Default'] = 1;
 
-                const rolesSeq = [];
-                Object.keys(rawSlots).forEach(role => {
-                    const count = rawSlots[role];
-                    for (let i = 0; i < count; i++) {
-                        rolesSeq.push(role);
-                    }
-                });
+                const rolesSeq = expandSlots(rawSlots);
 
                 const dayRoleSlots = {};
                 const totalShifts = morningSlots + afternoonSlots + nightSlots;
@@ -1362,13 +1274,9 @@ function parseUIConfig() {
         if (/^\d+$/.test(slotsStr)) {
             dayRoleSlots['Default'] = Math.min(parseInt(slotsStr), 50);
         } else {
-            slotsStr.split(/[\n,]+/).forEach(part => {
-                const pair = part.split(':');
-                if (pair.length === 2) {
-                    const role = pair[0].trim();
-                    const count = Math.min(parseInt(pair[1].trim()), 50);
-                    if (role && !isNaN(count) && count > 0) dayRoleSlots[role] = count;
-                }
+            const parsed = parseKVNum(slotsStr);
+            Object.entries(parsed).forEach(([role, count]) => {
+                if (count > 0) dayRoleSlots[role] = count;
             });
         }
         if (Object.keys(dayRoleSlots).length === 0) dayRoleSlots['Default'] = defaultSlots;
@@ -1584,7 +1492,7 @@ function checkQuotaFeasibility(config) {
 }
 
 // Single trial of greedy scheduling with added randomness
-function generateSingleScheduleCandidate(randomness = 0, formatUI = false, config) {
+function generateSingleScheduleCandidate(randomness = 0, config) {
     const {
         numDays, holidaySet, noDutySet, offMap,
         roleBased, doctorRoles, quota, hasQuotas,
@@ -1749,14 +1657,8 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
 
         let slotsPerDay = 0;
         let dayRoleSlots = getRoleSlotsForDay(day);
-        let daySlotsList = [];
-        Object.keys(dayRoleSlots).forEach(role => {
-            const count = dayRoleSlots[role];
-            slotsPerDay += count;
-            for (let i = 0; i < count; i++) {
-                daySlotsList.push(role);
-            }
-        });
+        const daySlotsList = expandSlots(dayRoleSlots);
+        Object.values(dayRoleSlots).forEach(count => { slotsPerDay += count; });
 
         if (slotsPerDay > maxSlotsFound) maxSlotsFound = slotsPerDay;
 
@@ -1771,7 +1673,7 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
             let chosenSpecial = null;
             let specialRole = null;
 
-            if (useSpecialRule && day <= specialRuleDays && specialDocs.length > 0) {
+            if (useSpecialRule && specialRuleDays.has(day) && specialDocs.length > 0) {
                 let availableSpecial = specialDocs.filter(doc => {
                     // 1. Hard Quota Ceiling
                     const key = getQuotaKey(doc, config);
@@ -1966,14 +1868,6 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
             note: ""
         };
 
-        if (formatUI) {
-            const dateObj = new Date(calcYear, month - 1, day);
-            const thDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
-            const enDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-            tempDayRow.dayName = currentLang === 'th' ? thDays[dateObj.getDay()] : enDays[dateObj.getDay()];
-            updateDayNote(tempDayRow, offToday);
-        }
-
         scheduleData.push(tempDayRow);
     }
 
@@ -1994,21 +1888,9 @@ function generateSingleScheduleCandidate(randomness = 0, formatUI = false, confi
         hCounts,
         tCounts,
         maxSlots: maxSlotsFound,
-        config: config,
-        chkSoftAlternate: config ? config.chkSoftAlternate : true,
-        windowPenalty: config ? config.windowPenalty : 150,
-        pairPenalty: config ? config.pairPenalty : 300
+        config: config
     };
 }
-
-// Wrap the solver candidate generation function to reset proxy counter
-const originalGenerateCandidate = generateSingleScheduleCandidate;
-generateSingleScheduleCandidate = function (randomness, formatUI, config) {
-    if (config && config.specialRuleDays && typeof config.specialRuleDays.resetCounter === 'function') {
-        config.specialRuleDays.resetCounter();
-    }
-    return originalGenerateCandidate(randomness, formatUI, config);
-};
 
 // Scoring algorithm evaluating candidate quality
 // Higher scores represent better fairness, spacing, and fewer shortages
@@ -2045,7 +1927,7 @@ function scoreSchedule(candidate) {
     score -= stdDevWork * 300;
 
     // 3. Gap distribution: penalize gaps shorter than offDutyPeriod
-    const configOffDutyPeriod = (candidate.config && candidate.config.offDutyPeriod) ? candidate.config.offDutyPeriod : 2;
+    const configOffDutyPeriod = candidate.config?.offDutyPeriod ?? 2;
     doctors.forEach(doc => {
         let dutyDays = [];
         candidate.schedule.forEach(day => {
@@ -2065,11 +1947,11 @@ function scoreSchedule(candidate) {
     });
 
     // 3.5. Shift alternation/rotation variance penalty (under Shift-Based Mode)
-    const isShiftBased = (candidate.config && candidate.config.isShiftBased);
-    if (isShiftBased) {
-        const M = candidate.config.morningSlots || 0;
-        const A = candidate.config.afternoonSlots || 0;
-        const N = candidate.config.nightSlots || 0;
+    if (candidate.config?.isShiftBased) {
+        const cfg = candidate.config;
+        const M = cfg.morningSlots || 0;
+        const A = cfg.afternoonSlots || 0;
+        const N = cfg.nightSlots || 0;
         
         const activeShiftsCount = (M > 0 ? 1 : 0) + (A > 0 ? 1 : 0) + (N > 0 ? 1 : 0);
         if (activeShiftsCount > 1) {
@@ -2108,15 +1990,9 @@ function scoreSchedule(candidate) {
     let windowScore = 0;
     let pairScore = 0;
 
-    const chkSoftAlternate = candidate.chkSoftAlternate !== undefined 
-        ? candidate.chkSoftAlternate 
-        : (candidate.config ? candidate.config.chkSoftAlternate : true);
-    const windowPenalty = candidate.windowPenalty !== undefined 
-        ? candidate.windowPenalty 
-        : (candidate.config ? candidate.config.windowPenalty : 150);
-    const pairPenalty = candidate.pairPenalty !== undefined 
-        ? candidate.pairPenalty 
-        : (candidate.config ? candidate.config.pairPenalty : 300);
+    const chkSoftAlternate = candidate.chkSoftAlternate ?? candidate.config?.chkSoftAlternate ?? true;
+    const windowPenalty = candidate.windowPenalty ?? candidate.config?.windowPenalty ?? 150;
+    const pairPenalty = candidate.pairPenalty ?? candidate.config?.pairPenalty ?? 300;
 
     if (chkSoftAlternate) {
         // PENALTY TERM A — Solo Repeat Window
@@ -2139,9 +2015,7 @@ function scoreSchedule(candidate) {
         windowScore = windowExcess * windowPenalty;
 
         // PENALTY TERM B — Pair/Group Repeat
-        const roleBased = (candidate.config && candidate.config.roleBased !== undefined)
-            ? candidate.config.roleBased
-            : (typeof isRoleBased !== 'undefined' ? isRoleBased : (document.getElementById('chkRoleBased')?.checked || false));
+        const roleBased = candidate.config?.roleBased ?? false;
 
         let pairCounts = {};
         candidate.schedule.forEach(day => {
@@ -2265,7 +2139,7 @@ window.generateSchedule = async function () {
         const config = parseUIConfig();
 
         // 1. Run baseline greedy (0 randomness)
-        const baseline = generateSingleScheduleCandidate(0, false, config);
+        const baseline = generateSingleScheduleCandidate(0, config);
         bestCandidate = baseline;
         bestScore = scoreSchedule(baseline);
 
@@ -2275,7 +2149,7 @@ window.generateSchedule = async function () {
 
         for (let i = 0; i < iterations; i += batchSize) {
             for (let j = 0; j < batchSize && (i + j) < iterations; j++) {
-                const candidate = generateSingleScheduleCandidate(0.85, false, config);
+                const candidate = generateSingleScheduleCandidate(0.85, config);
                 const score = scoreSchedule(candidate);
                 if (score > bestScore) {
                     bestScore = score;
@@ -2315,12 +2189,10 @@ window.generateSchedule = async function () {
         const year = parseInt(document.getElementById('inputYear').value);
         const month = parseInt(document.getElementById('inputMonth').value);
         const calcYear = year > 2500 ? year - 543 : year;
-        const thDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
-        const enDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
         bestCandidate.schedule.forEach(row => {
             const dateObj = isCustomDateRange ? scheduleDates[row.day - 1] : new Date(calcYear, month - 1, row.day);
-            row.dayName = currentLang === 'th' ? thDays[dateObj.getDay()] : enDays[dateObj.getDay()];
+            row.dayName = dayName(dateObj);
 
             if (isCustomDateRange) {
                 const dd = String(dateObj.getDate()).padStart(2, '0');
@@ -2391,9 +2263,8 @@ window.generateSchedule = async function () {
 };
 
 // Apply manual edits to the current global result
-function applyManualOverrides(config = null) {
+function applyManualOverrides(config) {
     if (!globalResult) return;
-    if (!config) config = parseUIConfig();
 
     Object.keys(manualOverrides).forEach(dayStr => {
         const day = parseInt(dayStr);
@@ -2426,9 +2297,8 @@ window.clearManualOverrides = function () {
 };
 
 // Recalculate summary metrics based on manual overrides
-function recalculateCounts(config = null) {
+function recalculateCounts(config) {
     if (!globalResult) return;
-    if (!config) config = parseUIConfig();
 
     const wCounts = {};
     const hCounts = {};
@@ -2485,13 +2355,11 @@ function recalculateCounts(config = null) {
 }
 
 // Dynamically update day warning notes on override change
-function updateDayNote(dayRow, offTodayList = null, config = null) {
+function updateDayNote(dayRow, offTodayList, config) {
     const lang = currentLang;
     let noteStr = "";
 
-    if (!config) config = parseUIConfig();
     const { roleBased, year, month, specialHols, doctorRoles, areConflicting, getRoleSlotsForDay } = config;
-    const calcYear = year > 2500 ? year - 543 : year;
 
     // Build base note labels
     let baseNotes = [];
@@ -2514,13 +2382,8 @@ function updateDayNote(dayRow, offTodayList = null, config = null) {
     }
 
     // Check for Lock special rule
-    const useSpecialRule = document.getElementById('chkUseSpecialRule').checked;
-    const specialRuleDocsInput = document.getElementById('inputSpecialDocs').value;
-    const specialDocs = specialRuleDocsInput.split(',').map(d => d.trim()).filter(d => d);
-    const specialRuleDays = parseInt(document.getElementById('inputSpecialDays').value) || 0;
-
-    window.currentRenderDay = dayRow.day;
-    if (useSpecialRule && dayRow.day <= specialRuleDays && specialDocs.length > 0) {
+    const specialDocs = config.specialDocs;
+    if (config.useSpecialRule && config.specialRuleDays.has(dayRow.day) && specialDocs.length > 0) {
         const assignedSpecial = dayRow.selectedDocs.find(d => specialDocs.includes(d.name));
         if (assignedSpecial) {
             noteStr += (noteStr ? " / " : "") + translations[lang].lockedBadge.replace('{name}', assignedSpecial.name);
@@ -2571,13 +2434,7 @@ function updateDayNote(dayRow, offTodayList = null, config = null) {
 
     // Check for role mismatch on this day
     let dayRoleSlots = getRoleSlotsForDay(dayRow.day);
-    let daySlotsList = [];
-    Object.keys(dayRoleSlots).forEach(role => {
-        const count = dayRoleSlots[role];
-        for (let i = 0; i < count; i++) {
-            daySlotsList.push(role);
-        }
-    });
+    const daySlotsList = expandSlots(dayRoleSlots);
 
     let roleMismatches = [];
     const isRoleBased = document.getElementById('chkRoleBased')?.checked;
@@ -2621,17 +2478,7 @@ function updateTargetedCellDOM(day, slotIndex) {
         badgeClass = "text-slate-300 dark:text-slate-600 bg-transparent border-dashed border-slate-200 dark:border-slate-800";
         calBadgeClass = badgeClass;
     } else if (doctors.includes(docName)) {
-        const docIdx = doctors.indexOf(docName);
-        const colors = [
-            "bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900 text-teal-700 dark:text-teal-400",
-            "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400",
-            "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400",
-            "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400",
-            "bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900 text-purple-700 dark:text-purple-400",
-            "bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-900 text-sky-700 dark:text-sky-400",
-            "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400"
-        ];
-        badgeClass = colors[docIdx % colors.length] + " font-bold";
+        badgeClass = DOC_COLOR(docName);
         calBadgeClass = badgeClass;
     }
 
@@ -2730,7 +2577,7 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
         name: newDoctor,
         role: globalResult.schedule[day - 1].selectedDocs[slotIndex]?.role || 'Default'
     };
-    updateDayNote(globalResult.schedule[day - 1]);
+    updateDayNote(globalResult.schedule[day - 1], null, parseUIConfig());
 
     updateTargetedCellDOM(day, slotIndex);
 
@@ -2899,7 +2746,7 @@ window.resetSlotToAuto = function (day, slotIndex) {
             name: autoDoc ? autoDoc.name : "",
             role: autoDoc ? autoDoc.role : "Default"
         };
-        updateDayNote(globalResult.schedule[day - 1]);
+        updateDayNote(globalResult.schedule[day - 1], null, parseUIConfig());
 
         updateTargetedCellDOM(day, slotIndex);
 
@@ -2992,10 +2839,9 @@ function updateStatsDashboard() {
 
 // Render Results Router (handles Table & Calendar view)
 // Render only the Summary Table
-function renderSummaryTable(config = null) {
+function renderSummaryTable(config) {
     if (!globalResult) return;
 
-    if (!config) config = parseUIConfig();
     const { doctorRoles, quota, roleBased, isShiftBased } = config;
 
     // Draw header section dynamically
@@ -3111,14 +2957,7 @@ function getSlotRole(slotIdx) {
     }
     try {
         const config = parseUIConfig();
-        const dayRoleSlots = config.getRoleSlotsForDay(1);
-        const daySlotsList = [];
-        Object.keys(dayRoleSlots).forEach(role => {
-            const count = dayRoleSlots[role];
-            for (let i = 0; i < count; i++) {
-                daySlotsList.push(role);
-            }
-        });
+        const daySlotsList = expandSlots(config.getRoleSlotsForDay(1));
         if (daySlotsList[slotIdx]) return daySlotsList[slotIdx];
     } catch (e) {
         // Ignore
@@ -3141,7 +2980,6 @@ function renderTableView(config) {
             <th class="py-3.5 px-6 border-b border-slate-200 dark:border-slate-800 font-bold w-16">${translations[currentLang].tableDateCol}</th>
             <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-800 font-bold w-24">${translations[currentLang].tableDayCol}</th>
     `;
-    if (!config) config = parseUIConfig();
     const isShiftBased = config.isShiftBased;
     const M = config.morningSlots || 0;
     const A = config.afternoonSlots || 0;
@@ -3226,17 +3064,7 @@ function renderTableView(config) {
             } else if (d === "-" || d === "" || row.isNoDuty) {
                 badgeClass = "text-slate-300 dark:text-slate-600 bg-transparent border-dashed border-slate-200 dark:border-slate-800";
             } else if (doctors.includes(d)) {
-                const docIdx = doctors.indexOf(d);
-                const colors = [
-                    "bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900 text-teal-700 dark:text-teal-400",
-                    "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400",
-                    "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400",
-                    "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400",
-                    "bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900 text-purple-700 dark:text-purple-400",
-                    "bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-900 text-sky-700 dark:text-sky-400",
-                    "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400"
-                ];
-                badgeClass = colors[docIdx % colors.length] + " font-bold";
+                badgeClass = DOC_COLOR(d);
             }
 
             let displayDoc = d;
@@ -3279,7 +3107,6 @@ function renderTableView(config) {
 
 // Render Calendar Layout View
 function renderCalendarView(config) {
-    if (!config) config = parseUIConfig();
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
 
@@ -3323,10 +3150,7 @@ function renderCalendarView(config) {
             const dateObj = scheduleDates[dayRow.day - 1];
             displayDateNum = dateObj.getDate();
             if (displayDateNum === 1 || dayRow.day === 1) {
-                const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const monthNamesTh = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-                const mName = currentLang === 'th' ? monthNamesTh[dateObj.getMonth()] : monthNamesEn[dateObj.getMonth()];
-                monthLabel = ` ${mName}`;
+                monthLabel = ` ${monthName(dateObj)}`;
             }
         }
 
@@ -3351,17 +3175,7 @@ function renderCalendarView(config) {
                 } else if (doc === "-" || doc === "") {
                     badgeClass = "text-slate-300 dark:text-slate-600 bg-transparent border-dashed border-slate-200 dark:border-slate-800";
                 } else if (doctors.includes(doc)) {
-                    const docIdx = doctors.indexOf(doc);
-                    const colors = [
-                        "bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900 text-teal-700 dark:text-teal-400",
-                        "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400",
-                        "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400",
-                        "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400",
-                        "bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900 text-purple-700 dark:text-purple-400",
-                        "bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-900 text-sky-700 dark:text-sky-400",
-                        "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400"
-                    ];
-                    badgeClass = colors[docIdx % colors.length] + " font-bold";
+                    badgeClass = DOC_COLOR(doc);
                 }
 
                 let displayDoc = doc;
@@ -3433,15 +3247,14 @@ function renderCalendarView(config) {
 }
 
 // Cell Dropdown content builder for custom updates
-function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config = null, isMobile = false) {
+function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config) {
     let optionsHtml = '';
 
-    if (!config) config = parseUIConfig();
     const { doctorRoles } = config;
 
     // Show "Reset to Auto" option if cell has a manual override applied
     const isOverridden = manualOverrides[day] && manualOverrides[day][slotIndex] !== undefined;
-    const btnClassBase = isMobile ? 'w-full text-left px-4 py-3 min-h-[48px] text-base' : 'w-full text-left px-3 py-1.5 text-xs';
+    const btnClassBase = 'w-full text-left px-3 py-1.5 text-xs';
 
     if (isOverridden) {
         optionsHtml += `
@@ -3456,7 +3269,7 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config = null, i
         const role = doctorRoles[doc] || 'Default';
         const displayName = role !== 'Default' ? `${doc} (${role})` : doc;
         optionsHtml += `
-            <button onclick="updateDoctorAssignment(${day}, ${slotIndex}, ${index}); ${isMobile ? 'closeMobileModal();' : ''}" class="${btnClassBase} hover:bg-slate-100 dark:hover:bg-slate-800 ${isCurrent} border-b border-slate-100 dark:border-slate-800 last:border-0">
+            <button onclick="updateDoctorAssignment(${day}, ${slotIndex}, ${index})" class="${btnClassBase} hover:bg-slate-100 dark:hover:bg-slate-800 ${isCurrent} border-b border-slate-100 dark:border-slate-800 last:border-0">
                 ${esc(displayName)}
             </button>
         `;
@@ -3465,14 +3278,14 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config = null, i
     const isShortage = currentDoc === SHORTAGE_MARKER ? 'bg-red-50 dark:bg-red-950/40 font-bold text-red-650 dark:text-red-400 border-l-4 border-red-500' : 'text-red-600 dark:text-red-400 font-bold';
     optionsHtml += `
         <div class="border-t-4 border-slate-100 dark:border-slate-800 my-1"></div>
-        <button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -1); ${isMobile ? 'closeMobileModal();' : ''}" class="${btnClassBase} hover:bg-red-50 dark:hover:bg-red-900/50 ${isShortage} border-b border-slate-100 dark:border-slate-800">
+        <button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -1)" class="${btnClassBase} hover:bg-red-50 dark:hover:bg-red-900/50 ${isShortage} border-b border-slate-100 dark:border-slate-800">
             ⚠️ <span>${translations[currentLang].shortageSlot || 'ขาดคน'}</span>
         </button>
     `;
 
     const isNone = currentDoc === "-" || currentDoc === "" ? 'bg-slate-50 dark:bg-slate-800 font-bold border-l-4 border-slate-400' : 'text-slate-400 dark:text-slate-500 font-bold';
     optionsHtml += `
-        <button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -2); ${isMobile ? 'closeMobileModal();' : ''}" class="${btnClassBase} hover:bg-slate-100 dark:hover:bg-slate-800 ${isNone}">
+        <button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -2)" class="${btnClassBase} hover:bg-slate-100 dark:hover:bg-slate-800 ${isNone}">
             <span>${translations[currentLang].emptySlot || '- ว่าง'}</span>
         </button>
     `;
@@ -4097,16 +3910,15 @@ window.pushToUndoStack = function () {
 window.undoLastAction = function () {
     if (undoStack.length > 0) {
         manualOverrides = undoStack.pop();
-        applyManualOverrides();
-        renderTableView();
-        renderCalendarView();
+        const config = parseUIConfig();
+        applyManualOverrides(config);
+        renderTableView(config);
+        renderCalendarView(config);
 
         if (typeof renderPersonCentricView === 'function') {
-            const config = parseUIConfig();
             renderPersonCentricView(config);
         }
 
-        const config = parseUIConfig();
         recalculateCounts(config);
         renderSummaryTable(config);
         updateStatsDashboard();
@@ -4160,8 +3972,9 @@ window.handleDrop = function (e, targetDay, targetSlotIndex, targetDocIndex) {
         window.isDragAndDropOperation = false;
 
         // Final refresh to ensure counts are fully up to date
-        renderTableView();
-        renderCalendarView();
+        const config = parseUIConfig();
+        renderTableView(config);
+        renderCalendarView(config);
 
         showToast(currentLang === 'th' ? 'สลับเวรด้วยการลากวางสำเร็จ' : 'Drag & Drop swap successful');
     } catch (err) {
@@ -4197,9 +4010,10 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
             
             window.isDragAndDropOperation = false;
             
-            renderTableView();
-            renderCalendarView();
-            if (typeof renderPersonCentricView === 'function') renderPersonCentricView(parseUIConfig());
+            const config = parseUIConfig();
+            renderTableView(config);
+            renderCalendarView(config);
+            if (typeof renderPersonCentricView === 'function') renderPersonCentricView(config);
             
             showToast(currentLang === 'th' ? 'เปลี่ยนผู้เข้าเวรสำเร็จ' : 'Reassignment successful');
         } else {
@@ -4243,9 +4057,10 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
             
             window.isDragAndDropOperation = false;
             
-            renderTableView();
-            renderCalendarView();
-            if (typeof renderPersonCentricView === 'function') renderPersonCentricView(parseUIConfig());
+            const config = parseUIConfig();
+            renderTableView(config);
+            renderCalendarView(config);
+            if (typeof renderPersonCentricView === 'function') renderPersonCentricView(config);
             
             showToast(currentLang === 'th' ? 'สลับเวรข้ามวันสำเร็จ' : 'Cross-day swap successful');
         }
@@ -4275,10 +4090,7 @@ function renderPersonCentricView(config) {
             const dateObj = scheduleDates[d - 1];
             displayDateNum = dateObj.getDate();
             if (displayDateNum === 1 || d === 1) {
-                const monthNamesEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const monthNamesTh = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-                const mName = currentLang === 'th' ? monthNamesTh[dateObj.getMonth()] : monthNamesEn[dateObj.getMonth()];
-                monthLabel = ` ${mName}`;
+                monthLabel = ` ${monthName(dateObj)}`;
             }
             if (displayDateNum === 1 && d > 1) {
                 borderClass = "border-l-2 border-indigo-300 dark:border-indigo-700 " + borderClass;

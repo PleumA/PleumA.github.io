@@ -199,35 +199,25 @@ When `lockConditionType = "firstNDays"`, the solver reads two inputs:
 | Start day (inclusive) | `inputSpecialStartDay` | 1 |
 | End day (inclusive) | `inputSpecialDays` | 14 |
 
-**If start day = 1**, `specialRuleDays` is set to a plain integer (`endDay`). The solver condition `day <= specialRuleDays` then naturally covers days 1 – N with no extra infrastructure.
-
-**If start day > 1**, a custom `EveryWeekdayLockProxy` is created with a pre-computed `lockedDays` Set (all integers from `startDay` to `endDay`). The proxy's `valueOf()` returns `+99999` for days inside the set and `−99999` for days outside, so the solver's comparison `day <= specialRuleDays` evaluates to `true` only on locked days.
+All integers from `startDay` to `endDay` are added to the `specialRuleDays` Set (see the Special Rule Locks section below). The solver condition `specialRuleDays.has(day)` is $O(1)$, so no comparison trickery is needed.
 
 ### Mode 2 — Every [Weekday]
 
-When `lockConditionType = "everyWeekday"`, the solver creates an `EveryWeekdayLockProxy` that scans every calendar `Date` object in the schedule window and collects the 1-based day indices where `date.getDay() === lockWeekday`.
+When `lockConditionType = "everyWeekday"`, `parseUIConfig()` scans every calendar `Date` object in the schedule window and collects the 1-based day indices where `date.getDay() === lockWeekday` into the `specialRuleDays` Set.
 
 For **standard month ranges**, `new Date(year, month-1, d)` is used. For **custom date ranges**, the pre-built `scheduleDates` array is used directly — correctly spanning month and year boundaries.
 
 If no matching weekdays exist in the range, a non-fatal warning toast is emitted and the solver continues without crashing.
 
-### EveryWeekdayLockProxy — Internal Design
+### Special Rule Locks — Internal Design
 
 ```javascript
-class EveryWeekdayLockProxy {
-    constructor(lockWeekday, numDays, calcYear, month,
-                scheduleDates, noDutySet, customLockedDaysSet = null)
-
-    valueOf()   // returns +99999 (locked) or −99999 (not locked)
-    resetCounter()  // resets sequential day counter before each solver trial
-}
+const specialRuleDays = new Set();   // locked 1-based day numbers
+// firstNDays:  startDay..endDay added directly
+// everyWeekday: days whose Date.getDay() === lockWeekday
 ```
 
-`valueOf()` is invoked by the JavaScript engine whenever the proxy object is compared with a number (`day <= specialRuleDays`). It determines the current day using this priority order:
-
-1. **`window.currentRenderDay`** — set by `updateDayNote()` before each rendering call, ensuring the rendering engine always interrogates the correct day.
-2. **`arguments.callee.caller`** — tried first in sloppy mode; resolves the day from the solver's call-frame argument.
-3. **Sequential counter** (`currentDay`) — walks forward from day 1, automatically skipping no-duty days, as a fallback for environments where caller introspection is blocked.
+The solver and the note renderer query the Set explicitly (`specialRuleDays.has(day)`), so lock evaluation is deterministic and has no hidden state. (An earlier implementation used a `valueOf()` proxy that sniffed `arguments.callee.caller` and `Error().stack` to guess the current day during numeric comparisons; it was removed as fragile and unnecessary.)
 
 ### Off-Duty Period Exemption
 
@@ -275,8 +265,8 @@ Here is a detailed breakdown of the functions in `app.js`:
     };
     ```
 
-#### `generateSingleScheduleCandidate(config)`
-*   **Inputs**: `config` (object containing parsed constraints).
+#### `generateSingleScheduleCandidate(randomness, config)`
+*   **Inputs**: `randomness` (0 = deterministic greedy, >0 = randomized exploration), `config` (object containing parsed constraints).
 *   **Outputs**: A schedule candidate object, or `null` if pre-flight validation fails.
 *   **Responsibility**: Builds a single schedule candidate. Contains the nested loops (days, slots) and applies the constraint validation logic and fallback cascades.
 
@@ -295,13 +285,12 @@ Here is a detailed breakdown of the functions in `app.js`:
     *   **Person-Centric View (`renderPersonCentricView`)**: Renders a dynamic, color-coded role badge (e.g. `[R1]`) next to doctor names in the left-hand sticky column using `getRoleBadgeColorClass`. Cells display slot numbers without any role decorations.
     *   **Excel/Clipboard Exports**: Headers are dynamically appended with their respective roles (e.g. `Duty 1 (R1)`) when Role-Based mode is ON, keeping the data rows clean with just doctor names.
 
-#### `getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config, isMobile)`
+#### `getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config)`
 *   **Inputs**:
     *   `day` (Number): The calendar day.
     *   `slotIndex` (Number): The duty index on that day.
     *   `currentDoc` (String): The doctor currently occupying the slot.
-    *   `config` (Object): Parsed configuration.
-    *   `isMobile` (Boolean): If true, renders touch-friendly (48px+) buttons.
+    *   `config` (Object): Parsed configuration (required).
 *   **Outputs**: HTML string representing the list of buttons.
 
 ---
