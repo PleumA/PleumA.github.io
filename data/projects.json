@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-09-10T03:15:13.210Z",
+  "username": "PleumA",
+  "projects": [
+    {
+      "display_name": "doctor-scheduler",
+      "description": "An automatic, zero-backend, client-side on-call and night shift scheduler for hospital doctors and medical staff, featuring Monte Carlo simulation and strict constraint management.",
+      "github_url": "https://github.com/PleumA/doctor-scheduler",
+      "homepage": "https://pleuma.github.io/doctor-scheduler/",
+      "language": "JavaScript",
+      "topics": [
+        "featured",
+        "healthcare",
+        "optimization",
+        "portfolio",
+        "pwa",
+        "scheduling",
+        "simulation",
+        "software"
+      ],
+      "category": "Software",
+      "stars": 0,
+      "forks": 0,
+      "updated_at": "2026-09-10T03:15:06Z",
+      "featured": true
+    }
+  ]
+}
