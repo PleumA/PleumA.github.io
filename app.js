@@ -17,13 +17,13 @@ let quota = {};
 
 // Shared doctor badge color palette (indexed by doctor order)
 const DOC_COLORS = [
-    'bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900 text-teal-700 dark:text-teal-400',
-    'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400',
-    'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400',
-    'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400',
-    'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900 text-purple-700 dark:text-purple-400',
-    'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-900 text-sky-700 dark:text-sky-400',
-    'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400',
+    'bg-teal-100 dark:bg-teal-900/50 border-teal-300 dark:border-teal-700 text-teal-800 dark:text-teal-200',
+    'bg-indigo-100 dark:bg-indigo-900/50 border-indigo-300 dark:border-indigo-700 text-indigo-800 dark:text-indigo-200',
+    'bg-emerald-100 dark:bg-emerald-900/50 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200',
+    'bg-amber-100 dark:bg-amber-900/50 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200',
+    'bg-purple-100 dark:bg-purple-900/50 border-purple-300 dark:border-purple-700 text-purple-800 dark:text-purple-200',
+    'bg-sky-100 dark:bg-sky-900/50 border-sky-300 dark:border-sky-700 text-sky-800 dark:text-sky-200',
+    'bg-rose-100 dark:bg-rose-900/50 border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-200',
 ];
 const DOC_COLOR = (doc) => DOC_COLORS[doctors.indexOf(doc) % DOC_COLORS.length] + ' font-bold';
 
@@ -2872,7 +2872,7 @@ function updateTargetedCellDOM(day, slotIndex) {
     // 1. Update Table View Button
     const btnTable = document.getElementById(`btn-day-${day}-slot-${slotIndex}`);
     if (btnTable) {
-        btnTable.className = `w-full text-left text-xs px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm`;
+        btnTable.className = `w-full text-left text-sm px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm`;
         const span = btnTable.querySelector('span.truncate');
         if (span) span.innerText = displayDoc;
     }
@@ -3442,8 +3442,8 @@ function renderTableView(config) {
     const headerRow = document.getElementById('scheduleTableHeader');
     let headerHtml = `
         <tr class="text-slate-500 dark:text-slate-400 text-[13px] uppercase tracking-wider">
-            <th class="py-3.5 px-6 border-b border-slate-200 dark:border-slate-800 font-bold w-16">${translations[currentLang].tableDateCol}</th>
-            <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-800 font-bold w-24">${translations[currentLang].tableDayCol}</th>
+            <th class="py-3.5 px-6 border-b border-slate-200 dark:border-slate-800 font-bold w-16 whitespace-nowrap">${translations[currentLang].tableDateCol}</th>
+            <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-800 font-bold w-24 whitespace-nowrap">${translations[currentLang].tableDayCol}</th>
     `;
     const isShiftBased = config.isShiftBased;
     const M = config.morningSlots || 0;
@@ -3533,7 +3533,7 @@ function renderTableView(config) {
         }
 
         let displayDay = row.dayDisplay || row.day;
-        let colsHtml = `<td class="py-3.5 px-6 ${textClass}">${displayDay}</td><td class="py-3.5 px-4 ${textClass}">${row.dayName}</td>`;
+        let colsHtml = `<td class="py-3.5 px-6 whitespace-nowrap ${textClass}">${displayDay}</td><td class="py-3.5 px-4 whitespace-nowrap ${textClass}">${row.dayName}</td>`;
         for (let i = 0; i < globalResult.maxSlots; i++) {
             let docObj = row.selectedDocs[i];
             let d = docObj ? docObj.name : '';
@@ -3572,7 +3572,7 @@ function renderTableView(config) {
                         <div class="relative group/cell inline-block min-w-[110px]">
                             <button id="btn-day-${row.day}-slot-${i}" aria-label="Day ${row.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." 
                                 draggable="true" ondragstart="handleDragStart(event, ${row.day}, ${i}, ${docIndexToPass})" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${row.day}, ${i}, ${docIndexToPass})"
-                                onclick="openCellDropdown(event, 'tablecelldropdown-${row.day}-${i}')" class="w-full text-left text-xs px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing">
+                                onclick="openCellDropdown(event, 'tablecelldropdown-${row.day}-${i}')" class="w-full text-left text-sm px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing">
                                 <span class="truncate" aria-hidden="true">${displayDoc}</span>
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 opacity-0 group-hover/cell:opacity-60 transition-opacity"><path d="m6 9 6 6 6-6"/></svg>
                             </button>
