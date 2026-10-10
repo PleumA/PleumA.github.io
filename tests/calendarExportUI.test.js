@@ -154,5 +154,13 @@ runTest('no schedule → no download', () => {
     assert.strictEqual(downloads.length, 0);
 });
 
+runTest('scope select and both calendar buttons share one group (never split on wrap)', () => {
+    const group = document.getElementById('calendarExportGroup');
+    assert.ok(group, '#calendarExportGroup missing');
+    ['selectCalendarScope', 'btnCalendarApple', 'btnCalendarGoogle'].forEach((id) =>
+        assert.strictEqual(document.getElementById(id).parentElement, group, `${id} not in group`)
+    );
+});
+
 console.log(`\nPASSED: ${passedTests}/${totalTests}, FAILED: ${totalTests - passedTests}`);
 if (passedTests !== totalTests) process.exit(1);

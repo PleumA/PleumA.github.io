@@ -12,7 +12,7 @@ global.document = {
             mockDOM[id] = {
                 value: '',
                 checked: false,
-                classList: { add: () => {}, remove: () => {} },
+                classList: { add: () => {}, remove: () => {}, contains: () => false },
                 innerHTML: '',
                 setAttribute: () => {},
                 innerText: '',

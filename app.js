@@ -353,6 +353,21 @@ function toggleRoleBasedUI() {
             singlePoolQuotaContainer.classList.remove('hidden');
         }
     }
+    syncCustomSlotsDivider();
+}
+
+// Drop the divider above #customSlotsContainer when nothing is shown above it
+function syncCustomSlotsDivider() {
+    const customSlotsContainer = document.getElementById('customSlotsContainer');
+    if (!customSlotsContainer) return;
+    const nothingAbove = ['defaultSlotsContainer', 'singlePoolQuotaContainer'].every(
+        (id) => document.getElementById(id)?.classList.contains('hidden') ?? true
+    );
+    ['border-t', 'pt-4'].forEach((c) =>
+        nothingAbove
+            ? customSlotsContainer.classList.remove(c)
+            : customSlotsContainer.classList.add(c)
+    );
 }
 
 // Toggle Shift-Based settings visibility
@@ -383,6 +398,7 @@ function toggleShiftBasedUI() {
             customSlotsContainer.classList.remove('hidden');
         }
     }
+    syncCustomSlotsDivider();
 }
 
 // Close dropdown selectors when clicking outside
