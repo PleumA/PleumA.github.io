@@ -674,9 +674,25 @@ function removeDoctor(index) {
         }
     });
 
+    // ...and from off requests and the locked-doctor list
+    offData.forEach((req) => {
+        req.names = String(req.names)
+            .split(',')
+            .map((n) => n.trim())
+            .filter((n) => n && n !== name)
+            .join(', ');
+    });
+    const specialInput = document.getElementById('inputSpecialDocs');
+    specialInput.value = specialInput.value
+        .split(',')
+        .map((d) => d.trim())
+        .filter((d) => d && d !== name)
+        .join(', ');
+
     syncDoctorsToInput();
     syncDoctorRolesInput();
     renderDoctorTags();
+    renderOffRequests();
     generateSchedule();
 }
 
@@ -1482,7 +1498,7 @@ function parseUIConfig() {
     const specialDocs = specialRuleDocsInput
         .split(',')
         .map((d) => d.trim())
-        .filter((d) => d);
+        .filter((d) => d && doctors.includes(d));
 
     // Mathematical Validation (Fail-Safe) - only needs to run once per generation cycle
     if (hasQuotas) {
@@ -1960,17 +1976,30 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
             let chosenSpecial = null;
             let specialRole = null;
 
+            // Hard rules shared by the normal pick (cascade level 1) and the special-doctor pick
+            const strictOk = (doc, slotIdx) => {
+                if (chosenToday.includes(doc)) return false;
+                if (isBlockedByOffRequest(doc, slotIdx) || isBlockedByNightToMorning(doc, slotIdx))
+                    return false;
+                for (let lookBack = 1; lookBack < offDutyPeriod; lookBack++) {
+                    if ((scheduleMap[day - lookBack] || []).includes(doc)) return false;
+                }
+                if (
+                    isHoliday &&
+                    holidaySet.has(day - 1) &&
+                    (scheduleMap[day - 1] || []).includes(doc)
+                )
+                    return false;
+                return !chosenToday.some((otherDoc) => areConflicting(doc, otherDoc));
+            };
+
             if (useSpecialRule && specialRuleDays.has(day) && specialDocs.length > 0) {
                 let availableSpecial = specialDocs.filter((doc) => {
                     // 1. Hard Quota Ceiling
                     const key = getQuotaKey(doc, config);
-                    if (quota[key] !== undefined) {
-                        const qVal = quota[key];
-                        if (tCounts[doc] >= qVal) return false;
-                    }
-                    if (isBlockedByOffRequest(doc, 0) || isBlockedByNightToMorning(doc, 0))
-                        return false;
-                    return true;
+                    if (quota[key] !== undefined && tCounts[doc] >= quota[key]) return false;
+                    // Same hard rules as a normal pick
+                    return strictOk(doc, 0);
                 });
 
                 if (availableSpecial.length > 0) {
@@ -1982,7 +2011,12 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
 
             for (let i = 0; i < slotsPerDay; i++) {
                 const reqRole = daySlotsList[i];
-                if (chosenSpecial && specialRole === reqRole && !specialDoctorAssigned) {
+                if (
+                    chosenSpecial &&
+                    specialRole === reqRole &&
+                    !specialDoctorAssigned &&
+                    strictOk(chosenSpecial, i)
+                ) {
                     selected.push(chosenSpecial);
                     chosenToday.push(chosenSpecial);
                     specialDoctorAssigned = true;
@@ -2013,32 +2047,11 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
                     let availableDocs = [];
 
                     // Cascade Level 1: Strict Constraints (Ideal Case)
-                    availableDocs = roleDocs.filter((doc) => {
-                        if (chosenToday.includes(doc)) return false;
-                        if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i))
-                            return false;
-                        // Sliding window rest period check
-                        if (offDutyPeriod > 1) {
-                            for (let lookBack = 1; lookBack < offDutyPeriod; lookBack++) {
-                                const prevDay = day - lookBack;
-                                if (prevDay >= 1) {
-                                    const prevDocs = scheduleMap[prevDay] || [];
-                                    if (prevDocs.includes(doc)) return false;
-                                }
-                            }
-                        }
-                        if (
-                            isHoliday &&
-                            holidaySet.has(day - 1) &&
-                            (scheduleMap[day - 1] || []).includes(doc)
-                        )
-                            return false;
-                        if (chosenToday.some((otherDoc) => areConflicting(doc, otherDoc)))
-                            return false;
-                        if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial)
-                            return false;
-                        return true;
-                    });
+                    availableDocs = roleDocs.filter(
+                        (doc) =>
+                            strictOk(doc, i) &&
+                            !(chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial)
+                    );
 
                     // Must-Fill cascade: only runs when Allow Blank Days is OFF
                     if (availableDocs.length === 0 && !allowBlankDays) {

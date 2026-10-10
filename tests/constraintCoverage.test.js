@@ -228,13 +228,13 @@ async function runTest(name, testFn) {
     );
 
     // -----------------------------------------------------------------------
-    // TEST 3: LOCKED-DOCTOR OFF-DUTY EXEMPTION — a locked special doctor is
-    // exempt from the rest-gap / consecutive-holiday rules and covers EVERY
-    // locked day. Lock S to days 1-5 with a large offDutyPeriod that would
-    // otherwise forbid back-to-back work.
+    // TEST 3: LOCKED-DOCTOR OBEYS THE REST GAP — a locked special doctor is
+    // NOT exempt from the rest-gap rule (it used to be; see bug sweep C4).
+    // Lock S to days 1-5 with offDutyPeriod 4: S works day 1 (eligible) and
+    // is no longer force-picked on days 2-3 (inside the rest window).
     // -----------------------------------------------------------------------
     await runTest(
-        'TEST 3: LOCKED-DOCTOR EXEMPTION - locked doc covers every locked day',
+        'TEST 3: LOCKED-DOCTOR REST GAP - locked doc still obeys the rest window',
         async () => {
             resetMocks();
             global.doctors = ['S', 'B', 'C'];
@@ -243,19 +243,15 @@ async function runTest(name, testFn) {
             mockDOM['inputSpecialStartDay'].value = '1';
             mockDOM['inputSpecialDays'].value = '5'; // lock days 1-5
             mockDOM['lockConditionType'].value = 'firstNDays';
-            mockDOM['inputOffDutyPeriod'].value = '4'; // would normally block consecutive days
+            mockDOM['inputOffDutyPeriod'].value = '4';
 
             const config = parseUIConfig();
             const cand = buildCandidate(config);
             assert.ok(cand, 'candidate should generate');
 
-            for (let d = 1; d <= 5; d++) {
-                const names = cand.schedule[d - 1].selectedDocs.map((s) => s.name);
-                assert.ok(
-                    names.includes('S'),
-                    `locked doctor S must cover locked day ${d} despite the rest-gap rule`
-                );
-            }
+            const has = (d) => cand.schedule[d - 1].selectedDocs.some((x) => x.name === 'S');
+            assert.ok(has(1), 'S is eligible on day 1 and must still be scheduled');
+            assert.ok(!has(2) && !has(3), 'S must not be forced back in during its rest window');
         }
     );
 
