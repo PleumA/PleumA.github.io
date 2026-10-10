@@ -67,7 +67,10 @@ const { loadApp, reset, settle, setInput, runner } = require('./domHarness');
         const c = w.parseUIConfig();
         assert.strictEqual(c.isCustomDateRange, true);
         w.eval(
-            `globalResult = { schedule: [1, 2, 3].map((d) => ({ day: d, selectedDocs: [{ name: d === 2 ? 'A' : 'B' }] })) };`
+            `globalResult = {
+                schedule: [1, 2, 3].map((d) => ({ day: d, selectedDocs: [{ name: d === 2 ? 'A' : 'B' }] })),
+                doctors: ['A', 'B'], dates: scheduleDates.slice(), isCustomDateRange: true,
+            };`
         );
         w.explainSlotFailure(2, 'A', c);
         assert.ok(

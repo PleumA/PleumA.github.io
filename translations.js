@@ -168,6 +168,7 @@ const translations = {
         yearInvalid: 'กรุณาระบุปีให้ถูกต้อง (4 หลัก เช่น 2026 หรือ 2569)',
         monthInvalid: 'กรุณาระบุเดือนให้ถูกต้อง (1-12)',
         overridesCleared: 'ล้างการแก้ไขเวรด้วยมือแล้ว เพราะเปลี่ยนช่วงเวลา',
+        dayChipDropped: 'ข้ามวันที่ "{chip}" เพราะอ่านไม่ได้หรืออยู่นอกช่วงที่เลือก',
         clipboardUnavailable: 'เบราว์เซอร์นี้ไม่รองรับการคัดลอกไปยังคลิปบอร์ด',
         calendarPopupBlocked:
             'เบราว์เซอร์บล็อกหน้าต่างใหม่ เปิด https://calendar.google.com/calendar/r/settings/export แล้วนำเข้าไฟล์ .ics ที่ดาวน์โหลดไว้',
@@ -358,6 +359,7 @@ const translations = {
         yearInvalid: 'Enter a valid year (4 digits, e.g. 2026 or 2569).',
         monthInvalid: 'Enter a valid month (1-12).',
         overridesCleared: 'Manual edits were cleared because the period changed.',
+        dayChipDropped: 'Ignored date "{chip}": unreadable or outside the selected range.',
         clipboardUnavailable: 'Clipboard is not available in this browser.',
         calendarPopupBlocked:
             'Pop-up blocked. Open https://calendar.google.com/calendar/r/settings/export and import the downloaded .ics file.',

@@ -431,6 +431,10 @@ async function runTest(name, testFn) {
             maxSlots: 4,
             month: 1,
             year: 2026,
+            doctors: ['DocA', 'DocB', 'DocC', 'DocD'],
+            dates: [new Date(2026, 0, 1)],
+            isCustomDateRange: false,
+            config,
             schedule: [
                 {
                     day: 1,
@@ -577,6 +581,7 @@ async function runTest(name, testFn) {
             maxSlots: 3,
             month: 1,
             year: 2026,
+            doctors: ['DocA'],
             schedule: [
                 {
                     day: 1,

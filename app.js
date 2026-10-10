@@ -15,6 +15,7 @@ let scheduleDates = [];
 let manualOverrides = {};
 // Period the manual overrides belong to; null means "adopt the next run's period" (set by import)
 let overridesPeriod = null;
+const warnedChips = new Set(); // day chips already reported as dropped
 let quota = {};
 
 // Shared doctor badge color palette (indexed by doctor order)
@@ -27,7 +28,8 @@ const DOC_COLORS = [
     'bg-sky-100 dark:bg-sky-900/50 border-sky-300 dark:border-sky-700 text-sky-800 dark:text-sky-200',
     'bg-rose-100 dark:bg-rose-900/50 border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-200',
 ];
-const DOC_COLOR = (doc) => DOC_COLORS[doctors.indexOf(doc) % DOC_COLORS.length] + ' font-bold';
+const DOC_COLOR = (doc) =>
+    DOC_COLORS[resultCtx().doctors.indexOf(doc) % DOC_COLORS.length] + ' font-bold';
 
 // Locale-aware day/month name helpers (replaces duplicated name arrays)
 const localeTag = () => (currentLang === 'th' ? 'th-TH' : 'en-US');
@@ -522,9 +524,14 @@ function applyTranslations() {
 
     // Re-render components with the new language
     if (globalResult) {
-        updateDayNamesLanguage();
-        renderResults();
-        updateStatsDashboard();
+        try {
+            updateDayNamesLanguage();
+            renderResults();
+            updateStatsDashboard();
+        } catch (err) {
+            // The result view is secondary: never leave the rest of the UI half-translated
+            console.error('Result re-render failed:', err);
+        }
     }
 
     renderOffRequests();
@@ -544,22 +551,17 @@ const cellAria = (day, slot, name) =>
 function updateDayNamesLanguage() {
     if (!globalResult) return;
 
-    const year = parseInt(document.getElementById('inputYear').value);
-    const month = parseInt(document.getElementById('inputMonth').value);
-    const calcYear = year > 2500 ? year - 543 : year;
-    const config = parseUIConfig();
+    // Only the displayed result's own snapshot: live inputs may be invalid or describe the next run
+    const ctx = resultCtx();
+    const dates = ctx.isCustomDateRange ? ctx.dates : null;
 
     globalResult.schedule.forEach((row) => {
-        // A custom range has real dates in scheduleDates; month + row index would be wrong
-        const dateObj =
-            isCustomDateRange && scheduleDates[row.day - 1]
-                ? scheduleDates[row.day - 1]
-                : new Date(calcYear, month - 1, row.day);
-        row.dayName = dayName(dateObj);
-        if (isCustomDateRange) row.dayDisplay = formatShortDate(row.day, month, year, currentLang);
+        row.dayName = dayName(ctx.dates[row.day - 1]);
+        if (dates)
+            row.dayDisplay = formatShortDate(row.day, ctx.month, ctx.year, currentLang, dates);
 
         // Reconstruct warning flags using active language i18n
-        updateDayNote(row, null, config);
+        updateDayNote(row, null, ctx.config, ctx);
     });
 }
 
@@ -1156,7 +1158,10 @@ function parseUIConfig() {
         if (parts.length !== 3) return null;
         const d = parseInt(parts[0], 10);
         const m = parseInt(parts[1], 10) - 1;
-        const y = parseInt(parts[2], 10);
+        let y = parseInt(parts[2], 10);
+        if (y > 2500)
+            y -= 543; // Buddhist era
+        else if (y < 100) y += 2000; // new Date(26, ...) would be 1926
         const date = new Date(y, m, d);
         if (isNaN(date.getTime())) return null;
         return date;
@@ -1170,9 +1175,20 @@ function parseUIConfig() {
             .map((t) => {
                 if (!isCustomDateRange) return parseInt(t);
                 const dt = parseDateDDMMYYYY(t);
-                if (!dt || !scheduleDates.length) return NaN;
-                const idx = Math.round((dt - scheduleDates[0]) / 86400000) + 1;
-                return idx >= 1 && idx <= scheduleDates.length ? idx : NaN;
+                const idx =
+                    dt && scheduleDates.length
+                        ? Math.round((dt - scheduleDates[0]) / 86400000) + 1
+                        : NaN;
+                if (idx >= 1 && idx <= scheduleDates.length) return idx;
+                // Dropped: say so once per chip instead of silently ignoring it
+                if (t && !warnedChips.has(t)) {
+                    warnedChips.add(t);
+                    showToast(
+                        translations[currentLang].dayChipDropped.replace('{chip}', () => t),
+                        true
+                    );
+                }
+                return NaN;
             })
             .filter((d) => !isNaN(d));
     const specialHols = parseDayTokens(specialHolidaysInput);
@@ -2557,16 +2573,7 @@ async function runScheduleOnce() {
             }
         }
 
-        // Validation passed: only now may a changed period discard manual edits
         const key = periodKey();
-        if (overridesPeriod !== null && overridesPeriod !== key) {
-            if (Object.keys(manualOverrides).length > 0) {
-                showToast(translations[currentLang].overridesCleared);
-            }
-            manualOverrides = {};
-            undoStack.length = 0;
-        }
-        overridesPeriod = key;
 
         isInitialLoad = false;
         isCalculating = true;
@@ -2583,6 +2590,16 @@ async function runScheduleOnce() {
         // Yield to allow browser to render the disabled state, loader spinner, and toast
         // Parse config ONCE, before the first await, so later input changes cannot mix into this run
         const config = parseUIConfig();
+        // Everything the finished result needs from live state, captured with the config
+        const snapshot = {
+            month,
+            year,
+            dates: scheduleDates.slice(),
+            isCustomDateRange,
+            doctors: doctors.slice(),
+            periodKey: key,
+            config,
+        };
         await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Run smart solver search: generate multiple schedules and pick the highest scoring one
@@ -2655,22 +2672,28 @@ async function runScheduleOnce() {
             if (isCustomDateRange)
                 row.dayDisplay = formatShortDate(row.day, month, year, currentLang);
 
-            updateDayNote(row, null, config);
+            updateDayNote(row, null, config, snapshot);
         });
 
+        // Exports, edits and views of this result read this snapshot, never later input changes
         globalResult = {
             schedule: JSON.parse(JSON.stringify(bestCandidate.schedule)),
             originalSchedule: JSON.parse(JSON.stringify(bestCandidate.schedule)),
             summary: bestCandidate.summary,
-            month,
-            year,
             maxSlots: bestCandidate.maxSlots,
-            // Exports and edits of this result must not follow later input changes or failed runs
-            dates: scheduleDates.slice(),
-            isCustomDateRange,
-            config,
+            ...snapshot,
         };
         committed = true;
+
+        // Commit-only: a changed period discards the old period's manual edits
+        if (overridesPeriod !== null && overridesPeriod !== key) {
+            if (Object.keys(manualOverrides).length > 0) {
+                showToast(translations[currentLang].overridesCleared);
+            }
+            manualOverrides = {};
+            undoStack.length = 0;
+        }
+        overridesPeriod = key;
 
         // Apply manual overrides saved previously
         applyManualOverrides(config);
@@ -2747,7 +2770,21 @@ async function runScheduleOnce() {
 }
 
 // The config the displayed schedule was built with (inputs may have changed or gone invalid since)
-const resultConfig = () => (globalResult && globalResult.config) || parseUIConfig();
+// Everything that describes the displayed result lives on globalResult itself. Consumers that
+// render or act on the displayed schedule read this; live inputs are only for the next run.
+// Before the first result it falls back to the live state.
+const resultCtx = () =>
+    globalResult || {
+        get config() {
+            return parseUIConfig();
+        },
+        dates: scheduleDates,
+        isCustomDateRange,
+        doctors,
+        month: parseInt(document.getElementById('inputMonth').value),
+        year: parseInt(document.getElementById('inputYear').value),
+    };
+const resultConfig = () => resultCtx().config;
 
 // Apply manual edits to the current global result
 function applyManualOverrides(config) {
@@ -2805,6 +2842,7 @@ function recalculateCounts(config) {
     const mCounts = {};
     const aCounts = {};
     const nCounts = {};
+    const { doctors } = resultCtx();
     doctors.forEach((doc) => {
         wCounts[doc] = 0;
         hCounts[doc] = 0;
@@ -2854,8 +2892,10 @@ function recalculateCounts(config) {
 }
 
 // Dynamically update day warning notes on override change
-function updateDayNote(dayRow, offTodayList, config) {
+// `ctx` is the result context the row belongs to (the new snapshot while it is being committed)
+function updateDayNote(dayRow, offTodayList, config, ctx = resultCtx()) {
     const lang = currentLang;
+    const { doctors } = ctx;
     let noteStr = '';
 
     const {
@@ -2904,8 +2944,8 @@ function updateDayNote(dayRow, offTodayList, config) {
     let offToday = offTodayList;
     if (!offToday) {
         let key = dayRow.day;
-        if (isCustomDateRange && scheduleDates[dayRow.day - 1]) {
-            const dt = scheduleDates[dayRow.day - 1];
+        if (ctx.isCustomDateRange && ctx.dates[dayRow.day - 1]) {
+            const dt = ctx.dates[dayRow.day - 1];
             key = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
         }
         offToday = offMap[key] || [];
@@ -2948,8 +2988,7 @@ function updateDayNote(dayRow, offTodayList, config) {
     const daySlotsList = expandSlots(dayRoleSlots);
 
     let roleMismatches = [];
-    const isRoleBased = document.getElementById('chkRoleBased')?.checked;
-    if (isRoleBased) {
+    if (roleBased) {
         for (let i = 0; i < dayRow.selectedDocs.length; i++) {
             const docObj = dayRow.selectedDocs[i];
             const docName = docObj.name;
@@ -2976,6 +3015,7 @@ function updateDayNote(dayRow, offTodayList, config) {
 function updateTargetedCellDOM(day, slotIndex) {
     if (!globalResult) return;
 
+    const { doctors } = globalResult;
     const row = globalResult.schedule[day - 1];
     const docObj = row.selectedDocs[slotIndex];
     const docName = docObj ? docObj.name : '';
@@ -3101,7 +3141,7 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
     if (docIndex === -1) {
         newDoctor = SHORTAGE_MARKER;
     } else if (docIndex >= 0) {
-        newDoctor = doctors[docIndex];
+        newDoctor = globalResult.doctors[docIndex];
     }
     if (!newDoctor) return;
     const config = resultConfig();
@@ -3141,13 +3181,11 @@ window.explainSlotFailure = function (day, doc, config) {
     const { offDutyPeriod, offMap } = config;
     let reasons = [];
 
+    const ctx = resultCtx();
+    const dates = ctx.dates;
     let dayKey = day;
-    if (
-        config.isCustomDateRange &&
-        typeof scheduleDates !== 'undefined' &&
-        scheduleDates.length > 0
-    ) {
-        const dateObj = scheduleDates[day - 1];
+    if (ctx.isCustomDateRange && dates.length > 0) {
+        const dateObj = dates[day - 1];
         if (dateObj) {
             const dd = String(dateObj.getDate()).padStart(2, '0');
             const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -3161,13 +3199,9 @@ window.explainSlotFailure = function (day, doc, config) {
     }
 
     let tomorrowKey = day + 1;
-    if (
-        config.isCustomDateRange &&
-        typeof scheduleDates !== 'undefined' &&
-        scheduleDates.length > 0
-    ) {
-        if (day < scheduleDates.length) {
-            const tomorrowObj = scheduleDates[day];
+    if (ctx.isCustomDateRange && dates.length > 0) {
+        if (day < dates.length) {
+            const tomorrowObj = dates[day];
             if (tomorrowObj) {
                 const dd = String(tomorrowObj.getDate()).padStart(2, '0');
                 const mm = String(tomorrowObj.getMonth() + 1).padStart(2, '0');
@@ -3386,7 +3420,7 @@ function updateStatsDashboard() {
         shortagesIcon.setAttribute('data-lucide', 'check-circle');
     }
 
-    const activeDocCount = doctors.length;
+    const activeDocCount = globalResult.doctors.length;
     const avg = activeDocCount > 0 ? (totalDuties / activeDocCount).toFixed(1) : '0.0';
     document.getElementById('statAvgDuties').innerText =
         `${avg} ${currentLang === 'th' ? 'เวร/คน' : 'duties/doc'}`;
@@ -3552,7 +3586,7 @@ function getSlotRole(slotIdx) {
         }
     }
     try {
-        const config = parseUIConfig();
+        const config = resultConfig();
         const daySlotsList = expandSlots(config.getRoleSlotsForDay(1));
         if (daySlotsList[slotIdx]) return daySlotsList[slotIdx];
     } catch (e) {
@@ -3574,6 +3608,7 @@ function getRoleBadgeColorClass(role) {
 }
 
 function renderTableView(config) {
+    const { doctors } = globalResult;
     const headerRow = document.getElementById('scheduleTableHeader');
     let headerHtml = `
         <tr class="text-slate-500 dark:text-slate-400 text-[13px]">
@@ -3726,14 +3761,13 @@ function renderTableView(config) {
 
 // Render Calendar Layout View
 function renderCalendarView(config) {
+    const { doctors } = globalResult;
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
 
-    const year = parseInt(document.getElementById('inputYear').value);
-    const month = parseInt(document.getElementById('inputMonth').value);
-    const calcYear = year > 2500 ? year - 543 : year;
-
-    const firstDateObj = new Date(calcYear, month - 1, 1);
+    const ctx = resultCtx();
+    const calcYear = ctx.year > 2500 ? ctx.year - 543 : ctx.year;
+    const firstDateObj = ctx.dates[0] || new Date(calcYear, ctx.month - 1, 1);
     const startDayOfWeek = firstDateObj.getDay();
 
     // Empty placeholder boxes for alignment offset
@@ -3768,8 +3802,8 @@ function renderCalendarView(config) {
 
         let displayDateNum = dayRow.day;
         let monthLabel = '';
-        if (isCustomDateRange && scheduleDates && scheduleDates[dayRow.day - 1]) {
-            const dateObj = scheduleDates[dayRow.day - 1];
+        if (ctx.isCustomDateRange && ctx.dates[dayRow.day - 1]) {
+            const dateObj = ctx.dates[dayRow.day - 1];
             displayDateNum = dateObj.getDate();
             if (displayDateNum === 1 || dayRow.day === 1) {
                 monthLabel = ` ${monthName(dateObj)}`;
@@ -3885,6 +3919,7 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config) {
     let optionsHtml = '';
 
     const { doctorRoles } = config;
+    const { doctors } = globalResult;
 
     // Show "Reset to Auto" option if cell has a manual override applied
     const isOverridden = manualOverrides[day] && manualOverrides[day][slotIndex] !== undefined;
@@ -3980,8 +4015,9 @@ window.openCellDropdown = function (event, dropdownId) {
         if (!listContainer) return;
 
         let optionsHtml = '';
-        const config = parseUIConfig();
+        const config = resultConfig();
         const { doctorRoles } = config;
+        const { doctors } = globalResult;
 
         const isOverridden = manualOverrides[day] && manualOverrides[day][slotIndex] !== undefined;
         if (isOverridden) {
@@ -4014,7 +4050,7 @@ window.openCellDropdown = function (event, dropdownId) {
 // Clipboard Copy functions
 // `dates` (a result's own dates) overrides the live scheduleDates/isCustomDateRange
 function formatShortDate(dayIndex, month, year, lang, dates) {
-    const list = dates || (isCustomDateRange && scheduleDates);
+    const list = dates !== undefined ? dates : isCustomDateRange && scheduleDates;
     if (list && list[dayIndex - 1]) {
         const dateObj = list[dayIndex - 1];
         const dd = String(dateObj.getDate()).padStart(2, '0');
@@ -4049,7 +4085,7 @@ function copyToClipboard(text, okMsg) {
 
 // The displayed result's dates when it covers a custom range, else null
 const resultDates = () =>
-    globalResult && globalResult.isCustomDateRange && globalResult.dates?.length > 0
+    globalResult && globalResult.isCustomDateRange && globalResult.dates.length > 0
         ? globalResult.dates
         : null;
 
@@ -4078,8 +4114,8 @@ window.copyScheduleForExcel = function () {
     }
 
     let tsvData = currentLang === 'th' ? 'วันที่\tวัน\t' : 'Date\tDay\t';
-    const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
     const config = resultConfig();
+    const isRoleBasedEnabled = config.roleBased;
     const isShiftBased = config.isShiftBased;
     const M = config.morningSlots || 0;
     const A = config.afternoonSlots || 0;
@@ -4184,8 +4220,8 @@ window.exportToExcel = function () {
             translations[currentLang].tableDateCol,
             translations[currentLang].tableDayCol,
         ];
-        const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
         const config = resultConfig();
+        const isRoleBasedEnabled = config.roleBased;
         const isShiftBased = config.isShiftBased;
         const M = config.morningSlots || 0;
         const A = config.afternoonSlots || 0;
@@ -4335,7 +4371,11 @@ function renderCalendarScopeOptions(config) {
     if (!sel) return;
     const prev = sel.value;
     const t = translations[currentLang];
-    const { groups, people } = listCalendarScopes(doctors, config.doctorRoles, config.roleBased);
+    const { groups, people } = listCalendarScopes(
+        globalResult.doctors,
+        config.doctorRoles,
+        config.roleBased
+    );
     const opt = (value, label) => `<option value="${esc(value)}">${esc(label)}</option>`;
     let html = opt('all', t.calendarScopeAll);
     if (groups.length) {
@@ -4364,17 +4404,12 @@ window.exportCalendar = function (target) {
         }
         return config.roleBased && docObj.role && docObj.role !== 'Default' ? docObj.role : '';
     };
-    const events = collectDutyEvents(
-        globalResult.schedule,
-        globalResult.dates || scheduleDates,
-        scope,
-        {
-            doctorRoles: config.doctorRoles,
-            slotLabel,
-            titlePrefix: t.calendarEventPrefix,
-            skipNames: [SHORTAGE_MARKER],
-        }
-    );
+    const events = collectDutyEvents(globalResult.schedule, globalResult.dates, scope, {
+        doctorRoles: config.doctorRoles,
+        slotLabel,
+        titlePrefix: t.calendarEventPrefix,
+        skipNames: [SHORTAGE_MARKER],
+    });
     if (events.length === 0) {
         showToast(t.calendarNoEvents, true);
         return;
@@ -4925,7 +4960,7 @@ window.undoLastAction = function () {
         Object.keys(manualOverrides).forEach((day) => {
             Object.keys(manualOverrides[day]).forEach((slot) => {
                 const n = manualOverrides[day][slot];
-                if (n !== SHORTAGE_MARKER && n !== '-' && !doctors.includes(n))
+                if (n !== SHORTAGE_MARKER && n !== '-' && !resultCtx().doctors.includes(n))
                     delete manualOverrides[day][slot];
             });
             if (Object.keys(manualOverrides[day]).length === 0) delete manualOverrides[day];
@@ -4968,7 +5003,7 @@ document.addEventListener('keydown', (e) => {
 
 window.handleDragStart = function (e, day, slotIndex, docIndex) {
     if (docIndex < 0) return;
-    const docName = doctors[docIndex];
+    const docName = resultCtx().doctors[docIndex];
     if (!docName) return;
     e.dataTransfer.setData('text/plain', JSON.stringify({ day, slotIndex, docName }));
     e.dataTransfer.effectAllowed = 'move';
@@ -4993,7 +5028,7 @@ window.handleDrop = function (e, targetDay, targetSlotIndex, targetDocIndex) {
         window.pushToUndoStack();
         window.isDragAndDropOperation = true;
 
-        const srcDocIdx = doctors.indexOf(srcDoc);
+        const srcDocIdx = resultCtx().doctors.indexOf(srcDoc);
         let targetDocIdx = targetDocIndex;
 
         // Execute swap manually
@@ -5003,7 +5038,7 @@ window.handleDrop = function (e, targetDay, targetSlotIndex, targetDocIndex) {
         window.isDragAndDropOperation = false;
 
         // Final refresh to ensure counts are fully up to date
-        const config = parseUIConfig();
+        const config = resultConfig();
         renderTableView(config);
         renderCalendarView(config);
 
@@ -5026,6 +5061,7 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
         const srcDay = data.day;
         const srcSlot = data.slotIndex;
         const srcDoc = data.docName;
+        const { doctors } = resultCtx();
         const srcDocIdx = doctors.indexOf(srcDoc);
 
         if (srcDay === targetDay) {
@@ -5045,7 +5081,7 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
 
             window.isDragAndDropOperation = false;
 
-            const config = parseUIConfig();
+            const config = resultConfig();
             renderTableView(config);
             renderCalendarView(config);
             if (typeof renderPersonCentricView === 'function') renderPersonCentricView(config);
@@ -5103,7 +5139,7 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
 
             window.isDragAndDropOperation = false;
 
-            const config = parseUIConfig();
+            const config = resultConfig();
             renderTableView(config);
             renderCalendarView(config);
             if (typeof renderPersonCentricView === 'function') renderPersonCentricView(config);
@@ -5119,6 +5155,7 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
 
 // Render Person-Centric View
 function renderPersonCentricView(config) {
+    const { doctors, dates, isCustomDateRange } = globalResult;
     const head = document.getElementById('personViewHeader');
     const body = document.getElementById('personViewBody');
     if (!head || !body) return;
@@ -5134,8 +5171,8 @@ function renderPersonCentricView(config) {
         let monthLabel = '';
         let borderClass = 'border-slate-200 dark:border-slate-800';
 
-        if (isCustomDateRange && scheduleDates && scheduleDates[d - 1]) {
-            const dateObj = scheduleDates[d - 1];
+        if (isCustomDateRange && dates[d - 1]) {
+            const dateObj = dates[d - 1];
             displayDateNum = dateObj.getDate();
             if (displayDateNum === 1 || d === 1) {
                 monthLabel = ` ${monthName(dateObj)}`;
@@ -5183,8 +5220,8 @@ function renderPersonCentricView(config) {
             const dayRow = globalResult.schedule[d - 1];
 
             let borderClass = 'border-slate-200 dark:border-slate-800';
-            if (isCustomDateRange && scheduleDates && scheduleDates[d - 1]) {
-                if (scheduleDates[d - 1].getDate() === 1 && d > 1) {
+            if (isCustomDateRange && dates[d - 1]) {
+                if (dates[d - 1].getDate() === 1 && d > 1) {
                     borderClass =
                         'border-l-2 border-indigo-300 dark:border-indigo-700 ' + borderClass;
                 }

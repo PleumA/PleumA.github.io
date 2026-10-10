@@ -65,7 +65,9 @@ window.eval(`
             { day: 2, selectedDocs: [{ name: '<img src=x onerror=alert(1)>', role: 'Default' }] },
         ],
         maxSlots: 1, month: 1, year: 2026, summary: [],
+        doctors: doctors.slice(), dates: scheduleDates.slice(), isCustomDateRange: false,
     };
+    globalResult.config = parseUIConfig();
 `);
 
 function reset() {

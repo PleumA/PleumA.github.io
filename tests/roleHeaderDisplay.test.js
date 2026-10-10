@@ -140,6 +140,16 @@ function resetMocks() {
     };
 }
 
+// A displayed result is a self-contained snapshot: take the config after the test set its inputs
+function snapshotResult() {
+    Object.assign(globalResult, {
+        doctors: ['A', 'B'],
+        dates: [new Date(2026, 0, 1)],
+        isCustomDateRange: false,
+        config: parseUIConfig(),
+    });
+}
+
 let passed = 0;
 let failed = 0;
 
@@ -150,6 +160,7 @@ function runTests() {
     try {
         resetMocks();
         mockDOM['chkRoleBased'].checked = true;
+        snapshotResult();
         renderTableView(parseUIConfig());
         const headerHTML = mockDOM['scheduleTableHeader'].innerHTML;
         assert.ok(headerHTML.includes('R1'), "Header should contain 'R1'");
@@ -165,6 +176,7 @@ function runTests() {
     try {
         resetMocks();
         mockDOM['chkRoleBased'].checked = true;
+        snapshotResult();
         renderTableView(parseUIConfig());
         const bodyHTML = mockDOM['scheduleTableBody'].innerHTML;
         assert.ok(bodyHTML.includes('A'), "Cell should contain 'A'");
@@ -183,6 +195,7 @@ function runTests() {
     try {
         resetMocks();
         mockDOM['chkRoleBased'].checked = false;
+        snapshotResult();
         renderTableView(parseUIConfig());
         const headerHTML = mockDOM['scheduleTableHeader'].innerHTML;
         assert.ok(!headerHTML.includes('R1'), "Header should not contain 'R1'");
@@ -202,6 +215,7 @@ function runTests() {
             exportedSheets.push(data);
             return {};
         };
+        snapshotResult();
         window.exportToExcel();
         const headers = exportedSheets[0][0];
         assert.strictEqual(
@@ -230,6 +244,7 @@ function runTests() {
             exportedSheets.push(data);
             return {};
         };
+        snapshotResult();
         window.exportToExcel();
         const row = exportedSheets[0][1];
         assert.strictEqual(row[2], 'A', 'Excel data cell should not contain role suffix');
@@ -244,6 +259,7 @@ function runTests() {
     try {
         resetMocks();
         mockDOM['chkRoleBased'].checked = true;
+        snapshotResult();
         window.copyScheduleForExcel();
         assert.ok(clipboardText.includes('Duty 1 (R1)'), 'Clipboard header should contain role');
         console.log('✅ TEST 6 PASSED: Clipboard header contains role label');
@@ -257,6 +273,7 @@ function runTests() {
     try {
         resetMocks();
         mockDOM['chkRoleBased'].checked = true;
+        snapshotResult();
         window.copyScheduleForExcel();
         assert.ok(clipboardText.includes('\tA\t'), 'Clipboard cell should not contain role');
         console.log('✅ TEST 7 PASSED: Clipboard cell has no role suffix');
