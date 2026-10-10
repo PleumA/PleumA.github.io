@@ -605,7 +605,7 @@
                     </div>
                     <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
                         <label
-                            class="block text-xs font-bold text-slate-650 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
+                            class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
                             data-i18n="conflictListLabel">รายชื่อแพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ (Conflict
                             List)</label>
                         <textarea id="inputConflicts" class="hidden"></textarea>
@@ -617,7 +617,7 @@
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span
                                 data-i18n="addConflictBtn">เพิ่มคู่ขัดแย้ง</span>
                         </button>
-                        <p class="text-[11px] text-slate-400 dark:text-slate-550 mt-2 leading-relaxed"
+                        <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed"
                             data-i18n="conflictDesc">
                             *ระบุคู่ที่ขัดแย้งกันเพื่อให้ระบบไม่จัดให้อยู่เวรด้วยกัน</p>
                     </div>
@@ -719,7 +719,7 @@
                 <div class="bg-slate-50 dark:bg-slate-800 p-6 rounded-full mb-6 text-teal-400">
                     <i data-lucide="calendar" class="w-16 h-16"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-600 dark:text-slate-350 mb-2" data-i18n="emptyStateTitle">
+                <h3 class="text-xl font-bold text-slate-600 dark:text-slate-300 mb-2" data-i18n="emptyStateTitle">
                     พร้อมสำหรับการจัดตาราง</h3>
                 <p class="text-sm max-w-sm leading-relaxed" data-i18n="emptyStateDesc">กรอกชื่อแพทย์ให้ครบถ้วน
                     จากนั้นคลิก "คำนวณตารางใหม่" เพื่อดูผลลัพธ์</p>
@@ -818,7 +818,7 @@
                                         data-i18n="tableHeaderWorkdays">ทำการ (จ-ศ)</th>
                                     <th class="py-3 px-4 font-bold text-orange-700 dark:text-orange-400"
                                         data-i18n="tableHeaderHolidays">หยุด (ส-อา, พิเศษ)</th>
-                                    <th class="py-3 px-4 font-bold bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-350 rounded-tr-lg"
+                                    <th class="py-3 px-4 font-bold bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 rounded-tr-lg"
                                         data-i18n="tableHeaderTotal">รวมทั้งหมด</th>
                                 </tr>
                             </thead>
@@ -907,7 +907,7 @@
                                 <!-- Headers injected via JS -->
                             </thead>
                             <tbody id="scheduleTableBody"
-                                class="text-slate-700 dark:text-slate-350 divide-y divide-slate-100 dark:divide-slate-800">
+                                class="text-slate-700 dark:text-slate-300 divide-y divide-slate-100 dark:divide-slate-800">
                                 <!-- Data from JS -->
                             </tbody>
                         </table>
@@ -992,7 +992,7 @@
                     <div class="bg-teal-50 dark:bg-teal-950/50 p-2.5 rounded-xl text-teal-600 dark:text-teal-400">
                         <i data-lucide="help-circle" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-850 dark:text-white" data-i18n="manualTitle">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white" data-i18n="manualTitle">
                         คู่มือการใช้งานระบบจัดตารางเวร</h3>
                 </div>
                 <button onclick="closeManualModal()"
@@ -1009,60 +1009,60 @@
                 <div class="grid gap-6">
                     <!-- Section 1 -->
                     <div
-                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-teal-500"></span>
                             <span data-i18n="manualSection1Title">1. การจัดการแพทย์และบทบาท (Roles)</span>
                         </h4>
-                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection1Body">
+                        <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection1Body">
                             ระบุรายชื่อแพทย์ในรูปแบบ Tag และกำหนดบทบาทในกล่องข้อความ (เช่น <code>A:R1, B:R2</code>)
                             ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน
                         </p>
                     </div>
                     <!-- Section 2 -->
                     <div
-                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
                             <span data-i18n="manualSection2Title">2. จำนวนเวรตามบทบาท (Slots)</span>
                         </h4>
-                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection2Body">
+                        <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection2Body">
                             กำหนดจำนวนผู้ปฏิบัติงานต่อวัน เช่น <code>R1:1, R2:1</code> (หมายถึงต้องการ R1 1 คน และ R2 1
                             คน) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'
                         </p>
                     </div>
                     <!-- Section 3 -->
                     <div
-                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                             <span data-i18n="manualSection3Title">3. แพทย์ที่ขัดแย้งกัน (Conflict List)</span>
                         </h4>
-                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection3Body">
+                        <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection3Body">
                             ระบุแพทย์ที่ไม่สามารถอยู่เวรร่วมกันในวันเดียวกันได้ เช่น <code>A:B</code> หรือ
                             <code>C conflicts with D</code> อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ
                         </p>
                     </div>
                     <!-- Section 4 -->
                     <div
-                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-orange-500"></span>
                             <span data-i18n="manualSection4Title">4. วันหยุดและวันพัก (Off Requests)</span>
                         </h4>
-                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection4Body">
+                        <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection4Body">
                             ระบบห้ามจัดเวรซ้อนทับวัน Off หรือก่อนหน้าวัน Off 1 วัน และห้ามอยู่เวรวันหยุด (ส.-อา. +
                             นักขัตฤกษ์) ติดกันเด็ดขาด
                         </p>
                     </div>
                     <!-- Section 5 -->
                     <div
-                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-violet-500"></span>
                             <span data-i18n="manualSection5Title">5. การแก้ไขและตรวจสอบตาราง</span>
                         </h4>
-                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection5Body">
+                        <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection5Body">
                             ท่านสามารถคลิกที่ชื่อแพทย์ในตารางหรือปฏิทินเพื่อเลือกสลับตัวแพทย์ด้วยตนเอง
                             ระบบจะคำนวณสถิติใหม่พร้อมแสดงป้ายเตือนความขัดแย้ง (Conflict) หรือผิดบทบาท (Role Mismatch)
                             ทันที
@@ -1070,12 +1070,12 @@
                     </div>
                     <!-- Section 6 -->
                     <div
-                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
                             <span data-i18n="manualSection6Title">6. การบันทึก/โหลดและอัปเดตสถิติ</span>
                         </h4>
-                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection6Body">
+                        <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection6Body">
                             ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้
                             และเมื่อมีการแก้ไขเวรด้วยตนเอง กรุณากดปุ่ม "ยืนยันการเปลี่ยนแปลง"
                             เพื่อเริ่มคำนวณสรุปสถิติใหม่
@@ -1083,24 +1083,24 @@
                     </div>
                     <!-- Section 7 -->
                     <div
-                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span data-i18n="manualSection7Title">7. โหมดช่วงวันที่กำหนดเอง (Custom Date Range)</span>
                         </h4>
-                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection7Body">
+                        <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection7Body">
                             คุณสามารถสลับเปิด 'ใช้ช่วงวันที่กำหนดเอง' เพื่อจัดเวรตามวันที่ต้องการ (สูงสุด 90 วัน)
                             แทนการจัดเวรตามเดือนปกติ โดยกรอกวันที่ในรูปแบบ DD/MM/YYYY
                         </p>
                     </div>
                     <!-- Section 8 -->
                     <div
-                        class="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-2xl border border-slate-100 dark:border-slate-850">
+                        class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span data-i18n="manualSection8Title">8. โหมดจัดเวร 3 ผลัด (Shift-Based Mode)</span>
                         </h4>
-                        <p class="text-slate-600 dark:text-slate-350 text-[13px]" data-i18n-html="manualSection8Body">
+                        <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection8Body">
                             จัดตารางเวร 3 ผลัดต่อวัน (เช้า บ่าย ดึก) โดยสามารถระบุจำนวนคนในแต่ละผลัดได้อย่างอิสระ ระบบมีกฎห้ามอยู่เวรเช้าต่อจากเวรดึก (Night-to-Morning Spacing) และจะห้ามอยู่เวรดึกในวันก่อนวันหยุดของผู้ปฏิบัติงานนั้นๆ เท่านั้น (เวรเช้า/บ่ายของวันก่อนวันหยุดยังสามารถทำได้) พร้อมสถิติสรุปแบ่งตามแต่ละกะเวร
                         </p>
                     </div>

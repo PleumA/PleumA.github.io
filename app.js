@@ -750,7 +750,7 @@ function renderSpecialDocsCheckboxList() {
 
     container.innerHTML = '';
     if (doctors.length === 0) {
-        container.innerHTML = `<span class="text-xs text-slate-400 dark:text-slate-550">${currentLang === 'th' ? 'กรุณาเพิ่มรายชื่อแพทย์เพื่อตั้งค่า' : 'Please add doctors first'}</span>`;
+        container.innerHTML = `<span class="text-xs text-slate-400 dark:text-slate-500">${currentLang === 'th' ? 'กรุณาเพิ่มรายชื่อแพทย์เพื่อตั้งค่า' : 'Please add doctors first'}</span>`;
         return;
     }
 
@@ -853,7 +853,7 @@ function showToast(msg, isError = false) {
 function renderOffRequests() {
     const container = document.getElementById('offRequestsList');
     if (offData.length === 0) {
-        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-550 text-center py-2">${translations[currentLang].offRequestsNone || ''}</p>`;
+        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-500 text-center py-2">${translations[currentLang].offRequestsNone || ''}</p>`;
         return;
     }
     container.innerHTML = '';
@@ -909,7 +909,7 @@ function deleteOffRow(id) {
 function renderExtraSlots() {
     const container = document.getElementById('extraSlotsList');
     if (extraSlotsData.length === 0) {
-        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-550 text-center py-2">${translations[currentLang].customSlotsNone || ''}</p>`;
+        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-500 text-center py-2">${translations[currentLang].customSlotsNone || ''}</p>`;
         return;
     }
     container.innerHTML = '';
@@ -2867,9 +2867,9 @@ function updateTargetedCellDOM(day, slotIndex) {
     let noteHtmlTable = '';
     let noteHtmlCal = '';
     if (row.note) {
-        let textClass = 'font-medium text-slate-600 dark:text-slate-350';
-        if (row.isNoDuty) textClass = 'font-medium text-slate-400 dark:text-slate-550';
-        else if (row.isSpecial) textClass = 'font-medium text-orange-850 dark:text-orange-305';
+        let textClass = 'font-medium text-slate-600 dark:text-slate-300';
+        if (row.isNoDuty) textClass = 'font-medium text-slate-400 dark:text-slate-500';
+        else if (row.isSpecial) textClass = 'font-medium text-orange-800 dark:text-orange-300';
         else if (row.isHoliday) textClass = 'font-medium text-rose-800 dark:text-rose-300';
 
         const parts = row.note.split('/');
@@ -3288,7 +3288,7 @@ function renderSummaryTable(config) {
                     <th class="py-3 px-4 font-bold text-purple-600 dark:text-purple-400">${currentLang === 'th' ? 'ดึก (N)' : 'Night (N)'}</th>
                     <th class="py-3 px-4 font-bold text-teal-700 dark:text-teal-400">${currentLang === 'th' ? 'ทำการ (จ-ศ)' : 'Weekday'}</th>
                     <th class="py-3 px-4 font-bold text-orange-700 dark:text-orange-400">${currentLang === 'th' ? 'หยุด (ส-อา, พิเศษ)' : 'Weekend/Hol'}</th>
-                    <th class="py-3 px-4 font-bold bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-350 rounded-tr-lg">${currentLang === 'th' ? 'รวมทั้งหมด' : 'Grand Total'}</th>
+                    <th class="py-3 px-4 font-bold bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 rounded-tr-lg">${currentLang === 'th' ? 'รวมทั้งหมด' : 'Grand Total'}</th>
                 </tr>
             `;
         } else {
@@ -3297,7 +3297,7 @@ function renderSummaryTable(config) {
                     <th class="py-3 px-4 text-left font-bold rounded-tl-lg">${currentLang === 'th' ? 'แพทย์' : 'Doctor'}</th>
                     <th class="py-3 px-4 font-bold text-teal-700 dark:text-teal-400">${currentLang === 'th' ? 'ทำการ (จ-ศ)' : 'Weekday'}</th>
                     <th class="py-3 px-4 font-bold text-orange-700 dark:text-orange-400">${currentLang === 'th' ? 'หยุด (ส-อา, พิเศษ)' : 'Weekend/Hol'}</th>
-                    <th class="py-3 px-4 font-bold bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-350 rounded-tr-lg">${currentLang === 'th' ? 'รวมทั้งหมด' : 'Grand Total'}</th>
+                    <th class="py-3 px-4 font-bold bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 rounded-tr-lg">${currentLang === 'th' ? 'รวมทั้งหมด' : 'Grand Total'}</th>
                 </tr>
             `;
         }
@@ -3373,10 +3373,10 @@ function renderResults() {
 
 // Render standard Table List View
 const roleColors = {
-    R1: 'text-violet-650 dark:text-violet-400',
-    R2: 'text-teal-650 dark:text-teal-400',
-    R3: 'text-indigo-650 dark:text-indigo-400',
-    Staff: 'text-emerald-650 dark:text-emerald-400',
+    R1: 'text-violet-700 dark:text-violet-400',
+    R2: 'text-teal-700 dark:text-teal-400',
+    R3: 'text-indigo-700 dark:text-indigo-400',
+    Staff: 'text-emerald-700 dark:text-emerald-400',
 };
 
 function getSlotRole(slotIdx) {
@@ -3464,15 +3464,15 @@ function renderTableView(config) {
 
     globalResult.schedule.forEach((row) => {
         let rowClass = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors';
-        let textClass = 'font-medium text-slate-600 dark:text-slate-350';
+        let textClass = 'font-medium text-slate-600 dark:text-slate-300';
 
         if (row.isNoDuty) {
-            rowClass = 'bg-slate-100 dark:bg-slate-850/30 opacity-70';
-            textClass = 'font-medium text-slate-400 dark:text-slate-550';
+            rowClass = 'bg-slate-100 dark:bg-slate-800/30 opacity-70';
+            textClass = 'font-medium text-slate-400 dark:text-slate-500';
         } else if (row.isSpecial) {
             rowClass =
                 'bg-orange-50/60 dark:bg-orange-950/20 hover:bg-orange-100/80 dark:hover:bg-orange-950/35';
-            textClass = 'font-medium text-orange-850 dark:text-orange-305';
+            textClass = 'font-medium text-orange-800 dark:text-orange-300';
         } else if (row.isHoliday) {
             rowClass =
                 'bg-rose-50/60 dark:bg-rose-950/20 hover:bg-rose-100/80 dark:hover:bg-rose-950/35';
@@ -3583,7 +3583,7 @@ function renderCalendarView(config) {
     for (let i = 0; i < startDayOfWeek; i++) {
         const emptyCell = document.createElement('div');
         emptyCell.className =
-            'hidden md:block bg-slate-100/40 dark:bg-slate-850/20 border border-slate-200/40 dark:border-slate-800 rounded-2xl min-h-[105px] opacity-40';
+            'hidden md:block bg-slate-100/40 dark:bg-slate-800/20 border border-slate-200/40 dark:border-slate-800 rounded-2xl min-h-[105px] opacity-40';
         grid.appendChild(emptyCell);
     }
 
@@ -3596,7 +3596,7 @@ function renderCalendarView(config) {
 
         if (dayRow.isNoDuty) {
             cardBg =
-                'bg-slate-100 dark:bg-slate-850/40 border-slate-200 dark:border-slate-800 opacity-60';
+                'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 opacity-60';
             dateNumClass = 'text-slate-400 dark:text-slate-600 font-bold';
         } else if (dayRow.isSpecial) {
             cardBg =
@@ -3622,7 +3622,7 @@ function renderCalendarView(config) {
         let dayHeaderHtml = `
             <div class="flex justify-between items-center border-b border-black/5 dark:border-white/5 pb-1">
                 <span class="text-sm ${dateNumClass}">${displayDateNum}${monthLabel}</span>
-                <span class="text-[10px] text-slate-400 dark:text-slate-550 font-bold">${dayRow.dayName.substring(0, 3)}</span>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold">${dayRow.dayName.substring(0, 3)}</span>
             </div>
         `;
 
@@ -3757,7 +3757,7 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config) {
 
     const isShortage =
         currentDoc === SHORTAGE_MARKER
-            ? 'bg-red-50 dark:bg-red-950/40 font-bold text-red-650 dark:text-red-400 border-l-4 border-red-500'
+            ? 'bg-red-50 dark:bg-red-950/40 font-bold text-red-700 dark:text-red-400 border-l-4 border-red-500'
             : 'text-red-600 dark:text-red-400 font-bold';
     optionsHtml += `
         <div class="border-t-4 border-slate-100 dark:border-slate-800 my-1"></div>
