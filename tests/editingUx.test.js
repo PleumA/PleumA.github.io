@@ -183,7 +183,7 @@ const { loadApp, reset, settle, setInput, snap, runner } = require('./domHarness
         );
     });
 
-    await test('F1: a held (repeating) Backspace removes nothing; a single one removes one, undo restores overrides', async () => {
+    await test('F1: a held (repeating) Backspace removes nothing; a single one removes one (not undoable)', async () => {
         reset(w, ['A', 'B', 'C']);
         await w.generateSchedule();
         const input = d.getElementById('doctorInput');
@@ -195,8 +195,9 @@ const { loadApp, reset, settle, setInput, snap, runner } = require('./domHarness
         await settle(w);
         assert.deepStrictEqual(snap(w, 'doctors'), ['A', 'B']);
         assert.deepStrictEqual(snap(w, 'manualOverrides'), {});
-        w.undoLastAction();
-        assert.deepStrictEqual(snap(w, 'manualOverrides'), { 1: { 0: 'C' } });
+        w.undoLastAction(); // removing a doctor is not undoable: nothing comes back
+        assert.deepStrictEqual(snap(w, 'doctors'), ['A', 'B']);
+        assert.deepStrictEqual(snap(w, 'manualOverrides'), {});
     });
 
     await test('F5: showToast honours a custom duration and error toasts last longer', async () => {

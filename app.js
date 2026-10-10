@@ -676,7 +676,7 @@ function addDoctor(name) {
 function removeDoctor(index) {
     const name = doctors[index];
     if (!name) return;
-    pushToUndoStack();
+    // Not undoable: undo would resurrect the removed doctor as a ghost in the schedule
     doctors = doctors.filter((_, i) => i !== index);
 
     // Also clean up overrides for this doctor
@@ -705,6 +705,14 @@ function removeDoctor(index) {
         .map((d) => d.trim())
         .filter((d) => d && d !== name)
         .join(', ');
+
+    const quotaInput = document.getElementById('inputSinglePoolQuota');
+    if (quotaInput)
+        quotaInput.value = quotaInput.value
+            .split(',')
+            .map((q) => q.trim())
+            .filter((q) => q && q.split(':')[0].trim() !== name)
+            .join(', ');
 
     // A conflict row naming the removed doctor loses that side; the caller regenerates below
     if (
@@ -1134,14 +1142,32 @@ function parseUIConfig() {
     }
 
     const calcYear = year > 2500 ? year - 543 : year;
-    const specialHols = specialHolidaysInput
-        .split(',')
-        .map((d) => parseInt(d.trim()))
-        .filter((d) => !isNaN(d));
-    const noDutyDays = noDutyDaysInput
-        .split(',')
-        .map((d) => parseInt(d.trim()))
-        .filter((d) => !isNaN(d));
+    const parseDateDDMMYYYY = (str) => {
+        const parts = str.split('/');
+        if (parts.length !== 3) return null;
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const y = parseInt(parts[2], 10);
+        const date = new Date(y, m, d);
+        if (isNaN(date.getTime())) return null;
+        return date;
+    };
+
+    // Day list chips: plain day numbers, or DD/MM/YYYY in a custom range (mapped to the range's day index)
+    const parseDayTokens = (input) =>
+        input
+            .split(',')
+            .map((t) => t.trim())
+            .map((t) => {
+                if (!isCustomDateRange) return parseInt(t);
+                const dt = parseDateDDMMYYYY(t);
+                if (!dt || !scheduleDates.length) return NaN;
+                const idx = Math.round((dt - scheduleDates[0]) / 86400000) + 1;
+                return idx >= 1 && idx <= scheduleDates.length ? idx : NaN;
+            })
+            .filter((d) => !isNaN(d));
+    const specialHols = parseDayTokens(specialHolidaysInput);
+    const noDutyDays = parseDayTokens(noDutyDaysInput);
     let numDays = scheduleDates.length;
 
     // Fallback for isolated test environments that don't trigger generateSchedule
@@ -1196,17 +1222,6 @@ function parseUIConfig() {
         const dayOfWeek = dateObj.getDay();
         if (dayOfWeek === 0 || dayOfWeek === 6) holidaySet.add(d);
     }
-
-    const parseDateDDMMYYYY = (str) => {
-        const parts = str.split('/');
-        if (parts.length !== 3) return null;
-        const d = parseInt(parts[0], 10);
-        const m = parseInt(parts[1], 10) - 1;
-        const y = parseInt(parts[2], 10);
-        const date = new Date(y, m, d);
-        if (isNaN(date.getTime())) return null;
-        return date;
-    };
 
     const formatDateDDMMYYYY = (date) => {
         const dd = String(date.getDate()).padStart(2, '0');
@@ -2458,6 +2473,7 @@ async function runScheduleOnce() {
     const btn = document.getElementById('btnCalculate');
     let originalHtml = '';
     if (btn) originalHtml = btn.innerHTML;
+    let committed = false;
 
     try {
         // Read the period inputs once; the whole run, including its awaits, uses these locals
@@ -2640,7 +2656,12 @@ async function runScheduleOnce() {
             month,
             year,
             maxSlots: bestCandidate.maxSlots,
+            // Exports and edits of this result must not follow later input changes or failed runs
+            dates: scheduleDates.slice(),
+            isCustomDateRange,
+            config,
         };
+        committed = true;
 
         // Apply manual overrides saved previously
         applyManualOverrides(config);
@@ -2709,9 +2730,15 @@ async function runScheduleOnce() {
             );
         }
     } finally {
+        // scheduleDates was reassigned for the new period; a run that never committed keeps the old result's dates
+        if (!committed && globalResult && globalResult.dates)
+            scheduleDates = globalResult.dates.slice();
         isCalculating = false;
     }
 }
+
+// The config the displayed schedule was built with (inputs may have changed or gone invalid since)
+const resultConfig = () => (globalResult && globalResult.config) || parseUIConfig();
 
 // Apply manual edits to the current global result
 function applyManualOverrides(config) {
@@ -3068,6 +3095,7 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
         newDoctor = doctors[docIndex];
     }
     if (!newDoctor) return;
+    const config = resultConfig();
 
     // We only push to stack if this was not part of an internal bulk operation like drag-and-drop
     // Drag-and-drop handles its own stack pushing.
@@ -3082,7 +3110,7 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
         name: newDoctor,
         role: globalResult.schedule[day - 1].selectedDocs[slotIndex]?.role || 'Default',
     };
-    updateDayNote(globalResult.schedule[day - 1], null, parseUIConfig());
+    updateDayNote(globalResult.schedule[day - 1], null, config);
 
     updateTargetedCellDOM(day, slotIndex);
 
@@ -3092,7 +3120,6 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
             : `Day ${day} duty updated successfully!`
     );
 
-    const config = parseUIConfig();
     explainSlotFailure(day, newDoctor, config);
     recalculateCounts(config);
     renderSummaryTable(config);
@@ -3292,11 +3319,11 @@ window.resetSlotToAuto = function (day, slotIndex) {
             name: autoDoc ? autoDoc.name : '',
             role: autoDoc ? autoDoc.role : 'Default',
         };
-        updateDayNote(globalResult.schedule[day - 1], null, parseUIConfig());
+        const config = resultConfig();
+        updateDayNote(globalResult.schedule[day - 1], null, config);
 
         updateTargetedCellDOM(day, slotIndex);
 
-        const config = parseUIConfig();
         recalculateCounts(config);
         renderSummaryTable(config);
         updateStatsDashboard();
@@ -3479,7 +3506,7 @@ function renderFairnessStrip(summary) {
 function renderResults() {
     if (!globalResult) return;
 
-    const config = parseUIConfig();
+    const config = resultConfig();
     renderSummaryTable(config);
     renderCalendarScopeOptions(config);
 
@@ -3976,9 +4003,11 @@ window.openCellDropdown = function (event, dropdownId) {
 };
 
 // Clipboard Copy functions
-function formatShortDate(dayIndex, month, year, lang) {
-    if (isCustomDateRange && scheduleDates && scheduleDates[dayIndex - 1]) {
-        const dateObj = scheduleDates[dayIndex - 1];
+// `dates` (a result's own dates) overrides the live scheduleDates/isCustomDateRange
+function formatShortDate(dayIndex, month, year, lang, dates) {
+    const list = dates || (isCustomDateRange && scheduleDates);
+    if (list && list[dayIndex - 1]) {
+        const dateObj = list[dayIndex - 1];
         const dd = String(dateObj.getDate()).padStart(2, '0');
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
         const yyyy = lang === 'th' ? dateObj.getFullYear() + 543 : dateObj.getFullYear();
@@ -4009,11 +4038,18 @@ function copyToClipboard(text, okMsg) {
         });
 }
 
+// The displayed result's dates when it covers a custom range, else null
+const resultDates = () =>
+    globalResult && globalResult.isCustomDateRange && globalResult.dates?.length > 0
+        ? globalResult.dates
+        : null;
+
 // "Month 1/2026", or "Range 25/01/2026 - 05/02/2026" when a custom range is active
 function periodLabel(lang) {
-    if (isCustomDateRange && scheduleDates.length > 0) {
-        const from = formatShortDate(1, 0, 0, lang);
-        const to = formatShortDate(scheduleDates.length, 0, 0, lang);
+    const dates = resultDates();
+    if (dates) {
+        const from = formatShortDate(1, 0, 0, lang, dates);
+        const to = formatShortDate(dates.length, 0, 0, lang, dates);
         return `${lang === 'th' ? 'ช่วง' : 'Range'} ${from} - ${to}`;
     }
     // globalResult.year is stale after a language toggle; show BE in th, AD in en like formatShortDate
@@ -4034,7 +4070,7 @@ window.copyScheduleForExcel = function () {
 
     let tsvData = currentLang === 'th' ? 'วันที่\tวัน\t' : 'Date\tDay\t';
     const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
-    const config = parseUIConfig();
+    const config = resultConfig();
     const isShiftBased = config.isShiftBased;
     const M = config.morningSlots || 0;
     const A = config.afternoonSlots || 0;
@@ -4066,7 +4102,8 @@ window.copyScheduleForExcel = function () {
             row.day,
             globalResult.month,
             globalResult.year,
-            currentLang
+            currentLang,
+            resultDates()
         );
         tsvData += `${shortDate}\t${row.dayName}\t`;
         for (let i = 0; i < globalResult.maxSlots; i++) {
@@ -4087,7 +4124,7 @@ window.copyScheduleForExcel = function () {
 
 window.copySummary = function () {
     if (!globalResult) return;
-    const config = parseUIConfig();
+    const config = resultConfig();
     const isShiftBased = config.isShiftBased;
 
     let text = '';
@@ -4139,7 +4176,7 @@ window.exportToExcel = function () {
             translations[currentLang].tableDayCol,
         ];
         const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
-        const config = parseUIConfig();
+        const config = resultConfig();
         const isShiftBased = config.isShiftBased;
         const M = config.morningSlots || 0;
         const A = config.afternoonSlots || 0;
@@ -4172,7 +4209,8 @@ window.exportToExcel = function () {
                 r.day,
                 globalResult.month,
                 globalResult.year,
-                currentLang
+                currentLang,
+                resultDates()
             );
             let rowData = [shortDate, r.dayName];
             for (let i = 0; i < globalResult.maxSlots; i++) {
@@ -4191,11 +4229,12 @@ window.exportToExcel = function () {
 
         const ws = window.XLSX.utils.aoa_to_sheet(data);
         const wb = window.XLSX.utils.book_new();
-        const range = isCustomDateRange && scheduleDates.length > 0;
+        const dates = resultDates();
+        const range = !!dates;
         const iso = (dt) =>
             `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
         const sheetName = range
-            ? `Schedule ${iso(scheduleDates[0])}`
+            ? `Schedule ${iso(dates[0])}`
             : `Schedule Month ${globalResult.month}`;
         window.XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
@@ -4263,7 +4302,7 @@ window.exportToExcel = function () {
         window.XLSX.writeFile(
             wb,
             range
-                ? `OnCall_${iso(scheduleDates[0])}_${iso(scheduleDates[scheduleDates.length - 1])}.xlsx`
+                ? `OnCall_${iso(dates[0])}_${iso(dates[dates.length - 1])}.xlsx`
                 : `OnCall_Month_${globalResult.month}_Year_${displayYear}.xlsx`
         );
         showToast(
@@ -4304,7 +4343,7 @@ window.exportCalendar = function (target) {
         showToast(t.calendarNoData, true);
         return;
     }
-    const config = parseUIConfig();
+    const config = resultConfig();
     const scope = parseCalendarScope(
         document.getElementById('selectCalendarScope')?.value || 'all'
     );
@@ -4316,12 +4355,17 @@ window.exportCalendar = function (target) {
         }
         return config.roleBased && docObj.role && docObj.role !== 'Default' ? docObj.role : '';
     };
-    const events = collectDutyEvents(globalResult.schedule, scheduleDates, scope, {
-        doctorRoles: config.doctorRoles,
-        slotLabel,
-        titlePrefix: t.calendarEventPrefix,
-        skipNames: [SHORTAGE_MARKER],
-    });
+    const events = collectDutyEvents(
+        globalResult.schedule,
+        globalResult.dates || scheduleDates,
+        scope,
+        {
+            doctorRoles: config.doctorRoles,
+            slotLabel,
+            titlePrefix: t.calendarEventPrefix,
+            skipNames: [SHORTAGE_MARKER],
+        }
+    );
     if (events.length === 0) {
         showToast(t.calendarNoEvents, true);
         return;
@@ -4868,7 +4912,16 @@ window.pushToUndoStack = function () {
 window.undoLastAction = function () {
     if (undoStack.length > 0) {
         manualOverrides = undoStack.pop();
-        const config = parseUIConfig();
+        // A doctor removed since the snapshot must not come back as a ghost
+        Object.keys(manualOverrides).forEach((day) => {
+            Object.keys(manualOverrides[day]).forEach((slot) => {
+                const n = manualOverrides[day][slot];
+                if (n !== SHORTAGE_MARKER && n !== '-' && !doctors.includes(n))
+                    delete manualOverrides[day][slot];
+            });
+            if (Object.keys(manualOverrides[day]).length === 0) delete manualOverrides[day];
+        });
+        const config = resultConfig();
         applyManualOverrides(config);
         renderTableView(config);
         renderCalendarView(config);

@@ -37,12 +37,15 @@ const esc = (str) => {
 };
 
 // Doctor and role names live in "name:role, A:B" text formats, so strip the separators.
-const sanitizeName = (raw) =>
-    String(raw ?? '')
+const sanitizeName = (raw) => {
+    const n = String(raw ?? '')
         .replace(/[\u200b-\u200d\ufeff]/g, '')
         .replace(/[:;,/\r\n]+/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+    // '-' and the shortage marker are the empty-slot and shortage markers in the schedule
+    return n === '-' || n === '__SHORTAGE__' ? '' : n;
+};
 // An <input type="date"> value ("YYYY-MM-DD") as local midnight. new Date("YYYY-MM-DD") is UTC
 // midnight, which reads as the previous day west of UTC.
 const parseISODate = (str) => {
