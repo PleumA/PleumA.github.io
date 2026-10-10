@@ -70,6 +70,58 @@ function buildICS(events, calName, now = new Date()) {
     return lines.map(foldICSLine).join('\r\n') + '\r\n';
 }
 
+// Select value → scope. 'person:<name>' splits on the first colon only (names may contain ':').
+function parseCalendarScope(value) {
+    const i = String(value).indexOf(':');
+    const kind = i === -1 ? value : value.slice(0, i);
+    const arg = i === -1 ? '' : value.slice(i + 1);
+    if (kind === 'group' && arg) return { type: 'group', role: arg };
+    if (kind === 'person' && arg) return { type: 'person', name: arg };
+    return { type: 'all' };
+}
+
+function listCalendarScopes(doctors, doctorRoles, roleBased) {
+    const groups = roleBased
+        ? [...new Set(doctors.map((d) => doctorRoles[d] || 'Default'))].filter(
+              (r) => r !== 'Default'
+          )
+        : [];
+    return { groups, people: [...doctors] };
+}
+
+function collectDutyEvents(schedule, dates, scope, opts = {}) {
+    const { doctorRoles = {}, slotLabel = () => '', titlePrefix = 'Duty', skipNames = [] } = opts;
+    const matches = (name) =>
+        scope.type === 'all' ||
+        (scope.type === 'person' && name === scope.name) ||
+        (scope.type === 'group' && (doctorRoles[name] || 'Default') === scope.role);
+
+    const events = [];
+    for (const row of schedule) {
+        const date = dates[row.day - 1];
+        if (!date) continue;
+        row.selectedDocs.forEach((docObj, slotIdx) => {
+            const name = docObj && docObj.name;
+            if (!name || name === '-' || skipNames.includes(name) || !matches(name)) return;
+            const label = slotLabel(slotIdx, docObj);
+            events.push({
+                date,
+                title: `${titlePrefix}: ${name}${label ? ` (${label})` : ''}`,
+                uid: `${formatICSDate(date)}-${slotIdx}-${encodeURIComponent(name)}@doctor-scheduler`,
+            });
+        });
+    }
+    return events;
+}
+
 if (typeof module !== 'undefined') {
-    module.exports = { formatICSDate, escapeICSText, foldICSLine, buildICS };
+    module.exports = {
+        formatICSDate,
+        escapeICSText,
+        foldICSLine,
+        buildICS,
+        parseCalendarScope,
+        listCalendarScopes,
+        collectDutyEvents,
+    };
 }

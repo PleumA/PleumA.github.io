@@ -40,6 +40,9 @@ module.exports = {
     pushToUndoStack: 'readonly',
     // calendarExport.js
     buildICS: 'readonly',
+    parseCalendarScope: 'readonly',
+    listCalendarScopes: 'readonly',
+    collectDutyEvents: 'readonly',
   },
   overrides: [
     {
