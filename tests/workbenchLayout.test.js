@@ -143,5 +143,22 @@ runTest('full summary table lives in a <details> that starts open', () => {
     assert.strictEqual(d.open, true);
 });
 
+runTest('phone CSS turns table rows into cards without sideways scroll', () => {
+    const css = [...document.querySelectorAll('style')].map((s) => s.textContent).join('\n');
+    const m = css.match(/@media \(max-width: 767px\) \{([\s\S]*?)\n {8}\}/);
+    assert.ok(m, 'no @media (max-width: 767px) block');
+    const block = m[1];
+    assert.ok(
+        /#tableViewContainer table\s*\{[^}]*min-width:\s*0/.test(block),
+        'table min-width not reset'
+    );
+    assert.ok(/#scheduleTableHeader\s*\{[^}]*display:\s*none/.test(block), 'header not hidden');
+    assert.ok(/#scheduleTableBody tr\s*\{[^}]*display:\s*flex/.test(block), 'rows not flex cards');
+    assert.ok(
+        /#scheduleTableBody td:empty\s*\{[^}]*display:\s*none/.test(block),
+        'empty note cell not hidden'
+    );
+});
+
 console.log(`\nPASSED: ${passedTests}/${totalTests}, FAILED: ${totalTests - passedTests}`);
 if (passedTests !== totalTests) process.exit(1);

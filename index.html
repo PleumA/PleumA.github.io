@@ -215,6 +215,33 @@
                 color: inherit;
             }
         }
+
+        /* Phones: each schedule row becomes a card; date + day on one line, duties underneath */
+        @media (max-width: 767px) {
+            #tableViewContainer table {
+                min-width: 0;
+            }
+            #scheduleTableHeader {
+                display: none;
+            }
+            #scheduleTableBody tr {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem 1rem;
+            }
+            #scheduleTableBody td {
+                display: block;
+                padding: 0;
+            }
+            #scheduleTableBody td:nth-child(n + 3) {
+                flex: 1 1 40%;
+            }
+            #scheduleTableBody td:empty {
+                display: none;
+            }
+        }
     </style>
 </head>
 
