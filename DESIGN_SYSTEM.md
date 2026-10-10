@@ -106,6 +106,36 @@ Dark-mode variants use the `dark:` prefix and slate-800/900/950 backgrounds.
 </div>
 ```
 
+### Fairness row (`#fairnessStrip`)
+> Per-doctor totals above the schedule
+
+```html
+<span class="px-2.5 py-1 rounded-lg text-sm {doctor colour}">Name 5</span>
+<span class="px-2.5 py-1 rounded-lg text-sm {doctor colour} ring-2 ring-amber-400">Name 8</span> <!-- outlier -->
+<span class="ml-auto text-xs font-bold text-slate-500 dark:text-slate-400">Spread 5–8</span>
+```
+The doctor(s) furthest from the mean get `ring-2 ring-amber-400`; the right-aligned label shows min–max. Names are always `esc()`-ed. The per-doctor details table under it is a `<details open>` section.
+
+### Settings panel (`#settingsPanel`)
+> Inline column at >= 1024px, native popover below
+
+A `<section popover="auto">` opened by the header button (`popovertarget="settingsPanel"`). At >= 1024px it is a normal, independently scrolling column. Below 1024px (when `:popover-open` is supported) it becomes a fixed left drawer: `width: min(340px, 100vw)`, `height: 100dvh`, scrollable, with a dimmed `::backdrop`. Its colours are set explicitly (light `#f8fafc` / `#1e293b`, dark `#0f172a` / `#f1f5f9`) because the top layer does not inherit page text colour. Rarely used groups ("Doctors per day", "Advanced rules") are collapsible `<details class="group">` cards.
+
+### Phone schedule cards (< 768px)
+Each `#scheduleTableBody tr` becomes a flex-wrap card: date and day on one line, duty chips underneath; the table header (`#scheduleTableHeader`) is hidden and `table` min-width is removed. The page header is not sticky on phones.
+
+### Undo button (`#btnUndo`)
+> Secondary toolbar button, hidden until there is something to undo
+
+```html
+<button id="btnUndo" class="hidden flex items-center justify-center gap-1.5 text-xs font-bold
+        text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200
+        dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2.5 rounded-xl">
+  <i data-lucide="undo-2" class="w-4 h-4" aria-hidden="true"></i> <span data-i18n="undoBtn">…</span>
+</button>
+```
+Sits before the rose-coloured Reset-all button; it carries `data-i18n-aria="undoBtn"`.
+
 ---
 
 ## Spacing Scale
@@ -124,9 +154,11 @@ All spacing follows Tailwind's default scale. Key layout values:
 Applied via `darkMode: 'class'` — toggled by adding/removing `class="dark"` on `<html>`.
 All dark variants use the `dark:` prefix.
 
+**Contrast rule:** every light surface that gets a `dark:` background must also get a `dark:` text colour that reads on it (e.g. chips use `dark:bg-*-900/40` with `dark:text-*-300`). Only use real Tailwind shades (50-950); a nonexistent class such as `slate-150` compiles to nothing and leaves dark text on a dark background (`tests/tailwindClasses.test.js` guards this). Top-layer elements such as the popover panel set their own colours.
+
 ---
 
 ## Iconography
 
-[Lucide Icons](https://lucide.dev) loaded via CDN (`unpkg.com/lucide@latest`).
+[Lucide Icons](https://lucide.dev) loaded via CDN, pinned (`unpkg.com/lucide@1.55.0`). Dynamic render loops use inline `<svg>` instead.
 Always add `aria-hidden="true"` to decorative icons and `aria-label` to icon-only buttons.

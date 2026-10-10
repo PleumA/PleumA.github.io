@@ -48,7 +48,11 @@
 - **Table, Calendar, & Person Views**: View duties in a clean date-list format, an interactive month calendar, or a pivoted person-centric grid.
 - **Inline Constraint Explainer**: Manual schedule overrides are proactively validated against active rules. If an administrator assigns a shift that breaks constraints (e.g. insufficient rest periods or off requests), an exact explanation is proactively displayed.
 - **Manual Overrides & Drag-and-Drop**: Easily correct schedules manually. Instead of rigid dropdown menus, you can natively **drag and drop** a doctor's name from one slot to another in the calendar to effortlessly execute 2-way shift swaps.
-- **Undo / History Stack**: Safely navigate manual corrections. The app tracks a 20-step deep memory stack allowing you to press `Ctrl+Z` to seamlessly revert accidental cell edits and resets.
+- **Undo / History Stack**: Safely navigate manual corrections. The app tracks a 20-step stack of manual edits; press `Ctrl+Z` or the **Undo** button (shown once there is something to undo) to revert cell edits and Reset-all. Undo rebuilds the schedule from the solver's original picks, so it never needs a new solver run. Removing a doctor is not undoable.
+- **Workbench Layout & Settings Panel**: On wide screens (>= 1024px) settings sit in their own independently scrolling column beside the schedule; "Doctors per day" and "Advanced rules" are collapsible. Below 1024px the settings open in a native `popover` panel from the header button. On phones each schedule row becomes a card and the header scrolls away instead of sticking.
+- **Fairness Row**: A strip of per-doctor totals with an amber ring on the doctor(s) furthest from the mean and the min-max spread. The per-doctor details table below it is collapsible and starts open.
+- **Calendar Export (Apple / Google)**: Download an `.ics` file (RFC 5545) or open Google Calendar for **everyone**, a **role group**, or **one person** (pick the scope next to the buttons).
+- **Print Stylesheet & In-App Manual**: A print stylesheet hides the controls; a 9-section manual (header button) explains setup, editing, save/load and offline use.
 - **Targeted DOM Updates & Real-Time Sync**: The core rendering engine is optimized so that manual cell updates do not repaint the surrounding grid. The global Stats Dashboard and Individual Duty Summary table update automatically and immediately in real time, keeping the interface responsive and metrics instantly accurate.
 - **Real-Time Recalculation**: Schedule configurations (e.g., month, year, doctors per day, constraints) immediately trigger the smart solver to re-calculate the ideal schedule without needing manual confirmations. Recalculation automatically fires when both custom range dates are filled or changed.
 - **Save/Load Configuration**: Export all application settings, quotas, constraints, and **manual cell overrides** into a `.json` backup file, and instantly import them later to restore your precise environment without re-typing.
@@ -57,7 +61,7 @@
 - **Localization & Theme**: Supports dynamic switching between Thai (TH) and English (EN) languages, along with a sleek system-synced Dark Mode. Automatically detects browser/system language and system dark mode preferences on initial load, while strictly preserving manual user overrides via `localStorage`.
 
 ### 4. Installable PWA & Offline Support
-- **Offline Capability**: Features a service worker (`sw.js`) and a web app manifest (`manifest.json`) caching all layout resources, the locally compiled stylesheet (`dist/output.css`), custom fonts, and third-party libraries (SheetJS, Lucide Icons) for complete offline reliability in hospital wards with spotty Wi-Fi.
+- **Offline Capability**: A service worker (`sw.js`) and a web app manifest (`manifest.json`) cache the app files, the locally compiled stylesheet (`dist/output.css`), fonts, and the version-pinned third-party libraries (SheetJS, Lucide 1.55.0) for offline use in hospital wards with spotty Wi-Fi. The app's own files are fetched **network-first** (a new deploy shows on the next load; offline falls back to the cache); CDN files are cache-first.
 - **Installable App**: Fully compliant standard web app configurations allow installing the scheduler directly onto mobile and desktop home screens.
 
 ---
@@ -69,7 +73,8 @@ git clone https://github.com/PleumA/PleumA.github.io
 cd PleumA.github.io
 npm install          # install all dependencies
 npm run build        # compile Tailwind CSS → dist/output.css
-npm test             # run all 21 test suites (all should pass ✅)
+npm test             # run all 43 test suites (all should pass ✅)
+npm run lint         # ESLint + Prettier check (0 errors expected)
 npx serve .          # serve locally at http://localhost:3000
 ```
 
@@ -96,10 +101,10 @@ Designed with mobile first-class support in mind to ensure zero stutters on phon
 ## 🛡️ Robustness & Web Standards
 
 Built for high reliability, clean execution, and security:
-1. **Escaping & XSS Sanitization**: Doctor and role names are treated as user input; for UI badges, names are bound securely via `textContent`, or formatted using a custom escaping helper (`esc(...)`) when injected into template-literal dynamic DOM trees (e.g. Schedule cells, calendar grid, stats summary) to prevent cross-site scripting (XSS).
-2. **Robust Event Handlers (No String Eval)**: Inline click events like `removeDoctor`, `updateDoctorAssignment`, and `toggleSpecialDoc` reference stable doctor indices (integers) rather than raw name strings, eliminating execution bugs caused by names containing quotes or apostrophes (e.g., O'Connor).
+1. **Escaping & XSS Sanitization**: Doctor and role names and imported text are treated as user input; every `innerHTML` insertion (schedule cells, calendar grid, stats, fairness row, `title` attributes) goes through `esc(...)`, or the value is bound via `textContent`.
+2. **Robust Event Handlers (No String Eval)**: Inline handlers either take stable doctor indices (integers) or pass strings through `jsArg(...)` (a JSON literal, HTML-escaped), so names containing quotes or apostrophes (e.g., O'Connor) cannot break out of the attribute.
 3. **Modern Clipboard Integration**: Replaced deprecated `document.execCommand` methods with the modern, asynchronous `navigator.clipboard.writeText` API, assuring future-proof support and clean error handling via toasts.
-4. **Config Schema Validation**: The JSON import tool checks the schema's shape (verifying arrays for doctors, off requests, and extra slots data) before applying any state. This prevents application crashes from malformed, corrupted, or incompatible configuration files.
+4. **Config Import Validation & Rollback**: `sanitizeConfig` checks the shape of an imported JSON file, coerces values and cleans names (`sanitizeName`) before anything is applied. If applying still fails, the app is restored from a `getCurrentConfig()` snapshot, so a bad file never leaves a half-imported state.
 5. **Circular Dependency Prevention**: Decoupled dynamic list rendering from global DOM translation sweeps (`applyTranslations()`), resolving potential browser-freezing infinite recursion loops.
 
 ---
@@ -109,10 +114,11 @@ Built for high reliability, clean execution, and security:
 | File | Purpose |
 |------|---------|
 | `index.html` | Single-page app shell — layout, Tailwind classes, modals, PWA manifest link, service worker registration |
-| `app.js` | Scheduling state, Monte Carlo solver, UI handlers, focus-trap utility (~4 300 lines) |
+| `app.js` | Scheduling state, Monte Carlo solver, UI handlers, calendar-export UI, focus-trap utility (~5 400 lines) |
 | `structuredInputs.js` | Dynamic structured components — chips, dropdowns, steppers |
-| `translations.js` | Dual-language (Thai / English) translation dictionaries |
-| `sw.js` | Service worker — caches key assets for offline use |
+| `translations.js` | Dual-language (Thai / English) dictionaries plus shared helpers (`esc`, `sanitizeName`) |
+| `calendarExport.js` | `.ics` builder and duty-event collection for calendar export |
+| `sw.js` | Service worker — network-first for app files, cache-first for pinned CDN files |
 | `manifest.json` | PWA manifest — install config, theme colour |
 | `src/input.css` | Tailwind CSS entry point (`@tailwind` directives) |
 | `dist/output.css` | **Generated** — compiled & minified Tailwind CSS (run `npm run build`) |
@@ -123,8 +129,8 @@ Built for high reliability, clean execution, and security:
 | `.github/workflows/ci.yml` | GitHub Actions CI: lint → test → build |
 | `sitemap.xml` | Single-page sitemap for SEO |
 | `robots.txt` | Crawler permission file |
-| `tests/*.test.js` | **21 unit test suites** covering solver logic, UI DOM, quota enforcement, XSS, shift-based mode, accessibility, constraint coverage (holiday spacing, quota-density heuristic, locked-doctor exemption, blank-day spacing, dedup safeguard), and more. Run with `npm test`. |
-| `run-tests.js` | Built-in test runner — no Jest required |
+| `tests/*.test.js` | **43 test suites** covering solver logic, UI DOM (jsdom, via `tests/domHarness.js`), quotas, XSS, import rollback, undo/overrides, calendar export, service worker, and guard tests for Tailwind classes and translation copy. Run with `npm test`. |
+| `run-tests.js` | Built-in test runner — no Jest required; fails on `UNHANDLED`/`TypeError` output and on timeouts |
 | `DESIGN_SYSTEM.md` | Reusable component classes and colour tokens |
 | `DEVELOPER_GUIDE.md` | Full contributor setup, build, lint, test, and release guide |
 | `CONTRIBUTING.md` | Contribution guidelines |

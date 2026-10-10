@@ -4,6 +4,32 @@ All notable changes to the Automatic On-Call & Night Shift Doctor Scheduler will
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-10-11
+### Added
+* **Calendar export** to Apple and Google Calendar (`.ics`, `calendarExport.js`, `exportCalendar`) for everyone, a role group, or one person.
+* **Workbench layout:** the settings column scrolls on its own on wide screens; "Doctors per day" and "Advanced rules" are collapsible; below 1024px settings open as a native `popover` panel from the header; on phones the schedule shows as cards and the header is not sticky.
+* **Fairness row** (per-doctor totals, amber ring on the furthest outliers, min-max spread) and a collapsible per-doctor details table that starts open.
+* **Undo button** next to Reset-all (in addition to `Ctrl+Z`) and a **print stylesheet**.
+* **9-section in-app manual**, updated for the new layout, export, rules and undo.
+* **Tests:** jsdom harness (`tests/domHarness.js`), guard tests `tailwindClasses` and `translationsCopy`; 43 suites in total.
+
+### Changed
+* **Service worker is network-first** for the app's own files (offline falls back to the cache); lucide is pinned to 1.55.0; old caches are removed only if they start with `doctor-scheduler-`.
+* **Test runner** now fails on swallowed errors (`UNHANDLED`, line-start `TypeError`/`ReferenceError`) and on timeouts (`TEST_TIMEOUT_MS`); mock DOMs completed.
+* Calendar export, Undo and Reset-all controls grouped; header actions wrap on phones; all-caps labels dropped.
+* `npm run lint` passes again, so CI is green.
+
+### Fixed
+* **Solver:** the special (locked) doctor is picked under the same hard rules as everyone else (`strictOk`); removed doctors are unlocked.
+* **Parsing:** empty shift slots, off notes read through `offMap`, per-doctor role quotas, bounded off ranges, month/year validation, local-date and DST-safe dates, custom-range holiday chips and Buddhist-era year chips.
+* **Import:** configs are validated and coerced (`sanitizeConfig`) and a failed import rolls back fully (`getCurrentConfig`/`applyConfig`); doctor names are cleaned (`sanitizeName`) and name references kept in sync.
+* **State:** undo rebuilds from `originalSchedule`; period-key clearing, imported overrides (`pendingOverrides`) and doctor-removal pruning apply only on commit; regenerate requests are coalesced in a queue; the displayed result is a self-contained snapshot read via `resultCtx()`; removing a doctor can no longer be undone; Reset-all re-applies locally without a solver run.
+* **Editing:** custom-range language toggle, Backspace cleanup, typing-safe undo, clipboard and toast guards, calendar pop-up and Blob lifetime, conflict editor rows.
+* **i18n and accessibility:** no Thai/English duplicate strings, translated aria and title text, dialog roles and focus handling, accessible names on every form control, readable dark-mode contrast, nonexistent Tailwind classes replaced.
+
+### Security
+* Every `innerHTML` sink escapes names and imported text with `esc`; inline handler arguments go through `jsArg`.
+
 ## [1.10.0] - 2026-09-10
 ### Changed 
 * **Migrated the application to a dedicated GitHub Pages project URL:** `https://pleuma.github.io/doctor-scheduler/`.
