@@ -17,25 +17,25 @@ let quota = {};
 
 // Shared doctor badge color palette (indexed by doctor order)
 const DOC_COLORS = [
-    "bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900 text-teal-700 dark:text-teal-400",
-    "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400",
-    "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400",
-    "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400",
-    "bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900 text-purple-700 dark:text-purple-400",
-    "bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-900 text-sky-700 dark:text-sky-400",
-    "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400"
+    'bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900 text-teal-700 dark:text-teal-400',
+    'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-400',
+    'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400',
+    'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400',
+    'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900 text-purple-700 dark:text-purple-400',
+    'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-900 text-sky-700 dark:text-sky-400',
+    'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400',
 ];
-const DOC_COLOR = doc => DOC_COLORS[doctors.indexOf(doc) % DOC_COLORS.length] + " font-bold";
+const DOC_COLOR = (doc) => DOC_COLORS[doctors.indexOf(doc) % DOC_COLORS.length] + ' font-bold';
 
 // Locale-aware day/month name helpers (replaces duplicated name arrays)
-const localeTag = () => currentLang === 'th' ? 'th-TH' : 'en-US';
-const dayName = dateObj => dateObj.toLocaleDateString(localeTag(), { weekday: 'long' });
-const monthName = dateObj => dateObj.toLocaleDateString(localeTag(), { month: 'short' });
+const localeTag = () => (currentLang === 'th' ? 'th-TH' : 'en-US');
+const dayName = (dateObj) => dateObj.toLocaleDateString(localeTag(), { weekday: 'long' });
+const monthName = (dateObj) => dateObj.toLocaleDateString(localeTag(), { month: 'short' });
 
 // Shared parsers for "Name: 2, Other: 3" style textarea inputs (newline or comma separated)
-const parseKV = str => {
+const parseKV = (str) => {
     const map = {};
-    (str || '').split(/[\n,]+/).forEach(part => {
+    (str || '').split(/[\n,]+/).forEach((part) => {
         const pair = part.split(':');
         if (pair.length !== 2) return;
         const key = pair[0].trim();
@@ -44,7 +44,7 @@ const parseKV = str => {
     });
     return map;
 };
-const parseKVNum = str => {
+const parseKVNum = (str) => {
     const map = {};
     Object.entries(parseKV(str)).forEach(([k, v]) => {
         const n = parseInt(v);
@@ -52,25 +52,35 @@ const parseKVNum = str => {
     });
     return map;
 };
-const expandSlots = roleSlots => Object.entries(roleSlots).flatMap(([role, count]) => Array(count).fill(role));
+const expandSlots = (roleSlots) =>
+    Object.entries(roleSlots).flatMap(([role, count]) => Array(count).fill(role));
 
 function getQuotaKey(doctor, config) {
     const isRoleBased = config ? config.roleBased : false;
     const docName = typeof doctor === 'string' ? doctor : doctor.name;
-    const docRole = typeof doctor === 'object' && doctor.role ? doctor.role : (config && config.doctorRoles ? config.doctorRoles[docName] : 'Default');
+    const docRole =
+        typeof doctor === 'object' && doctor.role
+            ? doctor.role
+            : config && config.doctorRoles
+              ? config.doctorRoles[docName]
+              : 'Default';
     return isRoleBased ? docRole : docName;
 }
 
 // Dark Mode state
-let darkMode = localStorage.getItem('schedule_dark') !== null
-    ? localStorage.getItem('schedule_dark') === 'true'
-    : (window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : false);
+let darkMode =
+    localStorage.getItem('schedule_dark') !== null
+        ? localStorage.getItem('schedule_dark') === 'true'
+        : window.matchMedia
+          ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          : false;
 
 // Initial setup on document load
 document.addEventListener('DOMContentLoaded', () => {
     const d = new Date();
     document.getElementById('inputMonth').value = d.getMonth() + 1;
-    document.getElementById('inputYear').value = currentLang === 'th' ? d.getFullYear() + 543 : d.getFullYear();
+    document.getElementById('inputYear').value =
+        currentLang === 'th' ? d.getFullYear() + 543 : d.getFullYear();
 
     // Sync default doctors
     syncDoctorsToInput();
@@ -151,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (this.value.includes(',')) {
             const parts = this.value.split(',');
             const lastPart = parts.pop();
-            parts.forEach(part => {
+            parts.forEach((part) => {
                 addDoctor(part);
             });
             this.value = lastPart;
@@ -353,7 +363,7 @@ function toggleShiftBasedUI() {
     const customSlotsContainer = document.getElementById('customSlotsContainer');
     const chkRoleBased = document.getElementById('chkRoleBased');
     const isRoleActive = chkRoleBased?.checked;
-    
+
     if (shiftSlotsCountsContainer) {
         if (isShiftBased) {
             shiftSlotsCountsContainer.classList.remove('hidden');
@@ -361,7 +371,7 @@ function toggleShiftBasedUI() {
             shiftSlotsCountsContainer.classList.add('hidden');
         }
     }
-    
+
     if (isShiftBased) {
         if (defaultSlotsContainer) defaultSlotsContainer.classList.add('hidden');
         if (customSlotsContainer) customSlotsContainer.classList.add('hidden');
@@ -378,10 +388,12 @@ function toggleShiftBasedUI() {
 // Close dropdown selectors when clicking outside
 document.addEventListener('click', () => {
     const dropdowns = document.querySelectorAll('[id^="dropdown-"]');
-    dropdowns.forEach(d => d.classList.add('hidden'));
+    dropdowns.forEach((d) => d.classList.add('hidden'));
 
-    const cellDropdowns = document.querySelectorAll('[id^="celldropdown-"], [id^="tablecelldropdown-"]');
-    cellDropdowns.forEach(d => d.classList.add('hidden'));
+    const cellDropdowns = document.querySelectorAll(
+        '[id^="celldropdown-"], [id^="tablecelldropdown-"]'
+    );
+    cellDropdowns.forEach((d) => d.classList.add('hidden'));
 });
 
 // Language Translation Handler
@@ -403,7 +415,7 @@ window.toggleLanguage = function () {
     }
 
     applyTranslations();
-    showToast(currentLang === 'th' ? "เปลี่ยนภาษาเป็นไทยแล้ว" : "Language switched to English");
+    showToast(currentLang === 'th' ? 'เปลี่ยนภาษาเป็นไทยแล้ว' : 'Language switched to English');
 };
 
 function applyTranslations() {
@@ -414,7 +426,7 @@ function applyTranslations() {
 
     // Update simple text elements
     const elements = document.querySelectorAll('[data-i18n]');
-    elements.forEach(el => {
+    elements.forEach((el) => {
         const key = el.getAttribute('data-i18n');
         if (translations[lang][key]) {
             // Check if it's an input field placeholder
@@ -422,7 +434,7 @@ function applyTranslations() {
                 el.setAttribute('placeholder', translations[lang][key]);
             } else {
                 // Safely replace text node without breaking lucide icons inside buttons
-                let textNode = Array.from(el.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                let textNode = Array.from(el.childNodes).find((n) => n.nodeType === Node.TEXT_NODE);
                 if (textNode) {
                     textNode.nodeValue = translations[lang][key];
                 } else {
@@ -434,7 +446,7 @@ function applyTranslations() {
 
     // Update HTML elements (preserves rich formatting like <code> tags)
     const htmlElements = document.querySelectorAll('[data-i18n-html]');
-    htmlElements.forEach(el => {
+    htmlElements.forEach((el) => {
         const key = el.getAttribute('data-i18n-html');
         if (translations[lang][key]) {
             el.innerHTML = translations[lang][key];
@@ -496,7 +508,7 @@ function updateDayNamesLanguage() {
     const month = parseInt(document.getElementById('inputMonth').value);
     const calcYear = year > 2500 ? year - 543 : year;
 
-    globalResult.schedule.forEach(row => {
+    globalResult.schedule.forEach((row) => {
         const dateObj = new Date(calcYear, month - 1, row.day);
         row.dayName = dayName(dateObj);
 
@@ -510,9 +522,14 @@ window.toggleDarkMode = function () {
     darkMode = !darkMode;
     localStorage.setItem('schedule_dark', darkMode);
     applyDarkMode();
-    showToast(currentLang === 'th' ?
-        (darkMode ? "เปิดโหมดมืดแล้ว" : "ปิดโหมดมืดแล้ว") :
-        (darkMode ? "Dark mode enabled" : "Light mode enabled")
+    showToast(
+        currentLang === 'th'
+            ? darkMode
+                ? 'เปิดโหมดมืดแล้ว'
+                : 'ปิดโหมดมืดแล้ว'
+            : darkMode
+              ? 'Dark mode enabled'
+              : 'Light mode enabled'
     );
 };
 
@@ -541,7 +558,7 @@ function syncDoctorRolesInput() {
     if (!roleInput) return;
 
     const currentRoles = {};
-    roleInput.value.split(/[\n,]+/).forEach(part => {
+    roleInput.value.split(/[\n,]+/).forEach((part) => {
         const pair = part.split(':');
         if (pair.length === 2) {
             const doc = pair[0].trim();
@@ -570,12 +587,13 @@ function renderDoctorTags() {
 
     // Remove all existing tag badges
     const tags = container.querySelectorAll('.doctor-tag');
-    tags.forEach(tag => tag.remove());
+    tags.forEach((tag) => tag.remove());
 
     // Draw tag badges
     doctors.forEach((doc, index) => {
         const tag = document.createElement('span');
-        tag.className = 'doctor-tag bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-900/50 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none animate-in fade-in scale-95 duration-200';
+        tag.className =
+            'doctor-tag bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-900/50 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none animate-in fade-in scale-95 duration-200';
         tag.innerHTML = `
             <span></span>
             <button type="button" onclick="event.stopPropagation(); removeDoctor(${index})" class="text-teal-400 hover:text-teal-600 transition-colors">
@@ -595,7 +613,12 @@ function addDoctor(name) {
     name = name.trim();
     if (!name) return;
     if (doctors.includes(name)) {
-        showToast(currentLang === 'th' ? "มีชื่อแพทย์ท่านนี้ในระบบแล้ว" : "This doctor is already in the system", true);
+        showToast(
+            currentLang === 'th'
+                ? 'มีชื่อแพทย์ท่านนี้ในระบบแล้ว'
+                : 'This doctor is already in the system',
+            true
+        );
         return;
     }
     doctors.push(name);
@@ -611,8 +634,8 @@ function removeDoctor(index) {
     doctors = doctors.filter((_, i) => i !== index);
 
     // Also clean up overrides for this doctor
-    Object.keys(manualOverrides).forEach(day => {
-        Object.keys(manualOverrides[day]).forEach(slot => {
+    Object.keys(manualOverrides).forEach((day) => {
+        Object.keys(manualOverrides[day]).forEach((slot) => {
             if (manualOverrides[day][slot] === name) {
                 delete manualOverrides[day][slot];
             }
@@ -630,7 +653,7 @@ function removeDoctor(index) {
 
 function updateDoctorSelectors() {
     // Update dropdown values inside Off requests list
-    offData.forEach(req => {
+    offData.forEach((req) => {
         const dropdown = document.getElementById(`dropdown-${req.id}`);
         if (dropdown) {
             dropdown.innerHTML = getDropdownOptionsHtml(req.id, req.names);
@@ -643,7 +666,10 @@ function updateDoctorSelectors() {
 
 // Dropdown selection list for Off requests
 function getDropdownOptionsHtml(reqId, selectedNamesStr) {
-    const selectedNames = selectedNamesStr.split(',').map(n => n.trim()).filter(n => n);
+    const selectedNames = selectedNamesStr
+        .split(',')
+        .map((n) => n.trim())
+        .filter((n) => n);
     let optionsHtml = '';
     doctors.forEach((doc, index) => {
         const isChecked = selectedNames.includes(doc) ? 'checked' : '';
@@ -664,8 +690,10 @@ window.toggleDropdown = function (event, dropdownId) {
     event.stopPropagation();
 
     // Close other dropdowns
-    const dropdowns = document.querySelectorAll('[id^="dropdown-"], [id^="celldropdown-"], [id^="tablecelldropdown-"]');
-    dropdowns.forEach(d => {
+    const dropdowns = document.querySelectorAll(
+        '[id^="dropdown-"], [id^="celldropdown-"], [id^="tablecelldropdown-"]'
+    );
+    dropdowns.forEach((d) => {
         if (d.id !== dropdownId) d.classList.add('hidden');
     });
 
@@ -676,21 +704,29 @@ window.toggleDropdown = function (event, dropdownId) {
 };
 
 window.toggleOffDoctor = function (reqId, doc, isChecked) {
-    const index = offData.findIndex(o => o.id === reqId);
+    const index = offData.findIndex((o) => o.id === reqId);
     if (index === -1) return;
 
-    let selected = offData[index].names.split(',').map(n => n.trim()).filter(n => n);
+    let selected = offData[index].names
+        .split(',')
+        .map((n) => n.trim())
+        .filter((n) => n);
     if (isChecked) {
         if (!selected.includes(doc)) selected.push(doc);
     } else {
-        selected = selected.filter(d => d !== doc);
+        selected = selected.filter((d) => d !== doc);
     }
 
     offData[index].names = selected.join(', ');
 
     const btnText = document.querySelector(`#offReqBtnText-${reqId}`);
     if (btnText) {
-        btnText.innerText = selected.length > 0 ? selected.join(', ') : (currentLang === 'th' ? 'เลือกแพทย์...' : 'Select...');
+        btnText.innerText =
+            selected.length > 0
+                ? selected.join(', ')
+                : currentLang === 'th'
+                  ? 'เลือกแพทย์...'
+                  : 'Select...';
     }
 
     generateSchedule();
@@ -707,7 +743,10 @@ function renderSpecialDocsCheckboxList() {
     if (!container) return;
 
     const inputVal = document.getElementById('inputSpecialDocs').value;
-    const selected = inputVal.split(',').map(d => d.trim()).filter(d => d);
+    const selected = inputVal
+        .split(',')
+        .map((d) => d.trim())
+        .filter((d) => d);
 
     container.innerHTML = '';
     if (doctors.length === 0) {
@@ -729,12 +768,15 @@ function renderSpecialDocsCheckboxList() {
 
 window.toggleSpecialDoc = function (doc, isChecked) {
     const input = document.getElementById('inputSpecialDocs');
-    let selected = input.value.split(',').map(d => d.trim()).filter(d => d);
+    let selected = input.value
+        .split(',')
+        .map((d) => d.trim())
+        .filter((d) => d);
 
     if (isChecked) {
         if (!selected.includes(doc)) selected.push(doc);
     } else {
-        selected = selected.filter(d => d !== doc);
+        selected = selected.filter((d) => d !== doc);
     }
 
     input.value = selected.join(', ');
@@ -754,10 +796,12 @@ function toggleSpecialRuleUI() {
     const body = document.getElementById('specialRuleBody');
 
     if (isChecked) {
-        container.className = "rounded-2xl shadow-sm border bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900 transition-all overflow-hidden";
+        container.className =
+            'rounded-2xl shadow-sm border bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900 transition-all overflow-hidden';
         body.style.display = 'block';
     } else {
-        container.className = "rounded-2xl shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-all overflow-hidden";
+        container.className =
+            'rounded-2xl shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-all overflow-hidden';
         body.style.display = 'none';
     }
     toggleLockConditionUI();
@@ -787,10 +831,12 @@ function showToast(msg, isError = false) {
     const safeMsg = esc(msg);
 
     if (isError) {
-        toastContent.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm border bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/50";
+        toastContent.className =
+            'flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm border bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/50';
         toastContent.innerHTML = `<i data-lucide="alert-circle" class="w-6 h-6 text-red-500"></i> <span id="toastMsg">${safeMsg}</span>`;
     } else {
-        toastContent.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm border bg-slate-800 dark:bg-slate-950 text-white border-slate-700 dark:border-slate-800";
+        toastContent.className =
+            'flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm border bg-slate-800 dark:bg-slate-950 text-white border-slate-700 dark:border-slate-800';
         toastContent.innerHTML = `<i data-lucide="check-circle-2" class="w-6 h-6 text-emerald-400"></i> <span id="toastMsg">${safeMsg}</span>`;
     }
     lucide.createIcons();
@@ -811,20 +857,24 @@ function renderOffRequests() {
         return;
     }
     container.innerHTML = '';
-    offData.forEach(req => {
+    offData.forEach((req) => {
         const div = document.createElement('div');
-        div.className = "flex gap-2 items-center bg-slate-50 dark:bg-slate-950 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800";
+        div.className =
+            'flex gap-2 items-center bg-slate-50 dark:bg-slate-950 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800';
 
         const optionsHtml = getDropdownOptionsHtml(req.id, req.names);
-        const selectedNames = req.names.split(',').map(n => n.trim()).filter(n => n);
+        const selectedNames = req.names
+            .split(',')
+            .map((n) => n.trim())
+            .filter((n) => n);
 
         div.innerHTML = `
             <div class="${isCustomDateRange ? 'w-56' : 'w-48'} shrink-0 font-sans">
-                <input type="text" placeholder="${isCustomDateRange ? (currentLang === 'th' ? 'เช่น 20/05/2026 หรือ 25/02/2026-04/03/2026' : 'e.g. 20/05/2026, or 25/02/2026-04/03/2026') : (currentLang === 'th' ? 'เช่น 5, 12 หรือ 2-10' : 'e.g. 5, 12, or 2-10')}" value="${req.date}" onchange="updateOffRow(${req.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
+                <input type="text" placeholder="${isCustomDateRange ? (currentLang === 'th' ? 'เช่น 20/05/2026 หรือ 25/02/2026-04/03/2026' : 'e.g. 20/05/2026, or 25/02/2026-04/03/2026') : currentLang === 'th' ? 'เช่น 5, 12 หรือ 2-10' : 'e.g. 5, 12, or 2-10'}" value="${req.date}" onchange="updateOffRow(${req.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
             </div>
             <div class="relative flex-1">
                 <button type="button" onclick="toggleDropdown(event, 'dropdown-${req.id}')" class="w-full text-left border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-slate-900 flex justify-between items-center hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-                    <span id="offReqBtnText-${req.id}" class="truncate text-slate-700 dark:text-slate-200 font-semibold">${selectedNames.length > 0 ? selectedNames.join(', ') : (currentLang === 'th' ? 'เลือกแพทย์...' : 'Select...')}</span>
+                    <span id="offReqBtnText-${req.id}" class="truncate text-slate-700 dark:text-slate-200 font-semibold">${selectedNames.length > 0 ? selectedNames.join(', ') : currentLang === 'th' ? 'เลือกแพทย์...' : 'Select...'}</span>
                     <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 </button>
                 <div id="dropdown-${req.id}" onclick="event.stopPropagation()" class="absolute left-0 mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 py-1 hidden max-h-48 overflow-y-auto custom-scrollbar">
@@ -839,19 +889,19 @@ function renderOffRequests() {
 }
 
 function addOffRow() {
-    const newId = offData.length > 0 ? Math.max(...offData.map(o => o.id)) + 1 : 1;
+    const newId = offData.length > 0 ? Math.max(...offData.map((o) => o.id)) + 1 : 1;
     offData.push({ id: newId, date: '', names: '' });
     renderOffRequests();
 }
 function updateOffRow(id, field, value) {
-    const index = offData.findIndex(o => o.id === id);
+    const index = offData.findIndex((o) => o.id === id);
     if (index !== -1) {
         offData[index][field] = value;
         generateSchedule();
     }
 }
 function deleteOffRow(id) {
-    offData = offData.filter(o => o.id !== id);
+    offData = offData.filter((o) => o.id !== id);
     renderOffRequests();
     generateSchedule();
 }
@@ -863,9 +913,10 @@ function renderExtraSlots() {
         return;
     }
     container.innerHTML = '';
-    extraSlotsData.forEach(item => {
+    extraSlotsData.forEach((item) => {
         const div = document.createElement('div');
-        div.className = "flex gap-2 items-center bg-indigo-50/50 dark:bg-indigo-950/20 p-2 rounded-lg border border-indigo-100 dark:border-indigo-950/35 font-sans";
+        div.className =
+            'flex gap-2 items-center bg-indigo-50/50 dark:bg-indigo-950/20 p-2 rounded-lg border border-indigo-100 dark:border-indigo-950/35 font-sans';
         div.innerHTML = `
             <div class="w-20 shrink-0">
                 <label class="text-[10px] text-slate-500 block">${translations[currentLang].tableDateCol}</label>
@@ -883,23 +934,23 @@ function renderExtraSlots() {
 }
 
 function addExtraSlotRow() {
-    const newId = extraSlotsData.length > 0 ? Math.max(...extraSlotsData.map(o => o.id)) + 1 : 1;
+    const newId = extraSlotsData.length > 0 ? Math.max(...extraSlotsData.map((o) => o.id)) + 1 : 1;
     const roleBased = document.getElementById('chkRoleBased')?.checked;
     const defaultVal = roleBased
-        ? (document.getElementById('inputDefaultRoleSlots')?.value || 'R1:1, R2:1')
-        : (document.getElementById('inputDefaultSlots')?.value || '2');
+        ? document.getElementById('inputDefaultRoleSlots')?.value || 'R1:1, R2:1'
+        : document.getElementById('inputDefaultSlots')?.value || '2';
     extraSlotsData.push({ id: newId, date: '', slots: defaultVal });
     renderExtraSlots();
 }
 function updateExtraSlot(id, field, value) {
-    const index = extraSlotsData.findIndex(o => o.id === id);
+    const index = extraSlotsData.findIndex((o) => o.id === id);
     if (index !== -1) {
         extraSlotsData[index][field] = value;
         generateSchedule();
     }
 }
 function deleteExtraSlot(id) {
-    extraSlotsData = extraSlotsData.filter(o => o.id !== id);
+    extraSlotsData = extraSlotsData.filter((o) => o.id !== id);
     renderExtraSlots();
     generateSchedule();
 }
@@ -917,8 +968,10 @@ window.setViewMode = function (mode) {
     const personContainer = document.getElementById('personViewContainer');
 
     // Reset styles
-    [btnTable, btnCal, btnPerson].forEach(btn => {
-        if (btn) btn.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
+    [btnTable, btnCal, btnPerson].forEach((btn) => {
+        if (btn)
+            btn.className =
+                'px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200';
     });
 
     // Hide all
@@ -926,7 +979,8 @@ window.setViewMode = function (mode) {
     if (calendarContainer) calendarContainer.classList.add('hidden');
     if (personContainer) personContainer.classList.add('hidden');
 
-    const activeClass = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700";
+    const activeClass =
+        'px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700';
 
     if (mode === 'table') {
         if (btnTable) btnTable.className = activeClass;
@@ -953,21 +1007,39 @@ function parseUIConfig() {
     const month = parseInt(document.getElementById('inputMonth').value);
     const specialHolidaysInput = document.getElementById('inputSpecialHols').value;
     const noDutyDaysInput = document.getElementById('inputNoDuty').value;
-    const defaultSlots = Math.min(parseInt(document.getElementById('inputDefaultSlots').value) || 2, 50);
+    const defaultSlots = Math.min(
+        parseInt(document.getElementById('inputDefaultSlots').value) || 2,
+        50
+    );
     const useSpecialRule = document.getElementById('chkUseSpecialRule').checked;
     const specialRuleDocsInput = document.getElementById('inputSpecialDocs').value;
     const lockConditionType = document.getElementById('lockConditionType')?.value || 'firstNDays';
-    const selectLockWeekday = document.getElementById('selectLockWeekday')?.value !== undefined ? parseInt(document.getElementById('selectLockWeekday').value) : 0;
-    const offDutyPeriod = Math.max(1, Math.min(7, parseInt(document.getElementById('inputOffDutyPeriod')?.value) || 2));
+    const selectLockWeekday =
+        document.getElementById('selectLockWeekday')?.value !== undefined
+            ? parseInt(document.getElementById('selectLockWeekday').value)
+            : 0;
+    const offDutyPeriod = Math.max(
+        1,
+        Math.min(7, parseInt(document.getElementById('inputOffDutyPeriod')?.value) || 2)
+    );
     const preventLongGaps = document.getElementById('chkPreventLongGaps').checked;
     const balanceShifts = document.getElementById('chkBalanceShifts')?.checked;
     const allowBlankDays = document.getElementById('chkAllowBlankDays')?.checked;
     const roleBased = document.getElementById('chkRoleBased')?.checked;
 
     const isShiftBased = document.getElementById('chkShiftBased')?.checked || false;
-    let morningSlots = Math.max(0, Math.min(10, parseInt(document.getElementById('inputMorningSlots')?.value) ?? 1));
-    let afternoonSlots = Math.max(0, Math.min(10, parseInt(document.getElementById('inputAfternoonSlots')?.value) ?? 1));
-    let nightSlots = Math.max(0, Math.min(10, parseInt(document.getElementById('inputNightSlots')?.value) ?? 1));
+    let morningSlots = Math.max(
+        0,
+        Math.min(10, parseInt(document.getElementById('inputMorningSlots')?.value) ?? 1)
+    );
+    let afternoonSlots = Math.max(
+        0,
+        Math.min(10, parseInt(document.getElementById('inputAfternoonSlots')?.value) ?? 1)
+    );
+    let nightSlots = Math.max(
+        0,
+        Math.min(10, parseInt(document.getElementById('inputNightSlots')?.value) ?? 1)
+    );
     if (isShiftBased && morningSlots === 0 && afternoonSlots === 0 && nightSlots === 0) {
         morningSlots = 1;
         afternoonSlots = 1;
@@ -975,7 +1047,8 @@ function parseUIConfig() {
     }
 
     const chkSoftAlternate = document.getElementById('chkSoftAlternate')?.checked ?? true;
-    const selectAlternateStrength = document.getElementById('selectAlternateStrength')?.value || 'medium';
+    const selectAlternateStrength =
+        document.getElementById('selectAlternateStrength')?.value || 'medium';
 
     let windowPenalty = 150;
     let pairPenalty = 300;
@@ -988,8 +1061,14 @@ function parseUIConfig() {
     }
 
     const calcYear = year > 2500 ? year - 543 : year;
-    const specialHols = specialHolidaysInput.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
-    const noDutyDays = noDutyDaysInput.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
+    const specialHols = specialHolidaysInput
+        .split(',')
+        .map((d) => parseInt(d.trim()))
+        .filter((d) => !isNaN(d));
+    const noDutyDays = noDutyDaysInput
+        .split(',')
+        .map((d) => parseInt(d.trim()))
+        .filter((d) => !isNaN(d));
     let numDays = scheduleDates.length;
 
     // Fallback for isolated test environments that don't trigger generateSchedule
@@ -1009,7 +1088,10 @@ function parseUIConfig() {
             for (let d = startD; d <= endD; d++) specialRuleDays.add(d);
         } else {
             for (let d = 1; d <= numDays; d++) {
-                const dateObj = (scheduleDates.length > 0) ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
+                const dateObj =
+                    scheduleDates.length > 0
+                        ? scheduleDates[d - 1]
+                        : new Date(calcYear, month - 1, d);
                 if (dateObj.getDay() === selectLockWeekday) specialRuleDays.add(d);
             }
         }
@@ -1017,20 +1099,27 @@ function parseUIConfig() {
 
     let hasMatchingWeekday = false;
     for (let d = 1; d <= numDays; d++) {
-        const dateObj = (scheduleDates.length > 0) ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
+        const dateObj =
+            scheduleDates.length > 0 ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
         if (dateObj.getDay() === selectLockWeekday) {
             hasMatchingWeekday = true;
         }
     }
     if (useSpecialRule && lockConditionType === 'everyWeekday' && !hasMatchingWeekday) {
         if (!window.lockWarningShown) {
-            showToast(currentLang === 'th' ? "ไม่พบวันที่ตรงเงื่อนไข" : "No matching days found for the selected weekday", true);
+            showToast(
+                currentLang === 'th'
+                    ? 'ไม่พบวันที่ตรงเงื่อนไข'
+                    : 'No matching days found for the selected weekday',
+                true
+            );
             window.lockWarningShown = true;
         }
     }
 
     for (let d = 1; d <= numDays; d++) {
-        const dateObj = (scheduleDates.length > 0) ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
+        const dateObj =
+            scheduleDates.length > 0 ? scheduleDates[d - 1] : new Date(calcYear, month - 1, d);
         const dayOfWeek = dateObj.getDay();
         if (dayOfWeek === 0 || dayOfWeek === 6) holidaySet.add(d);
     }
@@ -1054,16 +1143,22 @@ function parseUIConfig() {
     };
 
     const offMap = {};
-    offData.forEach(req => {
+    offData.forEach((req) => {
         const fullDateStr = String(req.date).trim();
         if (!fullDateStr || !req.names) return;
-        
-        const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
+
+        const namesArr = req.names
+            .split(',')
+            .map((n) => n.trim())
+            .filter((n) => n);
         if (namesArr.length === 0) return;
 
-        const tokens = fullDateStr.split(',').map(t => t.trim()).filter(t => t);
-        
-        tokens.forEach(token => {
+        const tokens = fullDateStr
+            .split(',')
+            .map((t) => t.trim())
+            .filter((t) => t);
+
+        tokens.forEach((token) => {
             if (isCustomDateRange) {
                 if (token.includes('-')) {
                     const parts = token.split('-');
@@ -1071,33 +1166,53 @@ function parseUIConfig() {
                     const endStr = parts[1].trim();
                     const startDate = parseDateDDMMYYYY(startStr);
                     const endDate = parseDateDDMMYYYY(endStr);
-                    
+
                     if (startDate && endDate) {
                         if (startDate > endDate) {
-                            showToast(currentLang === 'th' ? `ช่วงวันที่ไม่ถูกต้อง: ${token}` : `Invalid date range: ${token}`, "error");
+                            showToast(
+                                currentLang === 'th'
+                                    ? `ช่วงวันที่ไม่ถูกต้อง: ${token}`
+                                    : `Invalid date range: ${token}`,
+                                'error'
+                            );
                             return;
                         }
                         const spanDays = Math.round((endDate - startDate) / 86400000) + 1;
                         if (spanDays > 90) {
-                            showToast(currentLang === 'th' ? `ช่วงวันที่ยาวเกินไป (>90 วัน): ${token}` : `Date range too long (>90 days): ${token}`, "warning");
+                            showToast(
+                                currentLang === 'th'
+                                    ? `ช่วงวันที่ยาวเกินไป (>90 วัน): ${token}`
+                                    : `Date range too long (>90 days): ${token}`,
+                                'warning'
+                            );
                         }
                         for (let i = 0; i < spanDays; i++) {
                             const curDate = new Date(startDate.getTime() + i * 86400000);
                             const curStr = formatDateDDMMYYYY(curDate);
                             if (!offMap[curStr]) offMap[curStr] = new Set();
-                            namesArr.forEach(n => offMap[curStr].add(n));
+                            namesArr.forEach((n) => offMap[curStr].add(n));
                         }
                     } else {
-                        showToast(currentLang === 'th' ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}` : `Invalid date format: ${token}`, "warning");
+                        showToast(
+                            currentLang === 'th'
+                                ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}`
+                                : `Invalid date format: ${token}`,
+                            'warning'
+                        );
                     }
                 } else {
                     const d = parseDateDDMMYYYY(token);
                     if (d) {
                         const curStr = formatDateDDMMYYYY(d);
                         if (!offMap[curStr]) offMap[curStr] = new Set();
-                        namesArr.forEach(n => offMap[curStr].add(n));
+                        namesArr.forEach((n) => offMap[curStr].add(n));
                     } else {
-                        showToast(currentLang === 'th' ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}` : `Invalid date format: ${token}`, "warning");
+                        showToast(
+                            currentLang === 'th'
+                                ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}`
+                                : `Invalid date format: ${token}`,
+                            'warning'
+                        );
                     }
                 }
             } else {
@@ -1107,26 +1222,46 @@ function parseUIConfig() {
                     const end = parseInt(parts[1], 10);
                     if (!isNaN(start) && !isNaN(end)) {
                         if (start > end) {
-                            showToast(currentLang === 'th' ? `ช่วงวันที่ไม่ถูกต้อง: ${token}` : `Invalid date range: ${token}`, "error");
+                            showToast(
+                                currentLang === 'th'
+                                    ? `ช่วงวันที่ไม่ถูกต้อง: ${token}`
+                                    : `Invalid date range: ${token}`,
+                                'error'
+                            );
                             return;
                         }
                         if (end - start + 1 > 90) {
-                            showToast(currentLang === 'th' ? `ช่วงวันที่ยาวเกินไป (>90 วัน): ${token}` : `Date range too long (>90 days): ${token}`, "warning");
+                            showToast(
+                                currentLang === 'th'
+                                    ? `ช่วงวันที่ยาวเกินไป (>90 วัน): ${token}`
+                                    : `Date range too long (>90 days): ${token}`,
+                                'warning'
+                            );
                         }
                         for (let i = start; i <= end; i++) {
                             if (!offMap[i]) offMap[i] = new Set();
-                            namesArr.forEach(n => offMap[i].add(n));
+                            namesArr.forEach((n) => offMap[i].add(n));
                         }
                     } else {
-                        showToast(currentLang === 'th' ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}` : `Invalid format: ${token}`, "warning");
+                        showToast(
+                            currentLang === 'th'
+                                ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}`
+                                : `Invalid format: ${token}`,
+                            'warning'
+                        );
                     }
                 } else {
                     const d = parseInt(token, 10);
                     if (!isNaN(d)) {
                         if (!offMap[d]) offMap[d] = new Set();
-                        namesArr.forEach(n => offMap[d].add(n));
+                        namesArr.forEach((n) => offMap[d].add(n));
                     } else {
-                        showToast(currentLang === 'th' ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}` : `Invalid format: ${token}`, "warning");
+                        showToast(
+                            currentLang === 'th'
+                                ? `รูปแบบวันที่ไม่ถูกต้อง: ${token}`
+                                : `Invalid format: ${token}`,
+                            'warning'
+                        );
                     }
                 }
             }
@@ -1134,7 +1269,7 @@ function parseUIConfig() {
     });
 
     const extraSlotsMap = {};
-    extraSlotsData.forEach(req => {
+    extraSlotsData.forEach((req) => {
         const dateStr = String(req.date).trim();
         const s = req.slots;
         if (isCustomDateRange) {
@@ -1157,11 +1292,15 @@ function parseUIConfig() {
     });
 
     const doctorRoles = {};
-    doctors.forEach(doc => { doctorRoles[doc] = 'Default'; });
+    doctors.forEach((doc) => {
+        doctorRoles[doc] = 'Default';
+    });
     if (roleBased) {
-        Object.entries(parseKV(document.getElementById('inputDoctorRoles')?.value)).forEach(([doc, role]) => {
-            doctorRoles[doc] = String(role);
-        });
+        Object.entries(parseKV(document.getElementById('inputDoctorRoles')?.value)).forEach(
+            ([doc, role]) => {
+                doctorRoles[doc] = String(role);
+            }
+        );
     }
 
     const defaultRoleSlots = {};
@@ -1178,7 +1317,12 @@ function parseUIConfig() {
     Object.entries(parseKV(document.getElementById(quotaInputId)?.value)).forEach(([key, raw]) => {
         const count = parseInt(raw);
         if (isNaN(count) || count <= 0) {
-            showToast(currentLang === 'th' ? `ข้อผิดพลาดโควตา: ${key} ต้องมากกว่า 0` : `Quota error: ${key} must be > 0`, true);
+            showToast(
+                currentLang === 'th'
+                    ? `ข้อผิดพลาดโควตา: ${key} ต้องมากกว่า 0`
+                    : `Quota error: ${key} must be > 0`,
+                true
+            );
         } else {
             quota[key] = count;
         }
@@ -1187,17 +1331,27 @@ function parseUIConfig() {
     // Filter invalid keys (Step 5: unknown key in quota -> warning toast, skip entry)
     if (Object.keys(quota).length > 0) {
         if (roleBased) {
-            const activeRoles = new Set(doctors.map(doc => doctorRoles[doc] || 'Default'));
-            Object.keys(quota).forEach(role => {
+            const activeRoles = new Set(doctors.map((doc) => doctorRoles[doc] || 'Default'));
+            Object.keys(quota).forEach((role) => {
                 if (!activeRoles.has(role)) {
-                    showToast(currentLang === 'th' ? `คำเตือนโควตา: ไม่พบกลุ่มเวร "${role}"` : `Quota warning: Role "${role}" not found`, true);
+                    showToast(
+                        currentLang === 'th'
+                            ? `คำเตือนโควตา: ไม่พบกลุ่มเวร "${role}"`
+                            : `Quota warning: Role "${role}" not found`,
+                        true
+                    );
                     delete quota[role];
                 }
             });
         } else {
-            Object.keys(quota).forEach(doc => {
+            Object.keys(quota).forEach((doc) => {
                 if (!doctors.includes(doc)) {
-                    showToast(currentLang === 'th' ? `คำเตือนโควตา: ไม่พบแพทย์ชื่อ "${doc}"` : `Quota warning: Doctor "${doc}" not found`, true);
+                    showToast(
+                        currentLang === 'th'
+                            ? `คำเตือนโควตา: ไม่พบแพทย์ชื่อ "${doc}"`
+                            : `Quota warning: Doctor "${doc}" not found`,
+                        true
+                    );
                     delete quota[doc];
                 }
             });
@@ -1207,7 +1361,7 @@ function parseUIConfig() {
 
     const conflicts = [];
     const conflictsText = document.getElementById('inputConflicts').value || '';
-    conflictsText.split(/[\n,]+/).forEach(part => {
+    conflictsText.split(/[\n,]+/).forEach((part) => {
         part = part.trim();
         if (!part) return;
         let pair = [];
@@ -1263,7 +1417,7 @@ function parseUIConfig() {
                 }
                 return dayRoleSlots;
             } else {
-                return { 'Default': morningSlots + afternoonSlots + nightSlots };
+                return { Default: morningSlots + afternoonSlots + nightSlots };
             }
         }
 
@@ -1282,13 +1436,13 @@ function parseUIConfig() {
         if (Object.keys(dayRoleSlots).length === 0) dayRoleSlots['Default'] = defaultSlots;
         if (!roleBased) {
             let total = 0;
-            Object.keys(dayRoleSlots).forEach(r => total += dayRoleSlots[r]);
-            dayRoleSlots = { 'Default': total };
+            Object.keys(dayRoleSlots).forEach((r) => (total += dayRoleSlots[r]));
+            dayRoleSlots = { Default: total };
         }
         return dayRoleSlots;
     };
 
-    const cleanName = name => name.trim().toLowerCase();
+    const cleanName = (name) => name.trim().toLowerCase();
     const conflictSet = new Set();
     conflicts.forEach(([d1, d2]) => {
         conflictSet.add(`${cleanName(d1)}:${cleanName(d2)}`);
@@ -1296,7 +1450,10 @@ function parseUIConfig() {
     });
     const areConflicting = (doc1, doc2) => conflictSet.has(`${cleanName(doc1)}:${cleanName(doc2)}`);
 
-    const specialDocs = specialRuleDocsInput.split(',').map(d => d.trim()).filter(d => d);
+    const specialDocs = specialRuleDocsInput
+        .split(',')
+        .map((d) => d.trim())
+        .filter((d) => d);
 
     // Mathematical Validation (Fail-Safe) - only needs to run once per generation cycle
     if (hasQuotas) {
@@ -1304,11 +1461,11 @@ function parseUIConfig() {
         for (let d = 1; d <= numDays; d++) {
             if (!noDutySet.has(d)) {
                 let dRoleSlots = getRoleSlotsForDay(d);
-                Object.keys(dRoleSlots).forEach(role => totalSlotsInMonth += dRoleSlots[role]);
+                Object.keys(dRoleSlots).forEach((role) => (totalSlotsInMonth += dRoleSlots[role]));
             }
         }
         let totalRequiredShifts = 0;
-        doctors.forEach(doc => {
+        doctors.forEach((doc) => {
             const key = getQuotaKey(doc, { roleBased, doctorRoles });
             if (quota[key] !== undefined) {
                 totalRequiredShifts += quota[key];
@@ -1317,36 +1474,65 @@ function parseUIConfig() {
 
         if (!allowBlankDays && totalRequiredShifts !== totalSlotsInMonth) {
             const diff = Math.abs(totalRequiredShifts - totalSlotsInMonth);
-            const msgTH = totalRequiredShifts < totalSlotsInMonth
-                ? `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาเพิ่มอีก ${diff} เวรในโควตา (หรือเปิดอนุญาตเว้นว่าง)`
-                : `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาลดโควตาลง ${diff} เวร`;
-            const msgEN = totalRequiredShifts < totalSlotsInMonth
-                ? `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — add ${diff} more shifts.`
-                : `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — remove ${diff} shifts.`;
+            const msgTH =
+                totalRequiredShifts < totalSlotsInMonth
+                    ? `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาเพิ่มอีก ${diff} เวรในโควตา (หรือเปิดอนุญาตเว้นว่าง)`
+                    : `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) แต่มีทั้งหมด ${totalSlotsInMonth} ช่อง - กรุณาลดโควตาลง ${diff} เวร`;
+            const msgEN =
+                totalRequiredShifts < totalSlotsInMonth
+                    ? `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — add ${diff} more shifts.`
+                    : `Error: Quotas sum to ${totalRequiredShifts} but there are ${totalSlotsInMonth} slots — remove ${diff} shifts.`;
             throw new Error(currentLang === 'th' ? msgTH : msgEN);
         } else if (allowBlankDays && totalRequiredShifts > totalSlotsInMonth) {
             const diff = totalRequiredShifts - totalSlotsInMonth;
-            throw new Error(currentLang === 'th' ? `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) เกินกว่าจำนวนเวรทั้งหมดในเดือน (${totalSlotsInMonth}) - กรุณาลดลง ${diff} เวร` : `Error: Quotas sum to ${totalRequiredShifts} but there are only ${totalSlotsInMonth} slots — remove ${diff} shifts.`);
+            throw new Error(
+                currentLang === 'th'
+                    ? `ข้อผิดพลาด: โควตารวม (${totalRequiredShifts}) เกินกว่าจำนวนเวรทั้งหมดในเดือน (${totalSlotsInMonth}) - กรุณาลดลง ${diff} เวร`
+                    : `Error: Quotas sum to ${totalRequiredShifts} but there are only ${totalSlotsInMonth} slots — remove ${diff} shifts.`
+            );
         }
     }
 
     const configObj = {
-        year, month, numDays, holidaySet, noDutySet, offMap,
-        roleBased, doctorRoles, quota, hasQuotas,
-        useSpecialRule, specialDocs, specialRuleDays,
-        offDutyPeriod, preventLongGaps, balanceShifts, allowBlankDays,
-        getRoleSlotsForDay, areConflicting, specialHols,
-        chkSoftAlternate, selectAlternateStrength, windowPenalty, pairPenalty,
-        isShiftBased, morningSlots, afternoonSlots, nightSlots
+        year,
+        month,
+        numDays,
+        holidaySet,
+        noDutySet,
+        offMap,
+        roleBased,
+        doctorRoles,
+        quota,
+        hasQuotas,
+        useSpecialRule,
+        specialDocs,
+        specialRuleDays,
+        offDutyPeriod,
+        preventLongGaps,
+        balanceShifts,
+        allowBlankDays,
+        getRoleSlotsForDay,
+        areConflicting,
+        specialHols,
+        chkSoftAlternate,
+        selectAlternateStrength,
+        windowPenalty,
+        pairPenalty,
+        isShiftBased,
+        morningSlots,
+        afternoonSlots,
+        nightSlots,
     };
 
     // Warning: With 2 slots but only 2 doctors, the same pair is forced to repeat
     if (chkSoftAlternate && typeof showToast === 'function') {
         if (roleBased) {
             const roles = Object.keys(defaultRoleSlots);
-            roles.forEach(role => {
+            roles.forEach((role) => {
                 const count = defaultRoleSlots[role];
-                const docsInRole = doctors.filter(doc => (doctorRoles[doc] || 'Default') === role);
+                const docsInRole = doctors.filter(
+                    (doc) => (doctorRoles[doc] || 'Default') === role
+                );
                 if (count === 2 && docsInRole.length === 2) {
                     const msgTH = `คำเตือน: มีแพทย์เพียง 2 คนสำหรับบทบาท "${role}" ซึ่งต้องจัด 2 เวรต่อวัน ทำให้ต้องจัดคู่เดิมซ้ำเสมอ`;
                     const msgEN = `Warning: Only 2 doctors available for role "${role}" requiring 2 slots per day. The same pair will always repeat.`;
@@ -1355,8 +1541,10 @@ function parseUIConfig() {
             });
         } else {
             if (doctors.length === 2 && defaultSlots === 2) {
-                const msgTH = "คำเตือน: มีแพทย์เพียง 2 คนสำหรับ 2 เวรต่อวัน ทำให้ต้องจัดคู่เดิมซ้ำเสมอ";
-                const msgEN = "Warning: Only 2 doctors available for 2 slots per day. The same pair will always repeat.";
+                const msgTH =
+                    'คำเตือน: มีแพทย์เพียง 2 คนสำหรับ 2 เวรต่อวัน ทำให้ต้องจัดคู่เดิมซ้ำเสมอ';
+                const msgEN =
+                    'Warning: Only 2 doctors available for 2 slots per day. The same pair will always repeat.';
                 showToast(currentLang === 'th' ? msgTH : msgEN, true);
             }
         }
@@ -1367,29 +1555,38 @@ function parseUIConfig() {
         if (violations.length > 0) {
             const errorMessagesTH = [];
             const errorMessagesEN = [];
-            
-            violations.forEach(v => {
+
+            violations.forEach((v) => {
                 const gapTH = v.restGap > 1 ? ` (เว้นช่วง ${v.restGap - 1} วัน)` : '';
                 const gapEN = v.restGap > 1 ? ` (with ${v.restGap - 1}-day gap)` : '';
-                
+
                 if (v.isRoleShare) {
-                    errorMessagesTH.push(`นพ./พญ. ${v.name} (กลุ่ม ${v.role}): โควต้าเฉลี่ย ${v.required} เกินกว่าที่เป็นไปได้ — มีวันว่าง ${v.availableDays} วัน สามารถทำเวรได้สูงสุด ${v.maxShifts} เวร${gapTH}`);
-                    errorMessagesEN.push(`Dr. ${v.name} (Role ${v.role}): Quota share ${v.required} is impossible — ${v.availableDays} available days, max achievable ${v.maxShifts} shifts${gapEN}`);
+                    errorMessagesTH.push(
+                        `นพ./พญ. ${v.name} (กลุ่ม ${v.role}): โควต้าเฉลี่ย ${v.required} เกินกว่าที่เป็นไปได้ — มีวันว่าง ${v.availableDays} วัน สามารถทำเวรได้สูงสุด ${v.maxShifts} เวร${gapTH}`
+                    );
+                    errorMessagesEN.push(
+                        `Dr. ${v.name} (Role ${v.role}): Quota share ${v.required} is impossible — ${v.availableDays} available days, max achievable ${v.maxShifts} shifts${gapEN}`
+                    );
                 } else {
-                    errorMessagesTH.push(`นพ./พญ. ${v.name}: โควต้า ${v.required} เกินกว่าที่เป็นไปได้ — มีวันว่าง ${v.availableDays} วัน สามารถทำเวรได้สูงสุด ${v.maxShifts} เวร${gapTH}`);
-                    errorMessagesEN.push(`Dr. ${v.name}: Quota ${v.required} is impossible — ${v.availableDays} available days, max achievable ${v.maxShifts} shifts${gapEN}`);
+                    errorMessagesTH.push(
+                        `นพ./พญ. ${v.name}: โควต้า ${v.required} เกินกว่าที่เป็นไปได้ — มีวันว่าง ${v.availableDays} วัน สามารถทำเวรได้สูงสุด ${v.maxShifts} เวร${gapTH}`
+                    );
+                    errorMessagesEN.push(
+                        `Dr. ${v.name}: Quota ${v.required} is impossible — ${v.availableDays} available days, max achievable ${v.maxShifts} shifts${gapEN}`
+                    );
                 }
             });
 
             const msgTH = errorMessagesTH.join('\n');
             const msgEN = errorMessagesEN.join('\n');
-            const finalMsg = typeof currentLang !== 'undefined' && currentLang === 'th' ? msgTH : msgEN;
+            const finalMsg =
+                typeof currentLang !== 'undefined' && currentLang === 'th' ? msgTH : msgEN;
 
             if (!allowBlankDays) {
                 throw new Error(finalMsg);
             } else {
                 if (typeof showToast === 'function') {
-                    showToast(finalMsg, "warning");
+                    showToast(finalMsg, 'warning');
                 }
             }
         }
@@ -1404,25 +1601,43 @@ function getRestDaysForDoctor(doctorName, config) {
 
 function checkQuotaFeasibility(config) {
     const violations = [];
-    const { offMap, roleBased, doctorRoles, quota, numDays, isShiftBased, morningSlots, afternoonSlots, nightSlots } = config;
-    const multiplier = isShiftBased ? (morningSlots + afternoonSlots + nightSlots) : 1;
-    
-    Object.keys(quota).forEach(key => {
+    const {
+        offMap,
+        roleBased,
+        doctorRoles,
+        quota,
+        numDays,
+        isShiftBased,
+        morningSlots,
+        afternoonSlots,
+        nightSlots,
+    } = config;
+    const multiplier = isShiftBased ? morningSlots + afternoonSlots + nightSlots : 1;
+
+    Object.keys(quota).forEach((key) => {
         const required = quota[key];
         if (required <= 0) return;
 
         if (roleBased) {
             const role = key;
-            const doctorsInRole = typeof doctors !== 'undefined' ? doctors.filter(doc => (doctorRoles[doc] || 'Default') === role) : [];
+            const doctorsInRole =
+                typeof doctors !== 'undefined'
+                    ? doctors.filter((doc) => (doctorRoles[doc] || 'Default') === role)
+                    : [];
             if (doctorsInRole.length === 0) return;
 
             const perDoctorShare = Math.ceil(required / doctorsInRole.length);
-            
-            doctorsInRole.forEach(docName => {
+
+            doctorsInRole.forEach((docName) => {
                 let docOffCount = 0;
                 for (let d = 1; d <= numDays; d++) {
                     let dayKey = d;
-                    if (typeof isCustomDateRange !== 'undefined' && isCustomDateRange && typeof scheduleDates !== 'undefined' && scheduleDates.length > 0) {
+                    if (
+                        typeof isCustomDateRange !== 'undefined' &&
+                        isCustomDateRange &&
+                        typeof scheduleDates !== 'undefined' &&
+                        scheduleDates.length > 0
+                    ) {
                         const dateObj = scheduleDates[d - 1];
                         const dd = String(dateObj.getDate()).padStart(2, '0');
                         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -1434,11 +1649,13 @@ function checkQuotaFeasibility(config) {
                         docOffCount++;
                     }
                 }
-                
+
                 const docAvailDays = numDays - docOffCount;
                 const restGap = getRestDaysForDoctor(docName, config);
-                const maxShifts = (docAvailDays > 0 ? Math.floor((docAvailDays + restGap - 1) / restGap) : 0) * multiplier;
-                
+                const maxShifts =
+                    (docAvailDays > 0 ? Math.floor((docAvailDays + restGap - 1) / restGap) : 0) *
+                    multiplier;
+
                 if (perDoctorShare > maxShifts) {
                     violations.push({
                         name: docName,
@@ -1448,17 +1665,21 @@ function checkQuotaFeasibility(config) {
                         offCount: docOffCount,
                         restGap: restGap,
                         isRoleShare: true,
-                        role: role
+                        role: role,
                     });
                 }
             });
-            
         } else {
             const doctorName = key;
             let offCount = 0;
             for (let d = 1; d <= numDays; d++) {
                 let dayKey = d;
-                if (typeof isCustomDateRange !== 'undefined' && isCustomDateRange && typeof scheduleDates !== 'undefined' && scheduleDates.length > 0) {
+                if (
+                    typeof isCustomDateRange !== 'undefined' &&
+                    isCustomDateRange &&
+                    typeof scheduleDates !== 'undefined' &&
+                    scheduleDates.length > 0
+                ) {
                     const dateObj = scheduleDates[d - 1];
                     const dd = String(dateObj.getDate()).padStart(2, '0');
                     const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -1473,7 +1694,9 @@ function checkQuotaFeasibility(config) {
 
             const availableDays = numDays - offCount;
             const restGap = getRestDaysForDoctor(doctorName, config);
-            const maxShifts = (availableDays > 0 ? Math.floor((availableDays + restGap - 1) / restGap) : 0) * multiplier;
+            const maxShifts =
+                (availableDays > 0 ? Math.floor((availableDays + restGap - 1) / restGap) : 0) *
+                multiplier;
 
             if (required > maxShifts) {
                 violations.push({
@@ -1482,7 +1705,7 @@ function checkQuotaFeasibility(config) {
                     maxShifts,
                     availableDays,
                     offCount,
-                    restGap
+                    restGap,
                 });
             }
         }
@@ -1494,19 +1717,47 @@ function checkQuotaFeasibility(config) {
 // Single trial of greedy scheduling with added randomness
 function generateSingleScheduleCandidate(randomness = 0, config) {
     const {
-        numDays, holidaySet, noDutySet, offMap,
-        roleBased, doctorRoles, quota, hasQuotas,
-        useSpecialRule, specialDocs, specialRuleDays,
-        offDutyPeriod, preventLongGaps, balanceShifts, allowBlankDays,
-        getRoleSlotsForDay, areConflicting, month, year, specialHols,
-        isShiftBased, morningSlots, afternoonSlots, nightSlots
+        numDays,
+        holidaySet,
+        noDutySet,
+        offMap,
+        roleBased,
+        doctorRoles,
+        quota,
+        hasQuotas,
+        useSpecialRule,
+        specialDocs,
+        specialRuleDays,
+        offDutyPeriod,
+        preventLongGaps,
+        balanceShifts,
+        allowBlankDays,
+        getRoleSlotsForDay,
+        areConflicting,
+        month,
+        year,
+        specialHols,
+        isShiftBased,
+        morningSlots,
+        afternoonSlots,
+        nightSlots,
     } = config;
 
-    const wCounts = {}; const hCounts = {}; const tCounts = {}; const lastShift = {};
-    const mCounts = {}; const aCounts = {}; const nCounts = {};
-    doctors.forEach(doc => {
-        wCounts[doc] = 0; hCounts[doc] = 0; tCounts[doc] = 0; lastShift[doc] = -99;
-        mCounts[doc] = 0; aCounts[doc] = 0; nCounts[doc] = 0;
+    const wCounts = {};
+    const hCounts = {};
+    const tCounts = {};
+    const lastShift = {};
+    const mCounts = {};
+    const aCounts = {};
+    const nCounts = {};
+    doctors.forEach((doc) => {
+        wCounts[doc] = 0;
+        hCounts[doc] = 0;
+        tCounts[doc] = 0;
+        lastShift[doc] = -99;
+        mCounts[doc] = 0;
+        aCounts[doc] = 0;
+        nCounts[doc] = 0;
     });
 
     const scheduleData = [];
@@ -1520,13 +1771,13 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
         for (let d = 1; d <= numDays; d++) {
             if (!noDutySet.has(d)) {
                 let dRoleSlots = getRoleSlotsForDay(d);
-                Object.keys(dRoleSlots).forEach(role => {
+                Object.keys(dRoleSlots).forEach((role) => {
                     const key = roleBased ? role : 'Default';
                     remainingRoleSlots[key] = (remainingRoleSlots[key] || 0) + dRoleSlots[role];
                 });
             }
         }
-        doctors.forEach(doc => {
+        doctors.forEach((doc) => {
             const key = getQuotaKey(doc, config);
             if (quota[key] !== undefined) {
                 remainingRoleQuotas[key] = (remainingRoleQuotas[key] || 0) + quota[key];
@@ -1537,7 +1788,7 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
     // Sort doctors by workload counters, with random perturbation for exploring alternatives
     const sortDoctors = (docsList, isHol, currentDay) => {
         const noise = {};
-        docsList.forEach(doc => {
+        docsList.forEach((doc) => {
             noise[doc] = (Math.random() - 0.5) * randomness;
         });
 
@@ -1558,7 +1809,7 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
                 if (aNeedsQuota && bNeedsQuota) {
                     const diffQuotaA = quotaA - tCounts[a];
                     const diffQuotaB = quotaB - tCounts[b];
-                    
+
                     const getRemainingAvailableDays = (doc) => {
                         let count = 0;
                         for (let d = currentDay; d <= numDays; d++) {
@@ -1581,26 +1832,26 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
                     const availB = getRemainingAvailableDays(b);
                     const densityA = availA > 0 ? diffQuotaA / availA : 0;
                     const densityB = availB > 0 ? diffQuotaB / availB : 0;
-                    
+
                     if (densityA !== densityB) return densityB - densityA;
                 }
             }
 
             if (balanceShifts) {
                 if (isHol) {
-                    const diff = (hCounts[a] + noise[a]) - (hCounts[b] + noise[b]);
+                    const diff = hCounts[a] + noise[a] - (hCounts[b] + noise[b]);
                     if (diff !== 0) return diff;
                 } else {
-                    const diff = (wCounts[a] + noise[a]) - (wCounts[b] + noise[b]);
+                    const diff = wCounts[a] + noise[a] - (wCounts[b] + noise[b]);
                     if (diff !== 0) return diff;
                 }
 
-                const diffT = (tCounts[a] + noise[a]) - (tCounts[b] + noise[b]);
+                const diffT = tCounts[a] + noise[a] - (tCounts[b] + noise[b]);
                 if (diffT !== 0) return diffT;
             }
 
             if (preventLongGaps) {
-                const diffL = (lastShift[a] + noise[a] * 2) - (lastShift[b] + noise[b] * 2);
+                const diffL = lastShift[a] + noise[a] * 2 - (lastShift[b] + noise[b] * 2);
                 if (Math.abs(diffL) > 0.4) return diffL;
             }
             return noise[a] - noise[b];
@@ -1631,13 +1882,14 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
         }
 
         const offToday = offMap[offKeyToday] || new Set();
-        const offTomorrow = (offKeyTomorrow !== null && offMap[offKeyTomorrow]) ? offMap[offKeyTomorrow] : new Set();
+        const offTomorrow =
+            offKeyTomorrow !== null && offMap[offKeyTomorrow] ? offMap[offKeyTomorrow] : new Set();
 
         const isBlockedByOffRequest = (doc, slotIdx) => {
             if (offToday.has(doc)) return true;
             if (offTomorrow.has(doc)) {
                 if (isShiftBased) {
-                    return slotIdx >= (morningSlots + afternoonSlots);
+                    return slotIdx >= morningSlots + afternoonSlots;
                 } else {
                     return true;
                 }
@@ -1648,7 +1900,11 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
         const isBlockedByNightToMorning = (doc, slotIdx) => {
             if (isShiftBased && slotIdx < morningSlots && day > 1) {
                 const prevDayDocs = scheduleMap[day - 1] || [];
-                for (let s = morningSlots + afternoonSlots; s < morningSlots + afternoonSlots + nightSlots; s++) {
+                for (
+                    let s = morningSlots + afternoonSlots;
+                    s < morningSlots + afternoonSlots + nightSlots;
+                    s++
+                ) {
                     if (prevDayDocs[s] === doc) return true;
                 }
             }
@@ -1658,7 +1914,9 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
         let slotsPerDay = 0;
         let dayRoleSlots = getRoleSlotsForDay(day);
         const daySlotsList = expandSlots(dayRoleSlots);
-        Object.values(dayRoleSlots).forEach(count => { slotsPerDay += count; });
+        Object.values(dayRoleSlots).forEach((count) => {
+            slotsPerDay += count;
+        });
 
         if (slotsPerDay > maxSlotsFound) maxSlotsFound = slotsPerDay;
 
@@ -1666,7 +1924,7 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
 
         if (isNoDuty) {
             scheduleMap[day] = [];
-            for (let i = 0; i < slotsPerDay; i++) selected.push("-");
+            for (let i = 0; i < slotsPerDay; i++) selected.push('-');
         } else {
             let chosenToday = [];
             let specialDoctorAssigned = false;
@@ -1674,14 +1932,15 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
             let specialRole = null;
 
             if (useSpecialRule && specialRuleDays.has(day) && specialDocs.length > 0) {
-                let availableSpecial = specialDocs.filter(doc => {
+                let availableSpecial = specialDocs.filter((doc) => {
                     // 1. Hard Quota Ceiling
                     const key = getQuotaKey(doc, config);
                     if (quota[key] !== undefined) {
                         const qVal = quota[key];
                         if (tCounts[doc] >= qVal) return false;
                     }
-                    if (isBlockedByOffRequest(doc, 0) || isBlockedByNightToMorning(doc, 0)) return false;
+                    if (isBlockedByOffRequest(doc, 0) || isBlockedByNightToMorning(doc, 0))
+                        return false;
                     return true;
                 });
 
@@ -1710,8 +1969,10 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
                     }
                 } else {
                     // 2. Strict Role Isolation
-                    const baseRoleDocs = roleBased ? doctors.filter(doc => (doctorRoles[doc] || 'Default') === reqRole) : doctors;
-                    const roleDocs = baseRoleDocs.filter(doc => {
+                    const baseRoleDocs = roleBased
+                        ? doctors.filter((doc) => (doctorRoles[doc] || 'Default') === reqRole)
+                        : doctors;
+                    const roleDocs = baseRoleDocs.filter((doc) => {
                         // 1. Hard Quota Ceiling
                         const key = getQuotaKey(doc, config);
                         if (quota[key] !== undefined) {
@@ -1723,9 +1984,10 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
                     let availableDocs = [];
 
                     // Cascade Level 1: Strict Constraints (Ideal Case)
-                    availableDocs = roleDocs.filter(doc => {
+                    availableDocs = roleDocs.filter((doc) => {
                         if (chosenToday.includes(doc)) return false;
-                        if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i)) return false;
+                        if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i))
+                            return false;
                         // Sliding window rest period check
                         if (offDutyPeriod > 1) {
                             for (let lookBack = 1; lookBack < offDutyPeriod; lookBack++) {
@@ -1736,47 +1998,66 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
                                 }
                             }
                         }
-                        if (isHoliday && holidaySet.has(day - 1) && (scheduleMap[day - 1] || []).includes(doc)) return false;
-                        if (chosenToday.some(otherDoc => areConflicting(doc, otherDoc))) return false;
-                        if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial) return false;
+                        if (
+                            isHoliday &&
+                            holidaySet.has(day - 1) &&
+                            (scheduleMap[day - 1] || []).includes(doc)
+                        )
+                            return false;
+                        if (chosenToday.some((otherDoc) => areConflicting(doc, otherDoc)))
+                            return false;
+                        if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial)
+                            return false;
                         return true;
                     });
 
                     // Must-Fill cascade: only runs when Allow Blank Days is OFF
                     if (availableDocs.length === 0 && !allowBlankDays) {
                         // Cascade Level 2: Relax spacing / consecutive rules
-                        availableDocs = roleDocs.filter(doc => {
+                        availableDocs = roleDocs.filter((doc) => {
                             if (chosenToday.includes(doc)) return false;
-                            if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i)) return false;
-                            if (chosenToday.some(otherDoc => areConflicting(doc, otherDoc))) return false;
-                            if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial) return false;
+                            if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i))
+                                return false;
+                            if (chosenToday.some((otherDoc) => areConflicting(doc, otherDoc)))
+                                return false;
+                            if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial)
+                                return false;
                             return true;
                         });
                     }
 
                     if (availableDocs.length === 0 && !allowBlankDays) {
                         // Cascade Level 3: Relax conflict rules
-                        availableDocs = roleDocs.filter(doc => {
+                        availableDocs = roleDocs.filter((doc) => {
                             if (chosenToday.includes(doc)) return false;
-                            if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i)) return false;
-                            if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial) return false;
+                            if (isBlockedByOffRequest(doc, i) || isBlockedByNightToMorning(doc, i))
+                                return false;
+                            if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial)
+                                return false;
                             return true;
                         });
                     }
 
                     if (availableDocs.length === 0 && !allowBlankDays) {
                         // Cascade Level 4: Relax Off Requests
-                        availableDocs = roleDocs.filter(doc => {
+                        availableDocs = roleDocs.filter((doc) => {
                             if (chosenToday.includes(doc)) return false;
-                            if (offToday.has(doc) || isBlockedByNightToMorning(doc, i)) return false;
-                            if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial) return false;
+                            if (offToday.has(doc) || isBlockedByNightToMorning(doc, i))
+                                return false;
+                            if (chosenSpecial && specialDocs.includes(doc) && doc !== chosenSpecial)
+                                return false;
                             return true;
                         });
                     }
 
                     if (availableDocs.length === 0 && !allowBlankDays) {
                         // Cascade Level 5: Absolute fallback (Any doctor with matching role, but not already working today)
-                        availableDocs = roleDocs.filter(doc => !chosenToday.includes(doc) && !offToday.has(doc) && !isBlockedByNightToMorning(doc, i));
+                        availableDocs = roleDocs.filter(
+                            (doc) =>
+                                !chosenToday.includes(doc) &&
+                                !offToday.has(doc) &&
+                                !isBlockedByNightToMorning(doc, i)
+                        );
                     }
 
                     // Final assignment
@@ -1789,13 +2070,13 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
                             if (roleBased) {
                                 quotaLeft = remainingRoleQuotas[reqRole] || 0;
                             } else {
-                                doctors.forEach(doc => {
-                                    quotaLeft += (remainingRoleQuotas[doc] || 0);
+                                doctors.forEach((doc) => {
+                                    quotaLeft += remainingRoleQuotas[doc] || 0;
                                 });
                             }
                             if (slotsLeft > quotaLeft && quotaLeft > 0 && randomness > 0) {
                                 const blankProb = (slotsLeft - quotaLeft) / slotsLeft;
-                                if (Math.random() < (blankProb * (0.8 + Math.random() * 0.4))) {
+                                if (Math.random() < blankProb * (0.8 + Math.random() * 0.4)) {
                                     availableDocs = []; // Force blank
                                 }
                             }
@@ -1819,7 +2100,9 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
                         }
                     } else if (baseRoleDocs.length === 0 && !allowBlankDays) {
                         // Critical Coverage Error: no doctors mapped to this role at all
-                        throw new Error(`Critical Coverage Error: Day ${day} cannot be covered for role "${reqRole}". There are no doctors mapped to this role.`);
+                        throw new Error(
+                            `Critical Coverage Error: Day ${day} cannot be covered for role "${reqRole}". There are no doctors mapped to this role.`
+                        );
                     } else {
                         // Blank day / shortage marker
                         selected.push(SHORTAGE_MARKER);
@@ -1835,7 +2118,8 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
 
             selected.forEach((doc, slotIdx) => {
                 if (doctors.includes(doc)) {
-                    if (isHoliday) hCounts[doc]++; else wCounts[doc]++;
+                    if (isHoliday) hCounts[doc]++;
+                    else wCounts[doc]++;
                     tCounts[doc]++;
                     lastShift[doc] = day;
                     if (isShiftBased) {
@@ -1856,29 +2140,32 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
         // Temporary note object that will be fully translated later
         let tempDayRow = {
             day,
-            dayName: "",
+            dayName: '',
             isHoliday,
             isSpecial: specialHols.includes(day),
             isNoDuty,
             slots: slotsPerDay,
             selectedDocs: selected.map((doc, idx) => ({
                 name: doc,
-                role: (doc === SHORTAGE_MARKER || doc === "-") ? "Default" : (daySlotsList[idx] || 'Default')
+                role:
+                    doc === SHORTAGE_MARKER || doc === '-'
+                        ? 'Default'
+                        : daySlotsList[idx] || 'Default',
             })),
-            note: ""
+            note: '',
         };
 
         scheduleData.push(tempDayRow);
     }
 
-    const summaryData = doctors.map(doc => ({
+    const summaryData = doctors.map((doc) => ({
         name: doc,
         workdays: wCounts[doc] || 0,
         holidays: hCounts[doc] || 0,
         total: tCounts[doc] || 0,
         morning: mCounts[doc] || 0,
         afternoon: aCounts[doc] || 0,
-        night: nCounts[doc] || 0
+        night: nCounts[doc] || 0,
     }));
 
     return {
@@ -1888,7 +2175,7 @@ function generateSingleScheduleCandidate(randomness = 0, config) {
         hCounts,
         tCounts,
         maxSlots: maxSlotsFound,
-        config: config
+        config: config,
     };
 }
 
@@ -1901,8 +2188,8 @@ function scoreSchedule(candidate) {
 
     // 1. Heavy penalty for shortages (SHORTAGE_MARKER)
     let shortages = 0;
-    candidate.schedule.forEach(day => {
-        day.selectedDocs.forEach(docObj => {
+    candidate.schedule.forEach((day) => {
+        day.selectedDocs.forEach((docObj) => {
             if (docObj.name === SHORTAGE_MARKER) shortages++;
         });
     });
@@ -1917,9 +2204,15 @@ function scoreSchedule(candidate) {
     const avgHol = holidays.reduce((a, b) => a + b, 0) / activeDocsCount;
     const avgWork = workdays.reduce((a, b) => a + b, 0) / activeDocsCount;
 
-    const stdDevTotal = Math.sqrt(totals.reduce((sum, val) => sum + Math.pow(val - avgTotal, 2), 0) / activeDocsCount);
-    const stdDevHol = Math.sqrt(holidays.reduce((sum, val) => sum + Math.pow(val - avgHol, 2), 0) / activeDocsCount);
-    const stdDevWork = Math.sqrt(workdays.reduce((sum, val) => sum + Math.pow(val - avgWork, 2), 0) / activeDocsCount);
+    const stdDevTotal = Math.sqrt(
+        totals.reduce((sum, val) => sum + Math.pow(val - avgTotal, 2), 0) / activeDocsCount
+    );
+    const stdDevHol = Math.sqrt(
+        holidays.reduce((sum, val) => sum + Math.pow(val - avgHol, 2), 0) / activeDocsCount
+    );
+    const stdDevWork = Math.sqrt(
+        workdays.reduce((sum, val) => sum + Math.pow(val - avgWork, 2), 0) / activeDocsCount
+    );
 
     // Penalize high standard deviations
     score -= stdDevTotal * 600;
@@ -1928,10 +2221,10 @@ function scoreSchedule(candidate) {
 
     // 3. Gap distribution: penalize gaps shorter than offDutyPeriod
     const configOffDutyPeriod = candidate.config?.offDutyPeriod ?? 2;
-    doctors.forEach(doc => {
+    doctors.forEach((doc) => {
         let dutyDays = [];
-        candidate.schedule.forEach(day => {
-            if (day.selectedDocs.some(d => d.name === doc)) {
+        candidate.schedule.forEach((day) => {
+            if (day.selectedDocs.some((d) => d.name === doc)) {
                 dutyDays.push(day.day);
             }
         });
@@ -1952,15 +2245,15 @@ function scoreSchedule(candidate) {
         const M = cfg.morningSlots || 0;
         const A = cfg.afternoonSlots || 0;
         const N = cfg.nightSlots || 0;
-        
+
         const activeShiftsCount = (M > 0 ? 1 : 0) + (A > 0 ? 1 : 0) + (N > 0 ? 1 : 0);
         if (activeShiftsCount > 1) {
-            doctors.forEach(doc => {
+            doctors.forEach((doc) => {
                 let mCount = 0;
                 let aCount = 0;
                 let nCount = 0;
-                
-                candidate.schedule.forEach(day => {
+
+                candidate.schedule.forEach((day) => {
                     day.selectedDocs.forEach((docObj, idx) => {
                         if (docObj.name === doc) {
                             if (idx < M) mCount++;
@@ -1969,7 +2262,7 @@ function scoreSchedule(candidate) {
                         }
                     });
                 });
-                
+
                 const totalShifts = mCount + aCount + nCount;
                 if (totalShifts > 1) {
                     const avg = totalShifts / activeShiftsCount;
@@ -1977,7 +2270,7 @@ function scoreSchedule(candidate) {
                     if (M > 0) varianceSum += Math.pow(mCount - avg, 2);
                     if (A > 0) varianceSum += Math.pow(aCount - avg, 2);
                     if (N > 0) varianceSum += Math.pow(nCount - avg, 2);
-                    
+
                     const variance = varianceSum / activeShiftsCount;
                     // Apply a penalty to encourage even distribution (alternating shifts)
                     score -= variance * 600;
@@ -1990,7 +2283,8 @@ function scoreSchedule(candidate) {
     let windowScore = 0;
     let pairScore = 0;
 
-    const chkSoftAlternate = candidate.chkSoftAlternate ?? candidate.config?.chkSoftAlternate ?? true;
+    const chkSoftAlternate =
+        candidate.chkSoftAlternate ?? candidate.config?.chkSoftAlternate ?? true;
     const windowPenalty = candidate.windowPenalty ?? candidate.config?.windowPenalty ?? 150;
     const pairPenalty = candidate.pairPenalty ?? candidate.config?.pairPenalty ?? 300;
 
@@ -1998,17 +2292,17 @@ function scoreSchedule(candidate) {
         // PENALTY TERM A — Solo Repeat Window
         let windowExcess = 0;
         const numDays = candidate.schedule.length;
-        doctors.forEach(doc => {
+        doctors.forEach((doc) => {
             for (let d = 3; d <= numDays; d++) {
                 let count = 0;
                 for (let dayOffset = d - 2; dayOffset <= d; dayOffset++) {
                     const dayData = candidate.schedule[dayOffset - 1];
-                    if (dayData && dayData.selectedDocs.some(o => o.name === doc)) {
+                    if (dayData && dayData.selectedDocs.some((o) => o.name === doc)) {
                         count++;
                     }
                 }
                 if (count > 1) {
-                    windowExcess += (count - 1);
+                    windowExcess += count - 1;
                 }
             }
         });
@@ -2018,7 +2312,7 @@ function scoreSchedule(candidate) {
         const roleBased = candidate.config?.roleBased ?? false;
 
         let pairCounts = {};
-        candidate.schedule.forEach(day => {
+        candidate.schedule.forEach((day) => {
             if (day.isNoDuty) return;
 
             let assigned = [];
@@ -2040,10 +2334,10 @@ function scoreSchedule(candidate) {
         });
 
         let pairExcess = 0;
-        Object.keys(pairCounts).forEach(key => {
+        Object.keys(pairCounts).forEach((key) => {
             const count = pairCounts[key];
             if (count > 1) {
-                pairExcess += (count - 1);
+                pairExcess += count - 1;
             }
         });
         pairScore = pairExcess * pairPenalty;
@@ -2061,7 +2355,7 @@ window.generateSchedule = async function () {
     window.lockWarningShown = false;
 
     const btn = document.getElementById('btnCalculate');
-    let originalHtml = "";
+    let originalHtml = '';
     if (btn) originalHtml = btn.innerHTML;
 
     try {
@@ -2080,7 +2374,12 @@ window.generateSchedule = async function () {
             if (!startStr || !endStr) {
                 if (btn) btn.innerHTML = originalHtml;
                 isCalculating = false;
-                showToast(currentLang === 'th' ? "กรุณาระบุวันที่เริ่มต้นและสิ้นสุด" : "Please select start and end dates", true);
+                showToast(
+                    currentLang === 'th'
+                        ? 'กรุณาระบุวันที่เริ่มต้นและสิ้นสุด'
+                        : 'Please select start and end dates',
+                    true
+                );
                 return;
             }
             const sd = new Date(startStr);
@@ -2088,14 +2387,24 @@ window.generateSchedule = async function () {
             if (sd >= ed) {
                 if (btn) btn.innerHTML = originalHtml;
                 isCalculating = false;
-                showToast(currentLang === 'th' ? "วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด" : "Start date must be before end date", true);
+                showToast(
+                    currentLang === 'th'
+                        ? 'วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด'
+                        : 'Start date must be before end date',
+                    true
+                );
                 return;
             }
             const diffDays = Math.round((ed - sd) / (1000 * 60 * 60 * 24)) + 1;
             if (diffDays > 90) {
                 if (btn) btn.innerHTML = originalHtml;
                 isCalculating = false;
-                showToast(currentLang === 'th' ? "ช่วงวันที่เกิน 90 วัน กรุณาตรวจสอบ" : "Range exceeds 90 days, please check", true);
+                showToast(
+                    currentLang === 'th'
+                        ? 'ช่วงวันที่เกิน 90 วัน กรุณาตรวจสอบ'
+                        : 'Range exceeds 90 days, please check',
+                    true
+                );
                 return;
             }
 
@@ -2126,10 +2435,10 @@ window.generateSchedule = async function () {
         }
 
         // Show a loading toast before the loop starts
-        showToast(currentLang === 'th' ? "กำลังจัดตารางเวร..." : "Calculating schedule...");
+        showToast(currentLang === 'th' ? 'กำลังจัดตารางเวร...' : 'Calculating schedule...');
 
         // Yield to allow browser to render the disabled state, loader spinner, and toast
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Run smart solver search: generate multiple schedules and pick the highest scoring one
         let bestCandidate = null;
@@ -2148,7 +2457,7 @@ window.generateSchedule = async function () {
         const batchSize = 30; // Break the 300 iterations into 10 chunks of 30
 
         for (let i = 0; i < iterations; i += batchSize) {
-            for (let j = 0; j < batchSize && (i + j) < iterations; j++) {
+            for (let j = 0; j < batchSize && i + j < iterations; j++) {
                 const candidate = generateSingleScheduleCandidate(0.85, config);
                 const score = scoreSchedule(candidate);
                 if (score > bestScore) {
@@ -2157,15 +2466,15 @@ window.generateSchedule = async function () {
                 }
             }
             // Yield control back to the main thread unconditionally after each chunk
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await new Promise((resolve) => setTimeout(resolve, 0));
         }
 
         // 3. Fail-Safe Verification:
         // Check if the constraints are mathematically impossible (e.g. if the best schedule found consists entirely of shortages)
         let totalSlots = 0;
         let shortages = 0;
-        bestCandidate.schedule.forEach(day => {
-            day.selectedDocs.forEach(docObj => {
+        bestCandidate.schedule.forEach((day) => {
+            day.selectedDocs.forEach((docObj) => {
                 totalSlots++;
                 if (docObj.name === SHORTAGE_MARKER) shortages++;
             });
@@ -2178,9 +2487,10 @@ window.generateSchedule = async function () {
                 lucide.createIcons();
             }
             isCalculating = false;
-            const errorMsg = currentLang === 'th'
-                ? "ระบบจัดตารางล้มเหลว: เงื่อนไขการจัดเวรขัดแย้งกันเกินไปจนเป็นไปไม่ได้ กรุณาลดข้อจำกัดลง"
-                : "Scheduling failed: Conflict constraints make the schedule impossible. Please reduce restrictions.";
+            const errorMsg =
+                currentLang === 'th'
+                    ? 'ระบบจัดตารางล้มเหลว: เงื่อนไขการจัดเวรขัดแย้งกันเกินไปจนเป็นไปไม่ได้ กรุณาลดข้อจำกัดลง'
+                    : 'Scheduling failed: Conflict constraints make the schedule impossible. Please reduce restrictions.';
             showToast(errorMsg, true);
             return;
         }
@@ -2190,14 +2500,17 @@ window.generateSchedule = async function () {
         const month = parseInt(document.getElementById('inputMonth').value);
         const calcYear = year > 2500 ? year - 543 : year;
 
-        bestCandidate.schedule.forEach(row => {
-            const dateObj = isCustomDateRange ? scheduleDates[row.day - 1] : new Date(calcYear, month - 1, row.day);
+        bestCandidate.schedule.forEach((row) => {
+            const dateObj = isCustomDateRange
+                ? scheduleDates[row.day - 1]
+                : new Date(calcYear, month - 1, row.day);
             row.dayName = dayName(dateObj);
 
             if (isCustomDateRange) {
                 const dd = String(dateObj.getDate()).padStart(2, '0');
                 const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const yyyy = currentLang === 'th' ? dateObj.getFullYear() + 543 : dateObj.getFullYear();
+                const yyyy =
+                    currentLang === 'th' ? dateObj.getFullYear() + 543 : dateObj.getFullYear();
                 row.dayDisplay = `${dd}/${mm}/${yyyy}`;
             }
 
@@ -2210,7 +2523,7 @@ window.generateSchedule = async function () {
             summary: bestCandidate.summary,
             month,
             year,
-            maxSlots: bestCandidate.maxSlots
+            maxSlots: bestCandidate.maxSlots,
         };
 
         // Apply manual overrides saved previously
@@ -2230,11 +2543,19 @@ window.generateSchedule = async function () {
         isCalculating = false;
 
         if (shortages > 0) {
-            showToast(currentLang === 'th' ? "จัดตารางเวรเสร็จสิ้น แต่บางเวรขาดคนเนื่องจากเงื่อนไขโควตาแบบเป๊ะขัดแย้งกัน" : "Schedule completed, but some slots could not be filled strictly due to constraint conflicts.", true);
+            showToast(
+                currentLang === 'th'
+                    ? 'จัดตารางเวรเสร็จสิ้น แต่บางเวรขาดคนเนื่องจากเงื่อนไขโควตาแบบเป๊ะขัดแย้งกัน'
+                    : 'Schedule completed, but some slots could not be filled strictly due to constraint conflicts.',
+                true
+            );
         } else {
-            showToast(currentLang === 'th' ? "จัดตารางเวรด้วย Smart Solver สำเร็จ!" : "Schedule calculated successfully with Smart Solver!");
+            showToast(
+                currentLang === 'th'
+                    ? 'จัดตารางเวรด้วย Smart Solver สำเร็จ!'
+                    : 'Schedule calculated successfully with Smart Solver!'
+            );
         }
-
     } catch (error) {
         console.error(error);
         const btn = document.getElementById('btnCalculate');
@@ -2245,19 +2566,33 @@ window.generateSchedule = async function () {
         }
         isCalculating = false;
 
-        if (error.message && error.message.includes("Critical Coverage Error")) {
+        if (error.message && error.message.includes('Critical Coverage Error')) {
             showToast(error.message, true);
             const emptyState = document.getElementById('emptyState');
             if (emptyState) {
                 emptyState.classList.remove('hidden');
-                const titleEl = emptyState.querySelector('[data-i18n="emptyStateTitle"]') || emptyState.querySelector('h3');
-                const descEl = emptyState.querySelector('[data-i18n="emptyStateDesc"]') || emptyState.querySelector('p');
-                if (titleEl) titleEl.innerText = currentLang === 'th' ? "ข้อผิดพลาดร้ายแรงเกี่ยวกับการครอบคลุมเวร" : "Critical Coverage Error";
+                const titleEl =
+                    emptyState.querySelector('[data-i18n="emptyStateTitle"]') ||
+                    emptyState.querySelector('h3');
+                const descEl =
+                    emptyState.querySelector('[data-i18n="emptyStateDesc"]') ||
+                    emptyState.querySelector('p');
+                if (titleEl)
+                    titleEl.innerText =
+                        currentLang === 'th'
+                            ? 'ข้อผิดพลาดร้ายแรงเกี่ยวกับการครอบคลุมเวร'
+                            : 'Critical Coverage Error';
                 if (descEl) descEl.innerText = error.message;
             }
             document.getElementById('resultsContainer')?.classList.add('hidden');
         } else {
-            showToast(error.message || (currentLang === 'th' ? "เกิดข้อผิดพลาดในการคำนวณ" : "Error calculating schedule"), true);
+            showToast(
+                error.message ||
+                    (currentLang === 'th'
+                        ? 'เกิดข้อผิดพลาดในการคำนวณ'
+                        : 'Error calculating schedule'),
+                true
+            );
         }
     }
 };
@@ -2266,16 +2601,16 @@ window.generateSchedule = async function () {
 function applyManualOverrides(config) {
     if (!globalResult) return;
 
-    Object.keys(manualOverrides).forEach(dayStr => {
+    Object.keys(manualOverrides).forEach((dayStr) => {
         const day = parseInt(dayStr);
         const dayRow = globalResult.schedule[day - 1];
         if (dayRow && !dayRow.isNoDuty) {
-            Object.keys(manualOverrides[day]).forEach(slotStr => {
+            Object.keys(manualOverrides[day]).forEach((slotStr) => {
                 const slotIndex = parseInt(slotStr);
                 if (slotIndex < dayRow.slots) {
                     dayRow.selectedDocs[slotIndex] = {
                         name: manualOverrides[day][slotIndex],
-                        role: dayRow.selectedDocs[slotIndex]?.role || 'Default'
+                        role: dayRow.selectedDocs[slotIndex]?.role || 'Default',
                     };
                 }
             });
@@ -2293,7 +2628,11 @@ window.clearManualOverrides = function () {
     pushToUndoStack();
     manualOverrides = {};
     generateSchedule();
-    showToast(currentLang === 'th' ? "คืนค่าเริ่มต้นจากระบบคำนวณทั้งหมดแล้ว" : "All manual overrides reset to auto");
+    showToast(
+        currentLang === 'th'
+            ? 'คืนค่าเริ่มต้นจากระบบคำนวณทั้งหมดแล้ว'
+            : 'All manual overrides reset to auto'
+    );
 };
 
 // Recalculate summary metrics based on manual overrides
@@ -2306,7 +2645,7 @@ function recalculateCounts(config) {
     const mCounts = {};
     const aCounts = {};
     const nCounts = {};
-    doctors.forEach(doc => {
+    doctors.forEach((doc) => {
         wCounts[doc] = 0;
         hCounts[doc] = 0;
         tCounts[doc] = 0;
@@ -2317,7 +2656,7 @@ function recalculateCounts(config) {
 
     const { holidaySet, isShiftBased, morningSlots, afternoonSlots } = config;
 
-    globalResult.schedule.forEach(row => {
+    globalResult.schedule.forEach((row) => {
         if (row.isNoDuty) return;
         const isHoliday = holidaySet.has(row.day);
         row.selectedDocs.forEach((docObj, slotIdx) => {
@@ -2329,7 +2668,7 @@ function recalculateCounts(config) {
                     wCounts[docName] = (wCounts[docName] || 0) + 1;
                 }
                 tCounts[docName] = (tCounts[docName] || 0) + 1;
-                
+
                 if (isShiftBased) {
                     if (slotIdx < morningSlots) {
                         mCounts[docName] = (mCounts[docName] || 0) + 1;
@@ -2343,23 +2682,24 @@ function recalculateCounts(config) {
         });
     });
 
-    globalResult.summary = doctors.map(doc => ({
+    globalResult.summary = doctors.map((doc) => ({
         name: doc,
         workdays: wCounts[doc] || 0,
         holidays: hCounts[doc] || 0,
         total: tCounts[doc] || 0,
         morning: mCounts[doc] || 0,
         afternoon: aCounts[doc] || 0,
-        night: nCounts[doc] || 0
+        night: nCounts[doc] || 0,
     }));
 }
 
 // Dynamically update day warning notes on override change
 function updateDayNote(dayRow, offTodayList, config) {
     const lang = currentLang;
-    let noteStr = "";
+    let noteStr = '';
 
-    const { roleBased, year, month, specialHols, doctorRoles, areConflicting, getRoleSlotsForDay } = config;
+    const { roleBased, year, month, specialHols, doctorRoles, areConflicting, getRoleSlotsForDay } =
+        config;
 
     // Build base note labels
     let baseNotes = [];
@@ -2376,17 +2716,19 @@ function updateDayNote(dayRow, offTodayList, config) {
     noteStr = baseNotes.join(' / ');
 
     // Check for shortages
-    const hasShortage = dayRow.selectedDocs.some(d => d.name === SHORTAGE_MARKER);
+    const hasShortage = dayRow.selectedDocs.some((d) => d.name === SHORTAGE_MARKER);
     if (hasShortage) {
-        noteStr += (noteStr ? " / " : "") + translations[lang].shortageWarning;
+        noteStr += (noteStr ? ' / ' : '') + translations[lang].shortageWarning;
     }
 
     // Check for Lock special rule
     const specialDocs = config.specialDocs;
     if (config.useSpecialRule && config.specialRuleDays.has(dayRow.day) && specialDocs.length > 0) {
-        const assignedSpecial = dayRow.selectedDocs.find(d => specialDocs.includes(d.name));
+        const assignedSpecial = dayRow.selectedDocs.find((d) => specialDocs.includes(d.name));
         if (assignedSpecial) {
-            noteStr += (noteStr ? " / " : "") + translations[lang].lockedBadge.replace('{name}', assignedSpecial.name);
+            noteStr +=
+                (noteStr ? ' / ' : '') +
+                translations[lang].lockedBadge.replace('{name}', assignedSpecial.name);
         }
     }
 
@@ -2394,24 +2736,27 @@ function updateDayNote(dayRow, offTodayList, config) {
     let offToday = offTodayList;
     if (!offToday) {
         offToday = [];
-        offData.forEach(req => {
+        offData.forEach((req) => {
             const d = parseInt(req.date);
             if (d === dayRow.day && req.names) {
-                const namesArr = req.names.split(',').map(n => n.trim()).filter(n => n);
+                const namesArr = req.names
+                    .split(',')
+                    .map((n) => n.trim())
+                    .filter((n) => n);
                 offToday.push(...namesArr);
             }
         });
     }
 
     let offWarnings = [];
-    dayRow.selectedDocs.forEach(docObj => {
+    dayRow.selectedDocs.forEach((docObj) => {
         if (Array.from(offToday).includes(docObj.name)) {
             offWarnings.push(translations[lang].offWarning.replace('{name}', docObj.name));
         }
     });
 
     if (offWarnings.length > 0) {
-        noteStr += (noteStr ? " / " : "") + offWarnings.join(' / ');
+        noteStr += (noteStr ? ' / ' : '') + offWarnings.join(' / ');
     }
 
     // Check for doctor conflicts on this day
@@ -2428,8 +2773,11 @@ function updateDayNote(dayRow, offTodayList, config) {
         }
     }
     if (dayConflicts.length > 0) {
-        const warnMsg = lang === 'th' ? `⚠️ ขัดแย้ง: ${dayConflicts.join(', ')}` : `⚠️ Conflict: ${dayConflicts.join(', ')}`;
-        noteStr += (noteStr ? " / " : "") + warnMsg;
+        const warnMsg =
+            lang === 'th'
+                ? `⚠️ ขัดแย้ง: ${dayConflicts.join(', ')}`
+                : `⚠️ Conflict: ${dayConflicts.join(', ')}`;
+        noteStr += (noteStr ? ' / ' : '') + warnMsg;
     }
 
     // Check for role mismatch on this day
@@ -2452,8 +2800,11 @@ function updateDayNote(dayRow, offTodayList, config) {
         }
     }
     if (roleMismatches.length > 0) {
-        const warnMsg = lang === 'th' ? `⚠️ ผิดบทบาท: ${roleMismatches.join(', ')}` : `⚠️ Role Mismatch: ${roleMismatches.join(', ')}`;
-        noteStr += (noteStr ? " / " : "") + warnMsg;
+        const warnMsg =
+            lang === 'th'
+                ? `⚠️ ผิดบทบาท: ${roleMismatches.join(', ')}`
+                : `⚠️ Role Mismatch: ${roleMismatches.join(', ')}`;
+        noteStr += (noteStr ? ' / ' : '') + warnMsg;
     }
 
     dayRow.note = noteStr.trim();
@@ -2464,18 +2815,23 @@ function updateTargetedCellDOM(day, slotIndex) {
 
     const row = globalResult.schedule[day - 1];
     const docObj = row.selectedDocs[slotIndex];
-    const docName = docObj ? docObj.name : "";
-    const docRole = docObj ? docObj.role : "Default";
+    const docName = docObj ? docObj.name : '';
+    const docRole = docObj ? docObj.role : 'Default';
 
     // Calculate new styles
-    let badgeClass = "bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300";
-    let calBadgeClass = "bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300";
+    let badgeClass =
+        'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
+    let calBadgeClass =
+        'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
 
     if (docName === SHORTAGE_MARKER && !row.isNoDuty) {
-        badgeClass = "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-bold";
-        calBadgeClass = "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-bold animate-pulse";
-    } else if (docName === "-" || docName === "" || row.isNoDuty) {
-        badgeClass = "text-slate-300 dark:text-slate-600 bg-transparent border-dashed border-slate-200 dark:border-slate-800";
+        badgeClass =
+            'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-bold';
+        calBadgeClass =
+            'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-bold animate-pulse';
+    } else if (docName === '-' || docName === '' || row.isNoDuty) {
+        badgeClass =
+            'text-slate-300 dark:text-slate-600 bg-transparent border-dashed border-slate-200 dark:border-slate-800';
         calBadgeClass = badgeClass;
     } else if (doctors.includes(docName)) {
         badgeClass = DOC_COLOR(docName);
@@ -2485,7 +2841,7 @@ function updateTargetedCellDOM(day, slotIndex) {
     let displayDoc = docName;
     if (docName === SHORTAGE_MARKER) {
         displayDoc = translations[currentLang].shortageSlot;
-    } else if (docName === "-" || docName === "") {
+    } else if (docName === '-' || docName === '') {
         displayDoc = translations[currentLang].emptySlot;
     } else if (doctors.includes(docName)) {
         displayDoc = docName;
@@ -2511,31 +2867,53 @@ function updateTargetedCellDOM(day, slotIndex) {
     let noteHtmlTable = '';
     let noteHtmlCal = '';
     if (row.note) {
-        let textClass = "font-medium text-slate-600 dark:text-slate-350";
-        if (row.isNoDuty) textClass = "font-medium text-slate-400 dark:text-slate-550";
-        else if (row.isSpecial) textClass = "font-medium text-orange-850 dark:text-orange-305";
-        else if (row.isHoliday) textClass = "font-medium text-rose-800 dark:text-rose-300";
+        let textClass = 'font-medium text-slate-600 dark:text-slate-350';
+        if (row.isNoDuty) textClass = 'font-medium text-slate-400 dark:text-slate-550';
+        else if (row.isSpecial) textClass = 'font-medium text-orange-850 dark:text-orange-305';
+        else if (row.isHoliday) textClass = 'font-medium text-rose-800 dark:text-rose-300';
 
         const parts = row.note.split('/');
         noteHtmlTable = '<div class="flex flex-wrap gap-1.5">';
 
-        parts.forEach(p => {
+        parts.forEach((p) => {
             const text = p.trim();
             if (!text) return;
 
             // Table
-            let badgeClassTable = textClass && !row.isNoDuty ? 'bg-white/80 dark:bg-slate-800 border border-black/5 dark:border-slate-700 shadow-sm' : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400';
-            if (text.includes(translations[currentLang].noDutyNote) || text.includes(translations[currentLang].noDutyBadge)) badgeClassTable = 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700';
-            else if (text.startsWith("[ล็อคคิว") || text.startsWith("[Locked")) badgeClassTable = 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900';
-            else if (text.includes(SHORTAGE_MARKER) || text.includes("Shortage")) badgeClassTable = 'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900 animate-pulse';
-            else if (text.includes("ขอพัก") || text.includes("Off")) badgeClassTable = 'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900';
+            let badgeClassTable =
+                textClass && !row.isNoDuty
+                    ? 'bg-white/80 dark:bg-slate-800 border border-black/5 dark:border-slate-700 shadow-sm'
+                    : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400';
+            if (
+                text.includes(translations[currentLang].noDutyNote) ||
+                text.includes(translations[currentLang].noDutyBadge)
+            )
+                badgeClassTable =
+                    'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700';
+            else if (text.startsWith('[ล็อคคิว') || text.startsWith('[Locked'))
+                badgeClassTable =
+                    'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900';
+            else if (text.includes(SHORTAGE_MARKER) || text.includes('Shortage'))
+                badgeClassTable =
+                    'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900 animate-pulse';
+            else if (text.includes('ขอพัก') || text.includes('Off'))
+                badgeClassTable =
+                    'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900';
             noteHtmlTable += `<span class="text-[11px] px-2.5 py-1 rounded-md font-semibold tracking-wide ${badgeClassTable}">${text}</span>`;
 
             // Calendar
-            if (!row.isNoDuty && !text.includes("Off") && !text.includes("Shortage") && !text.includes("ขอพัก") && !text.includes(SHORTAGE_MARKER)) {
-                let badgeStyleCal = "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[8px] px-1 py-0.5 rounded";
-                if (text.startsWith("[ล็อคคิว") || text.startsWith("[Locked")) {
-                    badgeStyleCal = "bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 text-[8px] px-1 py-0.5 rounded font-bold";
+            if (
+                !row.isNoDuty &&
+                !text.includes('Off') &&
+                !text.includes('Shortage') &&
+                !text.includes('ขอพัก') &&
+                !text.includes(SHORTAGE_MARKER)
+            ) {
+                let badgeStyleCal =
+                    'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[8px] px-1 py-0.5 rounded';
+                if (text.startsWith('[ล็อคคิว') || text.startsWith('[Locked')) {
+                    badgeStyleCal =
+                        'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 text-[8px] px-1 py-0.5 rounded font-bold';
                 }
                 noteHtmlCal += `<span class="${badgeStyleCal} truncate block max-w-full" title="${text}">${text}</span>`;
             }
@@ -2556,7 +2934,7 @@ function updateTargetedCellDOM(day, slotIndex) {
 window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
     if (!globalResult) return;
 
-    let newDoctor = "-";
+    let newDoctor = '-';
     if (docIndex === -1) {
         newDoctor = SHORTAGE_MARKER;
     } else if (docIndex >= 0) {
@@ -2575,7 +2953,7 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
     // Update active state
     globalResult.schedule[day - 1].selectedDocs[slotIndex] = {
         name: newDoctor,
-        role: globalResult.schedule[day - 1].selectedDocs[slotIndex]?.role || 'Default'
+        role: globalResult.schedule[day - 1].selectedDocs[slotIndex]?.role || 'Default',
     };
     updateDayNote(globalResult.schedule[day - 1], null, parseUIConfig());
 
@@ -2584,7 +2962,11 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
     const btnConfirm = document.getElementById('btnConfirmChanges');
     if (btnConfirm) btnConfirm.classList.remove('hidden');
 
-    showToast(currentLang === 'th' ? `อัปเดตเวรวันที่ ${day} สำเร็จ!` : `Day ${day} duty updated successfully!`);
+    showToast(
+        currentLang === 'th'
+            ? `อัปเดตเวรวันที่ ${day} สำเร็จ!`
+            : `Day ${day} duty updated successfully!`
+    );
 
     const config = parseUIConfig();
     explainSlotFailure(day, newDoctor, config);
@@ -2600,7 +2982,11 @@ window.explainSlotFailure = function (day, doc, config) {
     let reasons = [];
 
     let dayKey = day;
-    if (config.isCustomDateRange && typeof scheduleDates !== 'undefined' && scheduleDates.length > 0) {
+    if (
+        config.isCustomDateRange &&
+        typeof scheduleDates !== 'undefined' &&
+        scheduleDates.length > 0
+    ) {
         const dateObj = scheduleDates[day - 1];
         if (dateObj) {
             const dd = String(dateObj.getDate()).padStart(2, '0');
@@ -2615,7 +3001,11 @@ window.explainSlotFailure = function (day, doc, config) {
     }
 
     let tomorrowKey = day + 1;
-    if (config.isCustomDateRange && typeof scheduleDates !== 'undefined' && scheduleDates.length > 0) {
+    if (
+        config.isCustomDateRange &&
+        typeof scheduleDates !== 'undefined' &&
+        scheduleDates.length > 0
+    ) {
         if (day < scheduleDates.length) {
             const tomorrowObj = scheduleDates[day];
             if (tomorrowObj) {
@@ -2628,7 +3018,7 @@ window.explainSlotFailure = function (day, doc, config) {
             tomorrowKey = null;
         }
     }
-    const offTomorrowSet = (tomorrowKey !== null && offMap[tomorrowKey]) ? offMap[tomorrowKey] : null;
+    const offTomorrowSet = tomorrowKey !== null && offMap[tomorrowKey] ? offMap[tomorrowKey] : null;
     if (offTomorrowSet && offTomorrowSet.has(doc)) {
         if (config.isShiftBased) {
             const dayRow = globalResult.schedule[day - 1];
@@ -2641,7 +3031,11 @@ window.explainSlotFailure = function (day, doc, config) {
                 });
             }
             if (assignedToNight) {
-                reasons.push(currentLang === 'th' ? `ลงเวรดึกในวันก่อนขอพัก` : `assigned to Night shift before off day`);
+                reasons.push(
+                    currentLang === 'th'
+                        ? `ลงเวรดึกในวันก่อนขอพัก`
+                        : `assigned to Night shift before off day`
+                );
             }
         } else {
             reasons.push(currentLang === 'th' ? `ขอพัก/ลาในวันพรุ่งนี้` : `requested off tomorrow`);
@@ -2652,14 +3046,14 @@ window.explainSlotFailure = function (day, doc, config) {
         const M = config.morningSlots || 0;
         const A = config.afternoonSlots || 0;
         const dayRow = globalResult.schedule[day - 1];
-        
+
         let assignedToMorning = false;
         if (dayRow) {
             dayRow.selectedDocs.forEach((s, sIdx) => {
                 if (s && s.name === doc && sIdx < M) assignedToMorning = true;
             });
         }
-        
+
         if (assignedToMorning && day > 1) {
             const prevDayRow = globalResult.schedule[day - 2];
             let workedNightYesterday = false;
@@ -2669,17 +3063,21 @@ window.explainSlotFailure = function (day, doc, config) {
                 });
             }
             if (workedNightYesterday) {
-                reasons.push(currentLang === 'th' ? `ต่อเวรเช้าหลังเวรดึกเมื่อวาน` : `worked Night shift yesterday and Morning shift today`);
+                reasons.push(
+                    currentLang === 'th'
+                        ? `ต่อเวรเช้าหลังเวรดึกเมื่อวาน`
+                        : `worked Night shift yesterday and Morning shift today`
+                );
             }
         }
-        
+
         let assignedToNight = false;
         if (dayRow) {
             dayRow.selectedDocs.forEach((s, sIdx) => {
                 if (s && s.name === doc && sIdx >= M + A) assignedToNight = true;
             });
         }
-        
+
         if (assignedToNight && day < globalResult.schedule.length) {
             const nextDayRow = globalResult.schedule[day];
             let worksMorningTomorrow = false;
@@ -2689,7 +3087,11 @@ window.explainSlotFailure = function (day, doc, config) {
                 });
             }
             if (worksMorningTomorrow) {
-                reasons.push(currentLang === 'th' ? `ต่อเวรดึกก่อนเวรเช้าพรุ่งนี้` : `assigned to Night shift today and Morning shift tomorrow`);
+                reasons.push(
+                    currentLang === 'th'
+                        ? `ต่อเวรดึกก่อนเวรเช้าพรุ่งนี้`
+                        : `assigned to Night shift today and Morning shift tomorrow`
+                );
             }
         }
     }
@@ -2699,12 +3101,22 @@ window.explainSlotFailure = function (day, doc, config) {
             const prevDayIdx = day - 1 - lookBack;
             if (prevDayIdx >= 0 && globalResult.schedule[prevDayIdx]) {
                 const prevDay = globalResult.schedule[prevDayIdx];
-                if (prevDay.selectedDocs.some(s => s && s.name === doc)) {
-                    const daysAgoStr = lookBack === 1 
-                        ? (currentLang === 'th' ? 'เมื่อวาน' : 'yesterday')
-                        : (currentLang === 'th' ? `${lookBack} วันก่อน` : `${lookBack} days ago`);
-                    const restMsg = translations[currentLang].offDutyPeriodExplainer.replace('{n}', offDutyPeriod);
-                    reasons.push(`${currentLang === 'th' ? 'อยู่เวร' : 'worked'} ${daysAgoStr} (${restMsg})`);
+                if (prevDay.selectedDocs.some((s) => s && s.name === doc)) {
+                    const daysAgoStr =
+                        lookBack === 1
+                            ? currentLang === 'th'
+                                ? 'เมื่อวาน'
+                                : 'yesterday'
+                            : currentLang === 'th'
+                              ? `${lookBack} วันก่อน`
+                              : `${lookBack} days ago`;
+                    const restMsg = translations[currentLang].offDutyPeriodExplainer.replace(
+                        '{n}',
+                        offDutyPeriod
+                    );
+                    reasons.push(
+                        `${currentLang === 'th' ? 'อยู่เวร' : 'worked'} ${daysAgoStr} (${restMsg})`
+                    );
                     break;
                 }
             }
@@ -2712,8 +3124,10 @@ window.explainSlotFailure = function (day, doc, config) {
         const nextDayIdx = day;
         if (nextDayIdx < globalResult.schedule.length && globalResult.schedule[nextDayIdx]) {
             const tomorrow = globalResult.schedule[nextDayIdx];
-            if (tomorrow.selectedDocs.some(s => s && s.name === doc)) {
-                reasons.push(currentLang === 'th' ? `อยู่เวรติดกัน (พรุ่งนี้)` : `working tomorrow`);
+            if (tomorrow.selectedDocs.some((s) => s && s.name === doc)) {
+                reasons.push(
+                    currentLang === 'th' ? `อยู่เวรติดกัน (พรุ่งนี้)` : `working tomorrow`
+                );
             }
         }
     }
@@ -2721,12 +3135,20 @@ window.explainSlotFailure = function (day, doc, config) {
     const dayRow = globalResult.schedule[day - 1];
     let slotsInDay = 0;
     if (dayRow) {
-        dayRow.selectedDocs.forEach(s => { if (s && s.name === doc) slotsInDay++; });
-        if (slotsInDay > 1) reasons.push(currentLang === 'th' ? `ถูกจัดเวรซ้ำซ้อนในวันนี้` : `assigned multiple times today`);
+        dayRow.selectedDocs.forEach((s) => {
+            if (s && s.name === doc) slotsInDay++;
+        });
+        if (slotsInDay > 1)
+            reasons.push(
+                currentLang === 'th' ? `ถูกจัดเวรซ้ำซ้อนในวันนี้` : `assigned multiple times today`
+            );
     }
 
     if (reasons.length > 0) {
-        showToast(`⚠️ ${currentLang === 'th' ? 'ข้อควรระวัง: ' : 'Warning: '}${doc} ${reasons.join(', ')}`, true);
+        showToast(
+            `⚠️ ${currentLang === 'th' ? 'ข้อควรระวัง: ' : 'Warning: '}${doc} ${reasons.join(', ')}`,
+            true
+        );
     }
 };
 
@@ -2743,8 +3165,8 @@ window.resetSlotToAuto = function (day, slotIndex) {
     if (globalResult && globalResult.originalSchedule) {
         const autoDoc = globalResult.originalSchedule[day - 1].selectedDocs[slotIndex];
         globalResult.schedule[day - 1].selectedDocs[slotIndex] = {
-            name: autoDoc ? autoDoc.name : "",
-            role: autoDoc ? autoDoc.role : "Default"
+            name: autoDoc ? autoDoc.name : '',
+            role: autoDoc ? autoDoc.role : 'Default',
         };
         updateDayNote(globalResult.schedule[day - 1], null, parseUIConfig());
 
@@ -2759,7 +3181,11 @@ window.resetSlotToAuto = function (day, slotIndex) {
         updateStatsDashboard();
         if (typeof renderPersonCentricView === 'function') renderPersonCentricView(config);
     }
-    showToast(currentLang === 'th' ? `คืนค่าระบบคำนวณ วันที่ ${day} สำเร็จ!` : `Reset Day ${day} to automatic solver`);
+    showToast(
+        currentLang === 'th'
+            ? `คืนค่าระบบคำนวณ วันที่ ${day} สำเร็จ!`
+            : `Reset Day ${day} to automatic solver`
+    );
 };
 
 window.confirmChanges = function () {
@@ -2772,7 +3198,7 @@ window.confirmChanges = function () {
     const btnConfirm = document.getElementById('btnConfirmChanges');
     if (btnConfirm) btnConfirm.classList.add('hidden');
 
-    showToast(currentLang === 'th' ? "อัปเดตสถิติเรียบร้อยแล้ว" : "Stats updated successfully");
+    showToast(currentLang === 'th' ? 'อัปเดตสถิติเรียบร้อยแล้ว' : 'Stats updated successfully');
 };
 
 // Stats Dashboard Rendering
@@ -2782,18 +3208,19 @@ function updateStatsDashboard() {
     let totalDuties = 0;
     let shortages = 0;
 
-    globalResult.schedule.forEach(row => {
+    globalResult.schedule.forEach((row) => {
         if (row.isNoDuty) return;
-        row.selectedDocs.forEach(docObj => {
+        row.selectedDocs.forEach((docObj) => {
             if (docObj.name === SHORTAGE_MARKER) {
                 shortages++;
-            } else if (docObj.name !== "-" && docObj.name !== "") {
+            } else if (docObj.name !== '-' && docObj.name !== '') {
                 totalDuties++;
             }
         });
     });
 
-    document.getElementById('statTotalDuties').innerText = `${totalDuties} ${currentLang === 'th' ? 'เวร' : 'duties'}`;
+    document.getElementById('statTotalDuties').innerText =
+        `${totalDuties} ${currentLang === 'th' ? 'เวร' : 'duties'}`;
 
     const shortagesCard = document.getElementById('statShortagesCard');
     const shortagesIconBg = document.getElementById('statShortagesIconBg');
@@ -2802,21 +3229,26 @@ function updateStatsDashboard() {
 
     shortagesText.innerText = `${shortages} ${currentLang === 'th' ? 'วัน' : 'days'}`;
     if (shortages > 0) {
-        shortagesCard.className = "bg-red-50 border border-red-200 rounded-2xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3 dark:bg-red-950/20 dark:border-red-900/40";
-        shortagesIconBg.className = "bg-red-100 dark:bg-red-950/60 p-2.5 rounded-xl text-red-600 dark:text-red-400";
+        shortagesCard.className =
+            'bg-red-50 border border-red-200 rounded-2xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3 dark:bg-red-950/20 dark:border-red-900/40';
+        shortagesIconBg.className =
+            'bg-red-100 dark:bg-red-950/60 p-2.5 rounded-xl text-red-600 dark:text-red-400';
         shortagesIcon.setAttribute('data-lucide', 'alert-circle');
     } else {
-        shortagesCard.className = "bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3 dark:bg-slate-900 dark:border-slate-800";
-        shortagesIconBg.className = "bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400";
+        shortagesCard.className =
+            'bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3 dark:bg-slate-900 dark:border-slate-800';
+        shortagesIconBg.className =
+            'bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400';
         shortagesIcon.setAttribute('data-lucide', 'check-circle');
     }
 
     const activeDocCount = doctors.length;
     const avg = activeDocCount > 0 ? (totalDuties / activeDocCount).toFixed(1) : '0.0';
-    document.getElementById('statAvgDuties').innerText = `${avg} ${currentLang === 'th' ? 'เวร/คน' : 'duties/doc'}`;
+    document.getElementById('statAvgDuties').innerText =
+        `${avg} ${currentLang === 'th' ? 'เวร/คน' : 'duties/doc'}`;
 
     if (globalResult.summary && globalResult.summary.length > 0) {
-        const totals = globalResult.summary.map(s => s.total);
+        const totals = globalResult.summary.map((s) => s.total);
         const minVal = Math.min(...totals);
         const maxVal = Math.max(...totals);
         document.getElementById('statSpread').innerText = `Min: ${minVal} | Max: ${maxVal}`;
@@ -2877,10 +3309,11 @@ function renderSummaryTable(config) {
     sumBody.innerHTML = '';
     let totalShifts = 0;
 
-    globalResult.summary.forEach(sum => {
+    globalResult.summary.forEach((sum) => {
         totalShifts += sum.total;
         const role = doctorRoles[sum.name] || 'Default';
-        const displayName = role !== 'Default' && roleBased ? `${esc(sum.name)} (${esc(role)})` : esc(sum.name);
+        const displayName =
+            role !== 'Default' && roleBased ? `${esc(sum.name)} (${esc(role)})` : esc(sum.name);
 
         let quotaIndicator = '';
         const key = getQuotaKey(sum.name, config);
@@ -2939,17 +3372,22 @@ function renderResults() {
 
 // Render standard Table List View
 const roleColors = {
-    'R1': 'text-violet-650 dark:text-violet-400',
-    'R2': 'text-teal-650 dark:text-teal-400',
-    'R3': 'text-indigo-650 dark:text-indigo-400',
-    'Staff': 'text-emerald-650 dark:text-emerald-400'
+    R1: 'text-violet-650 dark:text-violet-400',
+    R2: 'text-teal-650 dark:text-teal-400',
+    R3: 'text-indigo-650 dark:text-indigo-400',
+    Staff: 'text-emerald-650 dark:text-emerald-400',
 };
 
 function getSlotRole(slotIdx) {
     if (!globalResult) return 'Default';
     for (let r of globalResult.schedule) {
         const docObj = r.selectedDocs && r.selectedDocs[slotIdx];
-        if (docObj && docObj.name !== SHORTAGE_MARKER && docObj.name !== "-" && docObj.name !== "") {
+        if (
+            docObj &&
+            docObj.name !== SHORTAGE_MARKER &&
+            docObj.name !== '-' &&
+            docObj.name !== ''
+        ) {
             if (docObj.role && docObj.role !== 'Default') {
                 return docObj.role;
             }
@@ -2966,10 +3404,14 @@ function getSlotRole(slotIdx) {
 }
 
 function getRoleBadgeColorClass(role) {
-    if (role === 'R1') return 'text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-900';
-    if (role === 'R2') return 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-900';
-    if (role === 'R3') return 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-900';
-    if (role === 'Staff') return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900';
+    if (role === 'R1')
+        return 'text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-900';
+    if (role === 'R2')
+        return 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-900';
+    if (role === 'R3')
+        return 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-900';
+    if (role === 'Staff')
+        return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900';
     return 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700';
 }
 
@@ -2989,7 +3431,7 @@ function renderTableView(config) {
     for (let i = 1; i <= globalResult.maxSlots; i++) {
         let subHeader = '';
         let headerTitle = `${translations[currentLang].tableDutyCol} ${i}`;
-        
+
         if (isShiftBased) {
             const idx = i - 1;
             if (idx < M) {
@@ -3019,33 +3461,49 @@ function renderTableView(config) {
     const schedBody = document.getElementById('scheduleTableBody');
     schedBody.innerHTML = '';
 
-    globalResult.schedule.forEach(row => {
-        let rowClass = "hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors";
-        let textClass = "font-medium text-slate-600 dark:text-slate-350";
+    globalResult.schedule.forEach((row) => {
+        let rowClass = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors';
+        let textClass = 'font-medium text-slate-600 dark:text-slate-350';
 
         if (row.isNoDuty) {
-            rowClass = "bg-slate-100 dark:bg-slate-850/30 opacity-70";
-            textClass = "font-medium text-slate-400 dark:text-slate-550";
+            rowClass = 'bg-slate-100 dark:bg-slate-850/30 opacity-70';
+            textClass = 'font-medium text-slate-400 dark:text-slate-550';
         } else if (row.isSpecial) {
-            rowClass = "bg-orange-50/60 dark:bg-orange-950/20 hover:bg-orange-100/80 dark:hover:bg-orange-950/35";
-            textClass = "font-medium text-orange-850 dark:text-orange-305";
+            rowClass =
+                'bg-orange-50/60 dark:bg-orange-950/20 hover:bg-orange-100/80 dark:hover:bg-orange-950/35';
+            textClass = 'font-medium text-orange-850 dark:text-orange-305';
         } else if (row.isHoliday) {
-            rowClass = "bg-rose-50/60 dark:bg-rose-950/20 hover:bg-rose-100/80 dark:hover:bg-rose-950/35";
-            textClass = "font-medium text-rose-800 dark:text-rose-300";
+            rowClass =
+                'bg-rose-50/60 dark:bg-rose-950/20 hover:bg-rose-100/80 dark:hover:bg-rose-950/35';
+            textClass = 'font-medium text-rose-800 dark:text-rose-300';
         }
 
         let noteHtml = '';
         if (row.note) {
             const parts = row.note.split('/');
             noteHtml = '<div class="flex flex-wrap gap-1.5">';
-            parts.forEach(p => {
+            parts.forEach((p) => {
                 const text = p.trim();
                 if (!text) return;
-                let badgeClass = textClass && !row.isNoDuty ? 'bg-white/80 dark:bg-slate-800 border border-black/5 dark:border-slate-700 shadow-sm' : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400';
-                if (text.includes(translations[currentLang].noDutyNote) || text.includes(translations[currentLang].noDutyBadge)) badgeClass = 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700';
-                else if (text.startsWith("[ล็อคคิว") || text.startsWith("[Locked")) badgeClass = 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900';
-                else if (text.includes(SHORTAGE_MARKER) || text.includes("Shortage")) badgeClass = 'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900 animate-pulse';
-                else if (text.includes("ขอพัก") || text.includes("Off")) badgeClass = 'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900';
+                let badgeClass =
+                    textClass && !row.isNoDuty
+                        ? 'bg-white/80 dark:bg-slate-800 border border-black/5 dark:border-slate-700 shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400';
+                if (
+                    text.includes(translations[currentLang].noDutyNote) ||
+                    text.includes(translations[currentLang].noDutyBadge)
+                )
+                    badgeClass =
+                        'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700';
+                else if (text.startsWith('[ล็อคคิว') || text.startsWith('[Locked'))
+                    badgeClass =
+                        'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900';
+                else if (text.includes(SHORTAGE_MARKER) || text.includes('Shortage'))
+                    badgeClass =
+                        'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900 animate-pulse';
+                else if (text.includes('ขอพัก') || text.includes('Off'))
+                    badgeClass =
+                        'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900';
                 noteHtml += `<span class="text-[11px] px-2.5 py-1 rounded-md font-semibold tracking-wide ${badgeClass}">${text}</span>`;
             });
             noteHtml += '</div>';
@@ -3055,14 +3513,17 @@ function renderTableView(config) {
         let colsHtml = `<td class="py-3.5 px-6 ${textClass}">${displayDay}</td><td class="py-3.5 px-4 ${textClass}">${row.dayName}</td>`;
         for (let i = 0; i < globalResult.maxSlots; i++) {
             let docObj = row.selectedDocs[i];
-            let d = docObj ? docObj.name : "";
-            let dRole = docObj ? docObj.role : "Default";
-            let badgeClass = "bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300";
+            let d = docObj ? docObj.name : '';
+            let dRole = docObj ? docObj.role : 'Default';
+            let badgeClass =
+                'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
 
             if (d === SHORTAGE_MARKER && !row.isNoDuty) {
-                badgeClass = "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-bold";
-            } else if (d === "-" || d === "" || row.isNoDuty) {
-                badgeClass = "text-slate-300 dark:text-slate-600 bg-transparent border-dashed border-slate-200 dark:border-slate-800";
+                badgeClass =
+                    'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-bold';
+            } else if (d === '-' || d === '' || row.isNoDuty) {
+                badgeClass =
+                    'text-slate-300 dark:text-slate-600 bg-transparent border-dashed border-slate-200 dark:border-slate-800';
             } else if (doctors.includes(d)) {
                 badgeClass = DOC_COLOR(d);
             }
@@ -3070,7 +3531,7 @@ function renderTableView(config) {
             let displayDoc = d;
             if (d === SHORTAGE_MARKER) {
                 displayDoc = translations[currentLang].shortageSlot;
-            } else if (d === "-" || d === "") {
+            } else if (d === '-' || d === '') {
                 displayDoc = translations[currentLang].emptySlot;
             } else if (doctors.includes(d)) {
                 displayDoc = esc(d);
@@ -3120,26 +3581,29 @@ function renderCalendarView(config) {
     // Empty placeholder boxes for alignment offset
     for (let i = 0; i < startDayOfWeek; i++) {
         const emptyCell = document.createElement('div');
-        emptyCell.className = "hidden md:block bg-slate-100/40 dark:bg-slate-850/20 border border-slate-200/40 dark:border-slate-800 rounded-2xl min-h-[105px] opacity-40";
+        emptyCell.className =
+            'hidden md:block bg-slate-100/40 dark:bg-slate-850/20 border border-slate-200/40 dark:border-slate-800 rounded-2xl min-h-[105px] opacity-40';
         grid.appendChild(emptyCell);
     }
 
     // Populate monthly days
-    globalResult.schedule.forEach(dayRow => {
+    globalResult.schedule.forEach((dayRow) => {
         const dayCell = document.createElement('div');
 
-        let cardBg = "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800";
-        let dateNumClass = "text-slate-800 dark:text-slate-100 font-bold";
+        let cardBg = 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800';
+        let dateNumClass = 'text-slate-800 dark:text-slate-100 font-bold';
 
         if (dayRow.isNoDuty) {
-            cardBg = "bg-slate-100 dark:bg-slate-850/40 border-slate-200 dark:border-slate-800 opacity-60";
-            dateNumClass = "text-slate-400 dark:text-slate-600 font-bold";
+            cardBg =
+                'bg-slate-100 dark:bg-slate-850/40 border-slate-200 dark:border-slate-800 opacity-60';
+            dateNumClass = 'text-slate-400 dark:text-slate-600 font-bold';
         } else if (dayRow.isSpecial) {
-            cardBg = "bg-orange-50/70 dark:bg-orange-950/20 border-orange-200/60 dark:border-orange-900/40";
-            dateNumClass = "text-orange-700 dark:text-orange-400 font-bold";
+            cardBg =
+                'bg-orange-50/70 dark:bg-orange-950/20 border-orange-200/60 dark:border-orange-900/40';
+            dateNumClass = 'text-orange-700 dark:text-orange-400 font-bold';
         } else if (dayRow.isHoliday) {
-            cardBg = "bg-rose-50/70 dark:bg-rose-950/20 border-rose-200/60 dark:border-rose-900/40";
-            dateNumClass = "text-rose-700 dark:text-rose-400 font-bold";
+            cardBg = 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200/60 dark:border-rose-900/40';
+            dateNumClass = 'text-rose-700 dark:text-rose-400 font-bold';
         }
 
         dayCell.className = `border rounded-2xl p-2.5 min-h-[110px] flex flex-col gap-1.5 transition-all hover:shadow-md ${cardBg}`;
@@ -3167,13 +3631,16 @@ function renderCalendarView(config) {
         } else {
             for (let i = 0; i < dayRow.slots; i++) {
                 const docObj = dayRow.selectedDocs[i];
-                const doc = docObj ? docObj.name : "";
-                const dRole = docObj ? docObj.role : "Default";
-                let badgeClass = "bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300";
+                const doc = docObj ? docObj.name : '';
+                const dRole = docObj ? docObj.role : 'Default';
+                let badgeClass =
+                    'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
                 if (doc === SHORTAGE_MARKER) {
-                    badgeClass = "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-bold animate-pulse";
-                } else if (doc === "-" || doc === "") {
-                    badgeClass = "text-slate-300 dark:text-slate-600 bg-transparent border-dashed border-slate-200 dark:border-slate-800";
+                    badgeClass =
+                        'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-bold animate-pulse';
+                } else if (doc === '-' || doc === '') {
+                    badgeClass =
+                        'text-slate-300 dark:text-slate-600 bg-transparent border-dashed border-slate-200 dark:border-slate-800';
                 } else if (doctors.includes(doc)) {
                     badgeClass = DOC_COLOR(doc);
                 }
@@ -3183,7 +3650,7 @@ function renderCalendarView(config) {
                 if (doc === SHORTAGE_MARKER) {
                     displayDoc = translations[currentLang].shortageSlot;
                     docIndexToPass = -1;
-                } else if (doc === "-" || doc === "") {
+                } else if (doc === '-' || doc === '') {
                     displayDoc = translations[currentLang].emptySlot;
                 } else if (doctors.includes(doc)) {
                     displayDoc = esc(doc);
@@ -3193,13 +3660,13 @@ function renderCalendarView(config) {
                 if (config && config.isShiftBased) {
                     const M = config.morningSlots || 0;
                     const A = config.afternoonSlots || 0;
-                    let prefix = "";
+                    let prefix = '';
                     if (i < M) {
-                        prefix = currentLang === 'th' ? "ช: " : "M: ";
+                        prefix = currentLang === 'th' ? 'ช: ' : 'M: ';
                     } else if (i < M + A) {
-                        prefix = currentLang === 'th' ? "บ: " : "A: ";
+                        prefix = currentLang === 'th' ? 'บ: ' : 'A: ';
                     } else {
-                        prefix = currentLang === 'th' ? "ด: " : "N: ";
+                        prefix = currentLang === 'th' ? 'ด: ' : 'N: ';
                     }
                     displayDoc = prefix + displayDoc;
                 }
@@ -3224,13 +3691,22 @@ function renderCalendarView(config) {
         let noteHtml = '';
         if (dayRow.note && !dayRow.isNoDuty) {
             const parts = dayRow.note.split('/');
-            parts.forEach(p => {
+            parts.forEach((p) => {
                 const text = p.trim();
-                if (!text || text.includes("Off") || text.includes("Shortage") || text.includes("ขอพัก") || text.includes(SHORTAGE_MARKER)) return; // Skip lengthy notes in calendar view grid
+                if (
+                    !text ||
+                    text.includes('Off') ||
+                    text.includes('Shortage') ||
+                    text.includes('ขอพัก') ||
+                    text.includes(SHORTAGE_MARKER)
+                )
+                    return; // Skip lengthy notes in calendar view grid
 
-                let badgeStyle = "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[8px] px-1 py-0.5 rounded";
-                if (text.startsWith("[ล็อคคิว") || text.startsWith("[Locked")) {
-                    badgeStyle = "bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 text-[8px] px-1 py-0.5 rounded font-bold";
+                let badgeStyle =
+                    'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[8px] px-1 py-0.5 rounded';
+                if (text.startsWith('[ล็อคคิว') || text.startsWith('[Locked')) {
+                    badgeStyle =
+                        'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 text-[8px] px-1 py-0.5 rounded font-bold';
                 }
                 noteHtml += `<span class="${badgeStyle} truncate block max-w-full" title="${text}">${text}</span>`;
             });
@@ -3265,7 +3741,10 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config) {
     }
 
     doctors.forEach((doc, index) => {
-        const isCurrent = doc === currentDoc ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 font-bold border-l-4 border-teal-500' : 'text-slate-700 dark:text-slate-300 font-medium';
+        const isCurrent =
+            doc === currentDoc
+                ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 font-bold border-l-4 border-teal-500'
+                : 'text-slate-700 dark:text-slate-300 font-medium';
         const role = doctorRoles[doc] || 'Default';
         const displayName = role !== 'Default' ? `${doc} (${role})` : doc;
         optionsHtml += `
@@ -3275,7 +3754,10 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config) {
         `;
     });
 
-    const isShortage = currentDoc === SHORTAGE_MARKER ? 'bg-red-50 dark:bg-red-950/40 font-bold text-red-650 dark:text-red-400 border-l-4 border-red-500' : 'text-red-600 dark:text-red-400 font-bold';
+    const isShortage =
+        currentDoc === SHORTAGE_MARKER
+            ? 'bg-red-50 dark:bg-red-950/40 font-bold text-red-650 dark:text-red-400 border-l-4 border-red-500'
+            : 'text-red-600 dark:text-red-400 font-bold';
     optionsHtml += `
         <div class="border-t-4 border-slate-100 dark:border-slate-800 my-1"></div>
         <button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -1)" class="${btnClassBase} hover:bg-red-50 dark:hover:bg-red-900/50 ${isShortage} border-b border-slate-100 dark:border-slate-800">
@@ -3283,7 +3765,10 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config) {
         </button>
     `;
 
-    const isNone = currentDoc === "-" || currentDoc === "" ? 'bg-slate-50 dark:bg-slate-800 font-bold border-l-4 border-slate-400' : 'text-slate-400 dark:text-slate-500 font-bold';
+    const isNone =
+        currentDoc === '-' || currentDoc === ''
+            ? 'bg-slate-50 dark:bg-slate-800 font-bold border-l-4 border-slate-400'
+            : 'text-slate-400 dark:text-slate-500 font-bold';
     optionsHtml += `
         <button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -2)" class="${btnClassBase} hover:bg-slate-100 dark:hover:bg-slate-800 ${isNone}">
             <span>${translations[currentLang].emptySlot || '- ว่าง'}</span>
@@ -3296,12 +3781,12 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config) {
 window.closeMobileSheet = function () {
     const sheet = document.getElementById('mobileDoctorSheet');
     if (sheet) sheet.classList.add('hidden');
-}
+};
 
 // Keep closeMobileModal in case it's called anywhere else by accident
 window.closeMobileModal = function () {
     window.closeMobileSheet();
-}
+};
 
 // Cell Dropdown Router Trigger
 window.openCellDropdown = function (event, dropdownId) {
@@ -3309,10 +3794,12 @@ window.openCellDropdown = function (event, dropdownId) {
 
     // Close other dropdown instances
     const dropdowns = document.querySelectorAll('[id^="dropdown-"]');
-    dropdowns.forEach(d => d.classList.add('hidden'));
+    dropdowns.forEach((d) => d.classList.add('hidden'));
 
-    const cellDropdowns = document.querySelectorAll('[id^="celldropdown-"], [id^="tablecelldropdown-"]');
-    cellDropdowns.forEach(d => {
+    const cellDropdowns = document.querySelectorAll(
+        '[id^="celldropdown-"], [id^="tablecelldropdown-"]'
+    );
+    cellDropdowns.forEach((d) => {
         if (d.id !== dropdownId) d.classList.add('hidden');
     });
 
@@ -3323,9 +3810,9 @@ window.openCellDropdown = function (event, dropdownId) {
         const slotIndex = parseInt(parts.pop());
         const day = parseInt(parts.pop());
 
-        let currentDoc = "";
+        let currentDoc = '';
         if (globalResult && globalResult.schedule) {
-            const row = globalResult.schedule.find(r => r.day === day);
+            const row = globalResult.schedule.find((r) => r.day === day);
             if (row && row.selectedDocs && row.selectedDocs[slotIndex]) {
                 currentDoc = row.selectedDocs[slotIndex].name;
             }
@@ -3344,7 +3831,10 @@ window.openCellDropdown = function (event, dropdownId) {
         }
 
         doctors.forEach((doc, index) => {
-            const isCurrent = doc === currentDoc ? 'text-teal-600 dark:text-teal-400 font-bold' : 'text-slate-700 dark:text-slate-300';
+            const isCurrent =
+                doc === currentDoc
+                    ? 'text-teal-600 dark:text-teal-400 font-bold'
+                    : 'text-slate-700 dark:text-slate-300';
             const role = doctorRoles[doc] || 'Default';
             const displayName = role !== 'Default' ? `${doc} (${role})` : doc;
             optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, ${index}); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left ${isCurrent} transition-colors">${esc(displayName)}</button>`;
@@ -3355,7 +3845,6 @@ window.openCellDropdown = function (event, dropdownId) {
 
         listContainer.innerHTML = optionsHtml;
         document.getElementById('mobileDoctorSheet').classList.remove('hidden');
-
     } else {
         const dropdown = document.getElementById(dropdownId);
         if (dropdown) {
@@ -3387,11 +3876,14 @@ function formatShortDate(dayIndex, month, year, lang) {
 
 window.copyScheduleForExcel = function () {
     if (!globalResult || globalResult.schedule.length === 0) {
-        showToast(currentLang === 'th' ? "ยังไม่มีข้อมูลตารางเวร" : "No schedule data available", true);
+        showToast(
+            currentLang === 'th' ? 'ยังไม่มีข้อมูลตารางเวร' : 'No schedule data available',
+            true
+        );
         return;
     }
 
-    let tsvData = currentLang === 'th' ? "วันที่\tวัน\t" : "Date\tDay\t";
+    let tsvData = currentLang === 'th' ? 'วันที่\tวัน\t' : 'Date\tDay\t';
     const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
     const config = parseUIConfig();
     const isShiftBased = config.isShiftBased;
@@ -3418,29 +3910,37 @@ window.copyScheduleForExcel = function () {
         }
         tsvData += `${dutyHeader}\t`;
     }
-    tsvData += (currentLang === 'th' ? "หมายเหตุ\n" : "Notes\n");
+    tsvData += currentLang === 'th' ? 'หมายเหตุ\n' : 'Notes\n';
 
-    globalResult.schedule.forEach(row => {
-        const shortDate = formatShortDate(row.day, globalResult.month, globalResult.year, currentLang);
+    globalResult.schedule.forEach((row) => {
+        const shortDate = formatShortDate(
+            row.day,
+            globalResult.month,
+            globalResult.year,
+            currentLang
+        );
         tsvData += `${shortDate}\t${row.dayName}\t`;
         for (let i = 0; i < globalResult.maxSlots; i++) {
             let docObj = row.selectedDocs[i];
-            let doc = docObj ? docObj.name : "";
+            let doc = docObj ? docObj.name : '';
             if (doc === SHORTAGE_MARKER) {
-                doc = "";
-            } else if (doc === "-" || doc === "") {
-                doc = "";
+                doc = '';
+            } else if (doc === '-' || doc === '') {
+                doc = '';
             }
             tsvData += `${doc}\t`;
         }
         tsvData += `${row.note}\n`;
     });
 
-    navigator.clipboard.writeText(tsvData).then(() => {
-        showToast(translations[currentLang].copyExcelBtn + " copy success!");
-    }).catch(() => {
-        showToast(currentLang === 'th' ? "เกิดข้อผิดพลาดในการคัดลอก" : "Copy failed", true);
-    });
+    navigator.clipboard
+        .writeText(tsvData)
+        .then(() => {
+            showToast(translations[currentLang].copyExcelBtn + ' copy success!');
+        })
+        .catch(() => {
+            showToast(currentLang === 'th' ? 'เกิดข้อผิดพลาดในการคัดลอก' : 'Copy failed', true);
+        });
 };
 
 window.copySummary = function () {
@@ -3448,24 +3948,26 @@ window.copySummary = function () {
     const config = parseUIConfig();
     const isShiftBased = config.isShiftBased;
 
-    let text = "";
+    let text = '';
     if (isShiftBased) {
-        text = currentLang === 'th' ?
-            `📊 สรุปจำนวนเวร เดือน ${globalResult.month}/${globalResult.year}\n---------------------------------------------------------------\nชื่อ      | เช้า(M) | บ่าย(A) | ดึก(N) | ทำการ | วันหยุด | รวม\n---------------------------------------------------------------\n` :
-            `📊 On-call Summary Month ${globalResult.month}/${globalResult.year}\n---------------------------------------------------------------\nName     | Morning | Afternoon | Night | Weekdays | Holidays | Total\n---------------------------------------------------------------\n`;
+        text =
+            currentLang === 'th'
+                ? `📊 สรุปจำนวนเวร เดือน ${globalResult.month}/${globalResult.year}\n---------------------------------------------------------------\nชื่อ      | เช้า(M) | บ่าย(A) | ดึก(N) | ทำการ | วันหยุด | รวม\n---------------------------------------------------------------\n`
+                : `📊 On-call Summary Month ${globalResult.month}/${globalResult.year}\n---------------------------------------------------------------\nName     | Morning | Afternoon | Night | Weekdays | Holidays | Total\n---------------------------------------------------------------\n`;
     } else {
-        text = currentLang === 'th' ?
-            `📊 สรุปจำนวนเวร เดือน ${globalResult.month}/${globalResult.year}\n---------------------------------\nชื่อ      | ทำการ | วันหยุด | รวม\n---------------------------------\n` :
-            `📊 On-call Summary Month ${globalResult.month}/${globalResult.year}\n---------------------------------\nName     | Weekdays | Holidays | Total\n---------------------------------\n`;
+        text =
+            currentLang === 'th'
+                ? `📊 สรุปจำนวนเวร เดือน ${globalResult.month}/${globalResult.year}\n---------------------------------\nชื่อ      | ทำการ | วันหยุด | รวม\n---------------------------------\n`
+                : `📊 On-call Summary Month ${globalResult.month}/${globalResult.year}\n---------------------------------\nName     | Weekdays | Holidays | Total\n---------------------------------\n`;
     }
 
     let totalShifts = 0;
-    globalResult.summary.forEach(s => {
+    globalResult.summary.forEach((s) => {
         let name = s.name.padEnd(8, ' ');
         let w = String(s.workdays).padStart(3, ' ');
         let h = String(s.holidays).padStart(3, ' ');
         let t = String(s.total).padStart(3, ' ');
-        
+
         if (isShiftBased) {
             let m = String(s.morning || 0).padStart(3, ' ');
             let a = String(s.afternoon || 0).padStart(3, ' ');
@@ -3476,25 +3978,31 @@ window.copySummary = function () {
         }
         totalShifts += s.total;
     });
-    
+
     if (isShiftBased) {
         text += `---------------------------------------------------------------\n${currentLang === 'th' ? 'รวมทั้งหมด' : 'Total shifts'}: ${totalShifts} ${translations[currentLang].shiftsUnit}\n`;
     } else {
         text += `---------------------------------\n${currentLang === 'th' ? 'รวมทั้งหมด' : 'Total shifts'}: ${totalShifts} ${translations[currentLang].shiftsUnit}\n`;
     }
 
-    navigator.clipboard.writeText(text).then(() => {
-        showToast(translations[currentLang].copySummaryBtn + " copy success!");
-    }).catch(() => {
-        showToast(currentLang === 'th' ? "เกิดข้อผิดพลาดในการคัดลอก" : "Copy failed", true);
-    });
+    navigator.clipboard
+        .writeText(text)
+        .then(() => {
+            showToast(translations[currentLang].copySummaryBtn + ' copy success!');
+        })
+        .catch(() => {
+            showToast(currentLang === 'th' ? 'เกิดข้อผิดพลาดในการคัดลอก' : 'Copy failed', true);
+        });
 };
 
 // Excel Export File function
 window.exportToExcel = function () {
     if (!window.XLSX || !globalResult) return;
     try {
-        const headers = [translations[currentLang].tableDateCol, translations[currentLang].tableDayCol];
+        const headers = [
+            translations[currentLang].tableDateCol,
+            translations[currentLang].tableDayCol,
+        ];
         const isRoleBasedEnabled = document.getElementById('chkRoleBased')?.checked;
         const config = parseUIConfig();
         const isShiftBased = config.isShiftBased;
@@ -3524,16 +4032,21 @@ window.exportToExcel = function () {
         headers.push(translations[currentLang].tableNoteCol);
 
         const data = [headers];
-        globalResult.schedule.forEach(r => {
-            const shortDate = formatShortDate(r.day, globalResult.month, globalResult.year, currentLang);
+        globalResult.schedule.forEach((r) => {
+            const shortDate = formatShortDate(
+                r.day,
+                globalResult.month,
+                globalResult.year,
+                currentLang
+            );
             let rowData = [shortDate, r.dayName];
             for (let i = 0; i < globalResult.maxSlots; i++) {
                 let docObj = r.selectedDocs[i];
-                let doc = docObj ? docObj.name : "";
+                let doc = docObj ? docObj.name : '';
                 if (doc === SHORTAGE_MARKER) {
-                    doc = "";
-                } else if (doc === "-" || doc === "") {
-                    doc = "";
+                    doc = '';
+                } else if (doc === '-' || doc === '') {
+                    doc = '';
                 }
                 rowData.push(doc);
             }
@@ -3548,34 +4061,76 @@ window.exportToExcel = function () {
         // Add Individual Duty Summary to a second sheet
         let summaryHeaders = [];
         if (isShiftBased) {
-            summaryHeaders = currentLang === 'th' ?
-                ["ชื่อแพทย์", "เวรเช้า (Morning)", "เวรบ่าย (Afternoon)", "เวรดึก (Night)", "เวรวันทำการ (จ-ศ)", "เวรวันหยุด (ส-อา, พิเศษ)", "รวมทั้งหมด"] :
-                ["Doctor Name", "Morning", "Afternoon", "Night", "Weekdays (Mon-Fri)", "Holidays (Sat-Sun, Special)", "Total Shifts"];
+            summaryHeaders =
+                currentLang === 'th'
+                    ? [
+                          'ชื่อแพทย์',
+                          'เวรเช้า (Morning)',
+                          'เวรบ่าย (Afternoon)',
+                          'เวรดึก (Night)',
+                          'เวรวันทำการ (จ-ศ)',
+                          'เวรวันหยุด (ส-อา, พิเศษ)',
+                          'รวมทั้งหมด',
+                      ]
+                    : [
+                          'Doctor Name',
+                          'Morning',
+                          'Afternoon',
+                          'Night',
+                          'Weekdays (Mon-Fri)',
+                          'Holidays (Sat-Sun, Special)',
+                          'Total Shifts',
+                      ];
         } else {
-            summaryHeaders = currentLang === 'th' ?
-                ["ชื่อแพทย์", "เวรวันทำการ (จ-ศ)", "เวรวันหยุด (ส-อา, พิเศษ)", "รวมทั้งหมด"] :
-                ["Doctor Name", "Weekdays (Mon-Fri)", "Holidays (Sat-Sun, Special)", "Total Shifts"];
+            summaryHeaders =
+                currentLang === 'th'
+                    ? ['ชื่อแพทย์', 'เวรวันทำการ (จ-ศ)', 'เวรวันหยุด (ส-อา, พิเศษ)', 'รวมทั้งหมด']
+                    : [
+                          'Doctor Name',
+                          'Weekdays (Mon-Fri)',
+                          'Holidays (Sat-Sun, Special)',
+                          'Total Shifts',
+                      ];
         }
         const summaryData = [summaryHeaders];
-        globalResult.summary.forEach(s => {
+        globalResult.summary.forEach((s) => {
             if (isShiftBased) {
-                summaryData.push([s.name, s.morning || 0, s.afternoon || 0, s.night || 0, s.workdays, s.holidays, s.total]);
+                summaryData.push([
+                    s.name,
+                    s.morning || 0,
+                    s.afternoon || 0,
+                    s.night || 0,
+                    s.workdays,
+                    s.holidays,
+                    s.total,
+                ]);
             } else {
                 summaryData.push([s.name, s.workdays, s.holidays, s.total]);
             }
         });
         const summaryWs = window.XLSX.utils.aoa_to_sheet(summaryData);
-        window.XLSX.utils.book_append_sheet(wb, summaryWs, currentLang === 'th' ? "สรุปจำนวนเวร" : "Summary");
+        window.XLSX.utils.book_append_sheet(
+            wb,
+            summaryWs,
+            currentLang === 'th' ? 'สรุปจำนวนเวร' : 'Summary'
+        );
 
         let displayYear = parseInt(globalResult.year);
         if (currentLang === 'th' && displayYear < 2500) displayYear += 543;
         if (currentLang === 'en' && displayYear > 2500) displayYear -= 543;
 
         window.XLSX.writeFile(wb, `OnCall_Month_${globalResult.month}_Year_${displayYear}.xlsx`);
-        showToast(currentLang === 'th' ? "ดาวน์โหลดไฟล์ Excel สำเร็จ!" : "Excel file downloaded successfully!");
+        showToast(
+            currentLang === 'th'
+                ? 'ดาวน์โหลดไฟล์ Excel สำเร็จ!'
+                : 'Excel file downloaded successfully!'
+        );
     } catch (e) {
         console.error(e);
-        showToast(currentLang === 'th' ? "เกิดข้อผิดพลาดในการสร้างไฟล์ Excel" : "Error exporting Excel", true);
+        showToast(
+            currentLang === 'th' ? 'เกิดข้อผิดพลาดในการสร้างไฟล์ Excel' : 'Error exporting Excel',
+            true
+        );
     }
 };
 
@@ -3588,12 +4143,22 @@ window.handleCustomDateRangeChange = async function () {
         const sd = new Date(startStr);
         const ed = new Date(endStr);
         if (sd >= ed) {
-            showToast(currentLang === 'th' ? "วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด" : "Start date must be before end date", true);
+            showToast(
+                currentLang === 'th'
+                    ? 'วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด'
+                    : 'Start date must be before end date',
+                true
+            );
             return;
         }
         const diffDays = Math.round((ed - sd) / (1000 * 60 * 60 * 24)) + 1;
         if (diffDays > 90) {
-            showToast(currentLang === 'th' ? "ช่วงวันที่เกิน 90 วัน กรุณาตรวจสอบ" : "Range exceeds 90 days, please check", true);
+            showToast(
+                currentLang === 'th'
+                    ? 'ช่วงวันที่เกิน 90 วัน กรุณาตรวจสอบ'
+                    : 'Range exceeds 90 days, please check',
+                true
+            );
             return;
         }
 
@@ -3661,13 +4226,22 @@ const FocusTrap = {
         }
         if (e.key !== 'Tab') return;
         const focusable = Array.from(trap.querySelectorAll(FocusTrap._focusableSelectors));
-        if (!focusable.length) { e.preventDefault(); return; }
+        if (!focusable.length) {
+            e.preventDefault();
+            return;
+        }
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
         if (e.shiftKey) {
-            if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+            if (document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            }
         } else {
-            if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+            if (document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
         }
     },
 };
@@ -3730,10 +4304,11 @@ window.exportConfigJSON = function () {
             inputOffDutyPeriod: document.getElementById('inputOffDutyPeriod')?.value || '2',
             lockConditionType: document.getElementById('lockConditionType')?.value || 'firstNDays',
             selectLockWeekday: document.getElementById('selectLockWeekday')?.value || '0',
-            selectAlternateStrength: document.getElementById('selectAlternateStrength')?.value || 'medium',
+            selectAlternateStrength:
+                document.getElementById('selectAlternateStrength')?.value || 'medium',
             inputMorningSlots: document.getElementById('inputMorningSlots')?.value || '1',
             inputAfternoonSlots: document.getElementById('inputAfternoonSlots')?.value || '1',
-            inputNightSlots: document.getElementById('inputNightSlots')?.value || '1'
+            inputNightSlots: document.getElementById('inputNightSlots')?.value || '1',
         },
         checkboxes: {
             chkCustomDateRange: document.getElementById('chkCustomDateRange')?.checked || false,
@@ -3743,19 +4318,20 @@ window.exportConfigJSON = function () {
             chkAllowBlankDays: document.getElementById('chkAllowBlankDays')?.checked || false,
             chkUseSpecialRule: document.getElementById('chkUseSpecialRule')?.checked || false,
             chkSoftAlternate: document.getElementById('chkSoftAlternate')?.checked ?? true,
-            chkShiftBased: document.getElementById('chkShiftBased')?.checked || false
-        }
+            chkShiftBased: document.getElementById('chkShiftBased')?.checked || false,
+        },
     };
 
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config, null, 2));
+    const dataStr =
+        'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(config, null, 2));
     const dlAnchorElem = document.createElement('a');
-    dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", "schedule_config.json");
+    dlAnchorElem.setAttribute('href', dataStr);
+    dlAnchorElem.setAttribute('download', 'schedule_config.json');
     document.body.appendChild(dlAnchorElem);
     dlAnchorElem.click();
     dlAnchorElem.remove();
 
-    showToast(currentLang === 'th' ? "ส่งออกการตั้งค่าสำเร็จ!" : "Config exported successfully!");
+    showToast(currentLang === 'th' ? 'ส่งออกการตั้งค่าสำเร็จ!' : 'Config exported successfully!');
 };
 
 window.importConfigJSON = function (event) {
@@ -3767,9 +4343,10 @@ window.importConfigJSON = function (event) {
         try {
             const config = JSON.parse(e.target.result);
 
-            if (config.doctors && !Array.isArray(config.doctors)) throw new Error("Invalid format");
-            if (config.offData && !Array.isArray(config.offData)) throw new Error("Invalid format");
-            if (config.extraSlotsData && !Array.isArray(config.extraSlotsData)) throw new Error("Invalid format");
+            if (config.doctors && !Array.isArray(config.doctors)) throw new Error('Invalid format');
+            if (config.offData && !Array.isArray(config.offData)) throw new Error('Invalid format');
+            if (config.extraSlotsData && !Array.isArray(config.extraSlotsData))
+                throw new Error('Invalid format');
 
             if (config.doctors) doctors = config.doctors;
             if (config.offData) offData = config.offData;
@@ -3789,14 +4366,14 @@ window.importConfigJSON = function (event) {
             }
 
             if (config.inputs) {
-                Object.keys(config.inputs).forEach(id => {
+                Object.keys(config.inputs).forEach((id) => {
                     const el = document.getElementById(id);
                     if (el) el.value = config.inputs[id];
                 });
             }
 
             if (config.checkboxes) {
-                Object.keys(config.checkboxes).forEach(id => {
+                Object.keys(config.checkboxes).forEach((id) => {
                     const el = document.getElementById(id);
                     if (el) el.checked = config.checkboxes[id];
                 });
@@ -3804,22 +4381,37 @@ window.importConfigJSON = function (event) {
 
             // Set defaults for Lock Special Duty if missing
             const lockConditionEl = document.getElementById('lockConditionType');
-            if (lockConditionEl && (!config.inputs || !config.inputs.hasOwnProperty('lockConditionType'))) {
+            if (
+                lockConditionEl &&
+                (!config.inputs || !Object.hasOwn(config.inputs, 'lockConditionType'))
+            ) {
                 lockConditionEl.value = 'firstNDays';
             }
             const selectLockWeekdayEl = document.getElementById('selectLockWeekday');
-            if (selectLockWeekdayEl && (!config.inputs || !config.inputs.hasOwnProperty('selectLockWeekday'))) {
+            if (
+                selectLockWeekdayEl &&
+                (!config.inputs || !Object.hasOwn(config.inputs, 'selectLockWeekday'))
+            ) {
                 selectLockWeekdayEl.value = '0';
             }
             const specialStartDayEl = document.getElementById('inputSpecialStartDay');
-            if (specialStartDayEl && (!config.inputs || !config.inputs.hasOwnProperty('inputSpecialStartDay'))) {
+            if (
+                specialStartDayEl &&
+                (!config.inputs || !Object.hasOwn(config.inputs, 'inputSpecialStartDay'))
+            ) {
                 specialStartDayEl.value = '1';
             }
 
             // Migration: old JSON with chkPreventConsecutive → inputOffDutyPeriod
             const offDutyPeriodEl = document.getElementById('inputOffDutyPeriod');
-            if (offDutyPeriodEl && (!config.inputs || !config.inputs.hasOwnProperty('inputOffDutyPeriod'))) {
-                if (config.checkboxes && config.checkboxes.hasOwnProperty('chkPreventConsecutive')) {
+            if (
+                offDutyPeriodEl &&
+                (!config.inputs || !Object.hasOwn(config.inputs, 'inputOffDutyPeriod'))
+            ) {
+                if (
+                    config.checkboxes &&
+                    Object.hasOwn(config.checkboxes, 'chkPreventConsecutive')
+                ) {
                     offDutyPeriodEl.value = config.checkboxes.chkPreventConsecutive ? '2' : '1';
                 } else {
                     offDutyPeriodEl.value = '2';
@@ -3828,11 +4420,17 @@ window.importConfigJSON = function (event) {
 
             // Set defaults for Soft Alternate if missing
             const chkSoftAlternateEl = document.getElementById('chkSoftAlternate');
-            if (chkSoftAlternateEl && (!config.checkboxes || !config.checkboxes.hasOwnProperty('chkSoftAlternate'))) {
+            if (
+                chkSoftAlternateEl &&
+                (!config.checkboxes || !Object.hasOwn(config.checkboxes, 'chkSoftAlternate'))
+            ) {
                 chkSoftAlternateEl.checked = true;
             }
             const selectAlternateStrengthEl = document.getElementById('selectAlternateStrength');
-            if (selectAlternateStrengthEl && (!config.inputs || !config.inputs.hasOwnProperty('selectAlternateStrength'))) {
+            if (
+                selectAlternateStrengthEl &&
+                (!config.inputs || !Object.hasOwn(config.inputs, 'selectAlternateStrength'))
+            ) {
                 selectAlternateStrengthEl.value = 'medium';
             }
             // Sync visibility of Soft Alternate strength container
@@ -3847,19 +4445,31 @@ window.importConfigJSON = function (event) {
 
             // Set defaults for Shift-Based Mode if missing
             const chkShiftBasedEl = document.getElementById('chkShiftBased');
-            if (chkShiftBasedEl && (!config.checkboxes || !config.checkboxes.hasOwnProperty('chkShiftBased'))) {
+            if (
+                chkShiftBasedEl &&
+                (!config.checkboxes || !Object.hasOwn(config.checkboxes, 'chkShiftBased'))
+            ) {
                 chkShiftBasedEl.checked = false;
             }
             const inputMorningSlotsEl = document.getElementById('inputMorningSlots');
-            if (inputMorningSlotsEl && (!config.inputs || !config.inputs.hasOwnProperty('inputMorningSlots'))) {
+            if (
+                inputMorningSlotsEl &&
+                (!config.inputs || !Object.hasOwn(config.inputs, 'inputMorningSlots'))
+            ) {
                 inputMorningSlotsEl.value = '1';
             }
             const inputAfternoonSlotsEl = document.getElementById('inputAfternoonSlots');
-            if (inputAfternoonSlotsEl && (!config.inputs || !config.inputs.hasOwnProperty('inputAfternoonSlots'))) {
+            if (
+                inputAfternoonSlotsEl &&
+                (!config.inputs || !Object.hasOwn(config.inputs, 'inputAfternoonSlots'))
+            ) {
                 inputAfternoonSlotsEl.value = '1';
             }
             const inputNightSlotsEl = document.getElementById('inputNightSlots');
-            if (inputNightSlotsEl && (!config.inputs || !config.inputs.hasOwnProperty('inputNightSlots'))) {
+            if (
+                inputNightSlotsEl &&
+                (!config.inputs || !Object.hasOwn(config.inputs, 'inputNightSlots'))
+            ) {
                 inputNightSlotsEl.value = '1';
             }
 
@@ -3883,17 +4493,24 @@ window.importConfigJSON = function (event) {
             toggleSpecialRuleUI();
 
             const importInput = document.getElementById('importConfigFile');
-            if (importInput) importInput.value = ""; // Reset file input
+            if (importInput) importInput.value = ''; // Reset file input
 
-            showToast(currentLang === 'th' ? "นำเข้าการตั้งค่าสำเร็จ!" : "Config imported successfully!");
+            showToast(
+                currentLang === 'th' ? 'นำเข้าการตั้งค่าสำเร็จ!' : 'Config imported successfully!'
+            );
 
             // Re-calculate
             if (window.initialized) {
                 generateSchedule();
             }
         } catch (error) {
-            console.error("Error parsing JSON:", error);
-            showToast(currentLang === 'th' ? "เกิดข้อผิดพลาดในการอ่านไฟล์ JSON" : "Error reading JSON file", true);
+            console.error('Error parsing JSON:', error);
+            showToast(
+                currentLang === 'th'
+                    ? 'เกิดข้อผิดพลาดในการอ่านไฟล์ JSON'
+                    : 'Error reading JSON file',
+                true
+            );
         }
     };
     reader.readAsText(file);
@@ -3922,9 +4539,12 @@ window.undoLastAction = function () {
         recalculateCounts(config);
         renderSummaryTable(config);
         updateStatsDashboard();
-        showToast(currentLang === 'th' ? "เลิกทำ (Undo) สำเร็จ" : "Undo successful");
+        showToast(currentLang === 'th' ? 'เลิกทำ (Undo) สำเร็จ' : 'Undo successful');
     } else {
-        showToast(currentLang === 'th' ? "ไม่มีการกระทำที่สามารถเลิกทำได้" : "Nothing to undo", true);
+        showToast(
+            currentLang === 'th' ? 'ไม่มีการกระทำที่สามารถเลิกทำได้' : 'Nothing to undo',
+            true
+        );
     }
 };
 
@@ -3965,7 +4585,7 @@ window.handleDrop = function (e, targetDay, targetSlotIndex, targetDocIndex) {
         const srcDocIdx = doctors.indexOf(srcDoc);
         let targetDocIdx = targetDocIndex;
 
-        // Execute swap manually 
+        // Execute swap manually
         window.updateDoctorAssignment(srcDay, srcSlot, targetDocIdx);
         window.updateDoctorAssignment(targetDay, targetSlotIndex, srcDocIdx);
 
@@ -3976,9 +4596,11 @@ window.handleDrop = function (e, targetDay, targetSlotIndex, targetDocIndex) {
         renderTableView(config);
         renderCalendarView(config);
 
-        showToast(currentLang === 'th' ? 'สลับเวรด้วยการลากวางสำเร็จ' : 'Drag & Drop swap successful');
+        showToast(
+            currentLang === 'th' ? 'สลับเวรด้วยการลากวางสำเร็จ' : 'Drag & Drop swap successful'
+        );
     } catch (err) {
-        console.error("Drag and drop failed:", err);
+        console.error('Drag and drop failed:', err);
     }
 };
 
@@ -3998,7 +4620,7 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
 
             window.pushToUndoStack();
             window.isDragAndDropOperation = true;
-            
+
             if (targetSlotIndex !== -1 && targetSlotIndex !== srcSlot) {
                 // Swap the two slots on the same day
                 window.updateDoctorAssignment(srcDay, srcSlot, targetDocIndex);
@@ -4007,14 +4629,14 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
                 // Just reassign the source slot to the new doctor
                 window.updateDoctorAssignment(srcDay, srcSlot, targetDocIndex);
             }
-            
+
             window.isDragAndDropOperation = false;
-            
+
             const config = parseUIConfig();
             renderTableView(config);
             renderCalendarView(config);
             if (typeof renderPersonCentricView === 'function') renderPersonCentricView(config);
-            
+
             showToast(currentLang === 'th' ? 'เปลี่ยนผู้เข้าเวรสำเร็จ' : 'Reassignment successful');
         } else {
             // Across day swap
@@ -4022,50 +4644,61 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
                 // Dropped on cell. If the doctor has a shift, swap with their first shift.
                 const targetDayRow = globalResult.schedule[targetDay - 1];
                 let foundSlot = -1;
-                
+
                 // 1. Try to swap with target doctor's shift
                 for (let i = 0; i < targetDayRow.selectedDocs.length; i++) {
-                    if (targetDayRow.selectedDocs[i] && targetDayRow.selectedDocs[i].name === doctors[targetDocIndex]) {
+                    if (
+                        targetDayRow.selectedDocs[i] &&
+                        targetDayRow.selectedDocs[i].name === doctors[targetDocIndex]
+                    ) {
                         foundSlot = i;
                         break;
                     }
                 }
-                
+
                 // 2. Try to swap with a shortage slot
                 if (foundSlot === -1) {
                     for (let i = 0; i < targetDayRow.selectedDocs.length; i++) {
-                        if (targetDayRow.selectedDocs[i] && targetDayRow.selectedDocs[i].name === SHORTAGE_MARKER) {
+                        if (
+                            targetDayRow.selectedDocs[i] &&
+                            targetDayRow.selectedDocs[i].name === SHORTAGE_MARKER
+                        ) {
                             foundSlot = i;
                             break;
                         }
                     }
                 }
-                
+
                 if (foundSlot !== -1) {
                     targetSlotIndex = foundSlot;
                 } else {
-                    showToast(currentLang === 'th' ? 'ไม่สามารถย้ายได้ เนื่องจากไม่มีเวรว่างให้สลับในวันเป้าหมาย' : 'Cannot move shift. Target day has no empty slots to swap with.', 'error');
+                    showToast(
+                        currentLang === 'th'
+                            ? 'ไม่สามารถย้ายได้ เนื่องจากไม่มีเวรว่างให้สลับในวันเป้าหมาย'
+                            : 'Cannot move shift. Target day has no empty slots to swap with.',
+                        'error'
+                    );
                     return;
                 }
             }
-            
+
             window.pushToUndoStack();
             window.isDragAndDropOperation = true;
-            
+
             window.updateDoctorAssignment(srcDay, srcSlot, targetDocIndex);
             window.updateDoctorAssignment(targetDay, targetSlotIndex, srcDocIdx);
-            
+
             window.isDragAndDropOperation = false;
-            
+
             const config = parseUIConfig();
             renderTableView(config);
             renderCalendarView(config);
             if (typeof renderPersonCentricView === 'function') renderPersonCentricView(config);
-            
+
             showToast(currentLang === 'th' ? 'สลับเวรข้ามวันสำเร็จ' : 'Cross-day swap successful');
         }
     } catch (err) {
-        console.error("Person drag and drop failed:", err);
+        console.error('Person drag and drop failed:', err);
     }
 };
 
@@ -4075,16 +4708,16 @@ function renderPersonCentricView(config) {
     const body = document.getElementById('personViewBody');
     if (!head || !body) return;
 
-    let headHtml = `<tr class="text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider"><th class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[120px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${translations[currentLang].tableHeaderDoctors || "Doctor"}</th>`;
+    let headHtml = `<tr class="text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider"><th class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[120px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${translations[currentLang].tableHeaderDoctors || 'Doctor'}</th>`;
     for (let d = 1; d <= config.numDays; d++) {
         const dayRow = globalResult.schedule[d - 1];
         const dayName = dayRow ? dayRow.dayName.substring(0, 2) : '';
         const isHol = dayRow ? dayRow.isHoliday : false;
-        let dayClass = isHol ? "text-rose-500 font-bold" : "text-slate-500 dark:text-slate-400";
+        let dayClass = isHol ? 'text-rose-500 font-bold' : 'text-slate-500 dark:text-slate-400';
 
         let displayDateNum = d;
         let monthLabel = '';
-        let borderClass = "border-slate-200 dark:border-slate-800";
+        let borderClass = 'border-slate-200 dark:border-slate-800';
 
         if (isCustomDateRange && scheduleDates && scheduleDates[d - 1]) {
             const dateObj = scheduleDates[d - 1];
@@ -4093,7 +4726,7 @@ function renderPersonCentricView(config) {
                 monthLabel = ` ${monthName(dateObj)}`;
             }
             if (displayDateNum === 1 && d > 1) {
-                borderClass = "border-l-2 border-indigo-300 dark:border-indigo-700 " + borderClass;
+                borderClass = 'border-l-2 border-indigo-300 dark:border-indigo-700 ' + borderClass;
             }
         }
 
@@ -4105,13 +4738,17 @@ function renderPersonCentricView(config) {
     let bodyHtml = '';
 
     const displayDocs = [...doctors];
-    if (globalResult.schedule.some(d => d.selectedDocs.some(s => s && s.name === SHORTAGE_MARKER))) {
+    if (
+        globalResult.schedule.some((d) =>
+            d.selectedDocs.some((s) => s && s.name === SHORTAGE_MARKER)
+        )
+    ) {
         displayDocs.push(SHORTAGE_MARKER);
     }
 
     displayDocs.forEach((doc, idx) => {
         let isShortage = doc === SHORTAGE_MARKER;
-        let docName = isShortage ? (translations[currentLang].shortageSlot || "Shortage") : doc;
+        let docName = isShortage ? translations[currentLang].shortageSlot || 'Shortage' : doc;
 
         let badgeHtml = '';
         if (config.roleBased && !isShortage) {
@@ -4122,17 +4759,19 @@ function renderPersonCentricView(config) {
             }
         }
 
-        let rowClass = idx % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-50/50 dark:bg-slate-800/20";
+        let rowClass =
+            idx % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/20';
         bodyHtml += `<tr class="${rowClass} hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">`;
         bodyHtml += `<td class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 z-10 min-w-[120px] ${rowClass} ${isShortage ? 'text-red-500' : 'text-slate-800 dark:text-slate-200'} shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${esc(docName)}${badgeHtml}</td>`;
 
         for (let d = 1; d <= config.numDays; d++) {
             const dayRow = globalResult.schedule[d - 1];
 
-            let borderClass = "border-slate-200 dark:border-slate-800";
+            let borderClass = 'border-slate-200 dark:border-slate-800';
             if (isCustomDateRange && scheduleDates && scheduleDates[d - 1]) {
                 if (scheduleDates[d - 1].getDate() === 1 && d > 1) {
-                    borderClass = "border-l-2 border-indigo-300 dark:border-indigo-700 " + borderClass;
+                    borderClass =
+                        'border-l-2 border-indigo-300 dark:border-indigo-700 ' + borderClass;
                 }
             }
 
@@ -4149,39 +4788,41 @@ function renderPersonCentricView(config) {
             let docIndexToPass = isShortage ? -1 : doctors.indexOf(doc);
 
             if (slotIndices.length > 0) {
-                let bgClass = "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400";
+                let bgClass = 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400';
                 if (isShortage) {
-                    bgClass = "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400";
+                    bgClass = 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400';
                 } else {
                     const colors = [
-                        "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400",
-                        "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
-                        "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400",
-                        "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400",
-                        "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
-                        "bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-400",
-                        "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400"
+                        'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400',
+                        'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400',
+                        'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400',
+                        'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400',
+                        'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400',
+                        'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-400',
+                        'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400',
                     ];
                     bgClass = colors[docIndexToPass % colors.length];
                 }
 
-                let badgesHtml = slotIndices.map(sIdx => {
-                    let label = sIdx;
-                    if (config.isShiftBased) {
-                        const idx = sIdx - 1;
-                        const M = config.morningSlots || 0;
-                        const A = config.afternoonSlots || 0;
-                        const N = config.nightSlots || 0;
-                        if (idx < M) {
-                            label = "M";
-                        } else if (idx < M + A) {
-                            label = "A";
-                        } else {
-                            label = "N";
+                let badgesHtml = slotIndices
+                    .map((sIdx) => {
+                        let label = sIdx;
+                        if (config.isShiftBased) {
+                            const idx = sIdx - 1;
+                            const M = config.morningSlots || 0;
+                            const A = config.afternoonSlots || 0;
+                            const N = config.nightSlots || 0;
+                            if (idx < M) {
+                                label = 'M';
+                            } else if (idx < M + A) {
+                                label = 'A';
+                            } else {
+                                label = 'N';
+                            }
                         }
-                    }
-                    return `<div draggable="true" ondragstart="handleDragStart(event, ${d}, ${sIdx - 1}, ${docIndexToPass})" ondrop="handlePersonDrop(event, ${d}, ${docIndexToPass}, ${sIdx - 1})" class="rounded w-full text-[10px] font-bold flex items-center justify-center py-1 cursor-grab active:cursor-grabbing mb-0.5 last:mb-0 ${bgClass}">${label}</div>`;
-                }).join('');
+                        return `<div draggable="true" ondragstart="handleDragStart(event, ${d}, ${sIdx - 1}, ${docIndexToPass})" ondrop="handlePersonDrop(event, ${d}, ${docIndexToPass}, ${sIdx - 1})" class="rounded w-full text-[10px] font-bold flex items-center justify-center py-1 cursor-grab active:cursor-grabbing mb-0.5 last:mb-0 ${bgClass}">${label}</div>`;
+                    })
+                    .join('');
 
                 bodyHtml += `<td class="border-b ${borderClass} p-0.5 text-center align-top" ondragover="handleDragOver(event)" ondrop="handlePersonDrop(event, ${d}, ${docIndexToPass})">${badgesHtml}</td>`;
             } else {

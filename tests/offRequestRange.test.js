@@ -5,31 +5,37 @@ const mockDOM = {};
 global.document = {
     getElementById: (id) => {
         if (!mockDOM[id]) {
-            mockDOM[id] = { 
-                value: '', 
-                checked: false, 
+            mockDOM[id] = {
+                value: '',
+                checked: false,
                 classList: { add: () => {}, remove: () => {} },
                 innerHTML: '',
                 style: {},
                 setAttribute: () => {},
                 innerText: '',
-                querySelector: () => ({ innerHTML: '' })
+                querySelector: () => ({ innerHTML: '' }),
             };
         }
         return mockDOM[id];
     },
-    createElement: () => ({ setAttribute: () => {}, appendChild: () => {}, classList: { add: () => {}, remove: () => {} }, click: () => {}, remove: () => {} }),
+    createElement: () => ({
+        setAttribute: () => {},
+        appendChild: () => {},
+        classList: { add: () => {}, remove: () => {} },
+        click: () => {},
+        remove: () => {},
+    }),
     body: { appendChild: () => {}, classList: { add: () => {}, remove: () => {} } },
     addEventListener: () => {},
     documentElement: { lang: 'en', classList: { add: () => {}, remove: () => {} } },
-    querySelectorAll: () => []
+    querySelectorAll: () => [],
 };
 
 global.window = {
     innerWidth: 1024,
     XLSX: {},
     addEventListener: () => {},
-    setTimeout: (fn) => fn()
+    setTimeout: (fn) => fn(),
 };
 
 global.navigator = { clipboard: { writeText: async () => {} } };
@@ -47,15 +53,15 @@ global.showToast = (msg, isError = false) => {
 };
 
 function resetMocks() {
-    Object.keys(mockDOM).forEach(key => delete mockDOM[key]);
+    Object.keys(mockDOM).forEach((key) => delete mockDOM[key]);
     toastMessages = [];
-    
+
     mockDOM['inputMonth'] = { value: '1', classList: { add: () => {}, remove: () => {} } };
     mockDOM['inputYear'] = { value: '2026', classList: { add: () => {}, remove: () => {} } };
     mockDOM['inputDefaultSlots'] = { value: '1', classList: { add: () => {}, remove: () => {} } };
     mockDOM['chkRoleBased'] = { checked: false };
     mockDOM['btnCalculate'] = { innerHTML: 'Calc' };
-    
+
     global.doctors = [];
     global.offData = [];
     global.extraSlotsData = [];
@@ -64,8 +70,12 @@ function resetMocks() {
     global.isCalculating = false;
 }
 
-let appJsCode = fs.readFileSync('translations.js', 'utf8') + '\n' + fs.readFileSync('app.js', 'utf8');
-appJsCode = appJsCode.replace(/document\.addEventListener\('DOMContentLoaded',\s*\(\)\s*=>\s*\{/g, 'function dummyInit() {');
+let appJsCode =
+    fs.readFileSync('translations.js', 'utf8') + '\n' + fs.readFileSync('app.js', 'utf8');
+appJsCode = appJsCode.replace(
+    /document\.addEventListener\('DOMContentLoaded',\s*\(\)\s*=>\s*\{/g,
+    'function dummyInit() {'
+);
 appJsCode = appJsCode.replace(/\}\);\s*\n\/\/ Toggle Role-Based/, '}\n// Toggle Role-Based');
 appJsCode = appJsCode.replace(/let doctors = \[\];/g, '');
 appJsCode = appJsCode.replace(/let isCustomDateRange = false;/g, '');
@@ -78,7 +88,7 @@ let passed = 0;
 let failed = 0;
 
 async function waitForCalculation() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         const check = () => {
             if (!window.isCalculating) resolve();
             else setImmediate(check);
@@ -88,32 +98,32 @@ async function waitForCalculation() {
 }
 
 async function runTests() {
-    console.log("Running offRequestRange.test.js...");
+    console.log('Running offRequestRange.test.js...');
 
     // TEST 1: RANGE "2-4"
     try {
         resetMocks();
-        global.doctors = ["A", "B", "C"];
-        global.offData = [{ id: 1, date: "2-4", names: "A" }];
-        
+        global.doctors = ['A', 'B', 'C'];
+        global.offData = [{ id: 1, date: '2-4', names: 'A' }];
+
         await window.generateSchedule();
         await waitForCalculation();
-        
+
         const res = globalResult;
-        assert.ok(res, "Result generated");
-        
-        const day2 = res.schedule.find(d => d.day === 2);
-        const day3 = res.schedule.find(d => d.day === 3);
-        const day4 = res.schedule.find(d => d.day === 4);
-        
-        assert.ok(!day2.selectedDocs.some(d => d.name === "A"), "A should be off on day 2");
-        assert.ok(!day3.selectedDocs.some(d => d.name === "A"), "A should be off on day 3");
-        assert.ok(!day4.selectedDocs.some(d => d.name === "A"), "A should be off on day 4");
-        
-        console.log("✅ TEST 1 PASSED: OFF RANGE 2-4");
+        assert.ok(res, 'Result generated');
+
+        const day2 = res.schedule.find((d) => d.day === 2);
+        const day3 = res.schedule.find((d) => d.day === 3);
+        const day4 = res.schedule.find((d) => d.day === 4);
+
+        assert.ok(!day2.selectedDocs.some((d) => d.name === 'A'), 'A should be off on day 2');
+        assert.ok(!day3.selectedDocs.some((d) => d.name === 'A'), 'A should be off on day 3');
+        assert.ok(!day4.selectedDocs.some((d) => d.name === 'A'), 'A should be off on day 4');
+
+        console.log('✅ TEST 1 PASSED: OFF RANGE 2-4');
         passed++;
     } catch (e) {
-        console.error("❌ TEST 1 FAILED:", e.message);
+        console.error('❌ TEST 1 FAILED:', e.message);
         failed++;
     }
 

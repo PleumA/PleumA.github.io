@@ -9,11 +9,11 @@ global.document = {
             mockDOM[id] = { value: '', checked: false };
         }
         return mockDOM[id];
-    }
+    },
 };
 global.window = {
     innerWidth: 1024,
-    XLSX: {}
+    XLSX: {},
 };
 global.navigator = {};
 global.currentLang = 'en';
@@ -29,17 +29,21 @@ global.scheduleData = [];
 global.isCustomDateRange = false;
 global.scheduleDates = [];
 
-global.lucide = { createIcons: () => { } };
-global.document.createElement = () => ({ setAttribute: () => { }, appendChild: () => { }, classList: { add: () => { }, remove: () => { } } });
-global.document.body = { appendChild: () => { }, classList: { add: () => { }, remove: () => { } } };
-global.document.addEventListener = () => { };
-global.window.addEventListener = () => { };
-global.localStorage = { getItem: () => 'en', setItem: () => { } };
+global.lucide = { createIcons: () => {} };
+global.document.createElement = () => ({
+    setAttribute: () => {},
+    appendChild: () => {},
+    classList: { add: () => {}, remove: () => {} },
+});
+global.document.body = { appendChild: () => {}, classList: { add: () => {}, remove: () => {} } };
+global.document.addEventListener = () => {};
+global.window.addEventListener = () => {};
+global.localStorage = { getItem: () => 'en', setItem: () => {} };
 
 let lastToast = null;
 
 function resetMocks() {
-    Object.keys(mockDOM).forEach(key => delete mockDOM[key]);
+    Object.keys(mockDOM).forEach((key) => delete mockDOM[key]);
     global.doctors = [];
     global.offData = [];
     global.extraSlotsData = [];
@@ -69,9 +73,13 @@ function resetMocks() {
     }
     lastToast = null;
 }
-let appJsCode = fs.readFileSync('./translations.js', 'utf8') + '\n' + fs.readFileSync('./app.js', 'utf8');
+let appJsCode =
+    fs.readFileSync('./translations.js', 'utf8') + '\n' + fs.readFileSync('./app.js', 'utf8');
 // Mock showToast by renaming the original function so it doesn't conflict
-appJsCode = appJsCode.replace('function showToast(msg, isError = false) {', 'function original_showToast_disabled(msg, isError = false) {');
+appJsCode = appJsCode.replace(
+    'function showToast(msg, isError = false) {',
+    'function original_showToast_disabled(msg, isError = false) {'
+);
 
 // Inject a setter into appJsCode so we can modify the internal 'let' variables
 appJsCode += `\nglobal.setAppJsVars = function(configObj) {
@@ -86,11 +94,13 @@ appJsCode += `\nglobal.setAppJsVars = function(configObj) {
 eval(appJsCode);
 
 // Inject our mock showToast into the global scope
-global.showToast = (msg, type) => { lastToast = { msg, type }; };
+global.showToast = (msg, type) => {
+    lastToast = { msg, type };
+};
 showToast = global.showToast;
 
 // Wrap parseUIConfig to sync all test data into the closure before executing
-const origParseUIConfig = typeof parseUIConfig !== 'undefined' ? parseUIConfig : () => { };
+const origParseUIConfig = typeof parseUIConfig !== 'undefined' ? parseUIConfig : () => {};
 global.parseUIConfig = function () {
     if (typeof global.setAppJsVars === 'function') {
         global.setAppJsVars({
@@ -99,21 +109,23 @@ global.parseUIConfig = function () {
             doctors: global.doctors,
             offData: global.offData,
             extraSlotsData: global.extraSlotsData,
-            manualOverrides: global.manualOverrides
+            manualOverrides: global.manualOverrides,
         });
     }
     return origParseUIConfig();
 };
 parseUIConfig = global.parseUIConfig;
 if (typeof showToast !== 'undefined') {
-    global.showToast = (msg, type) => { lastToast = { msg, type }; };
+    global.showToast = (msg, type) => {
+        lastToast = { msg, type };
+    };
     showToast = global.showToast;
 }
 
 // Do one initial call
 resetMocks();
 
-console.log("Running Quota Feasibility Unit Tests...");
+console.log('Running Quota Feasibility Unit Tests...');
 let passed = 0;
 let failed = 0;
 
@@ -128,174 +140,209 @@ function runTest(name, testFn) {
     }
 }
 
-runTest("TEST 1: IMPOSSIBLE QUOTA DETECTED — ABORTS", () => {
+runTest('TEST 1: IMPOSSIBLE QUOTA DETECTED — ABORTS', () => {
     resetMocks();
-    global.doctors = ["A", "B", "C", "D", "E"];
+    global.doctors = ['A', 'B', 'C', 'D', 'E'];
     mockDOM['chkAllowBlankDays'].checked = false;
     mockDOM['inputOffDutyPeriod'].value = '2';
-    mockDOM['inputSinglePoolQuota'].value = "A:12, B:12, C:12, D:12, E:12"; // sum 60
-    global.offData = [{ names: "A", date: "22-30" }];
+    mockDOM['inputSinglePoolQuota'].value = 'A:12, B:12, C:12, D:12, E:12'; // sum 60
+    global.offData = [{ names: 'A', date: '22-30' }];
 
     try {
         parseUIConfig();
-        assert.fail("Should have thrown error");
+        assert.fail('Should have thrown error');
     } catch (e) {
         if (e.name === 'AssertionError') throw e;
-        assert(e.message.includes("Dr. A: Quota 12 is impossible"), "Missing Dr A in error: " + e.message);
-        assert(e.message.includes("21 available days"), "Missing 21 available days in error");
-        assert(e.message.includes("max achievable 11 shifts"), "Missing max 11 shifts in error");
+        assert(
+            e.message.includes('Dr. A: Quota 12 is impossible'),
+            'Missing Dr A in error: ' + e.message
+        );
+        assert(e.message.includes('21 available days'), 'Missing 21 available days in error');
+        assert(e.message.includes('max achievable 11 shifts'), 'Missing max 11 shifts in error');
     }
 });
 
-runTest("TEST 2: FEASIBLE QUOTA — NO VIOLATION", () => {
+runTest('TEST 2: FEASIBLE QUOTA — NO VIOLATION', () => {
     resetMocks();
-    global.doctors = ["A", "B", "C", "D", "E"];
+    global.doctors = ['A', 'B', 'C', 'D', 'E'];
     mockDOM['chkAllowBlankDays'].checked = false;
     mockDOM['inputOffDutyPeriod'].value = '2';
-    mockDOM['inputSinglePoolQuota'].value = "A:10, B:12, C:13, D:13, E:12"; // sum 60
-    global.offData = [{ names: "A", date: "22-30" }];
+    mockDOM['inputSinglePoolQuota'].value = 'A:10, B:12, C:13, D:13, E:12'; // sum 60
+    global.offData = [{ names: 'A', date: '22-30' }];
 
     let config;
-    assert.doesNotThrow(() => { config = parseUIConfig(); });
+    assert.doesNotThrow(() => {
+        config = parseUIConfig();
+    });
     assert(config !== undefined);
 });
 
-runTest("TEST 3: ALLOW BLANK DAYS — WARNING NOT ABORT", () => {
+runTest('TEST 3: ALLOW BLANK DAYS — WARNING NOT ABORT', () => {
     resetMocks();
-    global.doctors = ["A", "B", "C", "D", "E"];
+    global.doctors = ['A', 'B', 'C', 'D', 'E'];
     mockDOM['chkAllowBlankDays'].checked = true;
     mockDOM['inputOffDutyPeriod'].value = '2';
-    mockDOM['inputSinglePoolQuota'].value = "A:12";
-    global.offData = [{ names: "A", date: "22-30" }];
+    mockDOM['inputSinglePoolQuota'].value = 'A:12';
+    global.offData = [{ names: 'A', date: '22-30' }];
 
     const config = parseUIConfig();
-    assert(lastToast !== null, "Toast should be shown");
-    assert(lastToast.msg.includes("Dr. A: Quota 12 is impossible"), "Missing correct toast msg: " + lastToast.msg);
+    assert(lastToast !== null, 'Toast should be shown');
+    assert(
+        lastToast.msg.includes('Dr. A: Quota 12 is impossible'),
+        'Missing correct toast msg: ' + lastToast.msg
+    );
 });
 
-runTest("TEST 4: NO REST GAP — EVERY DAY AVAILABLE", () => {
+runTest('TEST 4: NO REST GAP — EVERY DAY AVAILABLE', () => {
     resetMocks();
-    global.doctors = ["A"];
+    global.doctors = ['A'];
     mockDOM['inputOffDutyPeriod'].value = '1';
-    mockDOM['inputSinglePoolQuota'].value = "A:20";
-    global.offData = [{ names: "A", date: "1-5" }];
+    mockDOM['inputSinglePoolQuota'].value = 'A:20';
+    global.offData = [{ names: 'A', date: '1-5' }];
     mockDOM['chkAllowBlankDays'].checked = true;
 
     parseUIConfig();
-    assert(lastToast === null, "Should not show toast, got: " + (lastToast ? lastToast.msg : "null"));
+    assert(
+        lastToast === null,
+        'Should not show toast, got: ' + (lastToast ? lastToast.msg : 'null')
+    );
 
     // Additional assert where quota = 26 exceeds availableDays = 25
     lastToast = null;
-    mockDOM['inputSinglePoolQuota'].value = "A:26";
+    mockDOM['inputSinglePoolQuota'].value = 'A:26';
     parseUIConfig();
-    assert(lastToast !== null, "Toast should have fired since quota 26 exceeds 25 available days");
-    assert(lastToast.msg.includes("Quota 26 is impossible"), "Warning message should mention quota 26");
+    assert(lastToast !== null, 'Toast should have fired since quota 26 exceeds 25 available days');
+    assert(
+        lastToast.msg.includes('Quota 26 is impossible'),
+        'Warning message should mention quota 26'
+    );
 });
 
-runTest("TEST 5: ALL DOCTORS OFF SAME DAY — ROLE-BASED CHECK", () => {
+runTest('TEST 5: ALL DOCTORS OFF SAME DAY — ROLE-BASED CHECK', () => {
     resetMocks();
-    global.doctors = ["A", "B"];
+    global.doctors = ['A', 'B'];
     mockDOM['chkRoleBased'].checked = true;
-    mockDOM['inputDoctorRoles'].value = "A:R1, B:R1";
-    mockDOM['inputRoleQuotas'].value = "R1:10";
+    mockDOM['inputDoctorRoles'].value = 'A:R1, B:R1';
+    mockDOM['inputRoleQuotas'].value = 'R1:10';
     mockDOM['inputOffDutyPeriod'].value = '2';
     mockDOM['chkAllowBlankDays'].checked = true;
 
-    global.offData = [{ names: "A, B", date: "15" }];
+    global.offData = [{ names: 'A, B', date: '15' }];
 
     parseUIConfig();
-    assert(lastToast === null, "Should not show toast, got: " + (lastToast ? lastToast.msg : "null"));
+    assert(
+        lastToast === null,
+        'Should not show toast, got: ' + (lastToast ? lastToast.msg : 'null')
+    );
 
     // Second scenario: A and B both have off requests covering 20+ days each with quota making individual share infeasible
     lastToast = null;
-    global.offData = [{ names: "A", date: "1-22" }, { names: "B", date: "9-30" }];
+    global.offData = [
+        { names: 'A', date: '1-22' },
+        { names: 'B', date: '9-30' },
+    ];
     parseUIConfig();
-    assert(lastToast !== null, "Toast should have fired due to infeasible role-based quota");
+    assert(lastToast !== null, 'Toast should have fired due to infeasible role-based quota');
 });
 
-runTest("TEST 6: DOCTOR WITH ZERO AVAILABLE DAYS", () => {
+runTest('TEST 6: DOCTOR WITH ZERO AVAILABLE DAYS', () => {
     resetMocks();
-    global.doctors = ["A", "B", "C", "D", "E"];
+    global.doctors = ['A', 'B', 'C', 'D', 'E'];
     mockDOM['inputOffDutyPeriod'].value = '2';
-    mockDOM['inputSinglePoolQuota'].value = "A:1, B:14, C:15, D:15, E:15"; // sum 60
-    global.offData = [{ names: "A", date: "1-30" }];
+    mockDOM['inputSinglePoolQuota'].value = 'A:1, B:14, C:15, D:15, E:15'; // sum 60
+    global.offData = [{ names: 'A', date: '1-30' }];
 
     try {
         parseUIConfig();
-        assert.fail("Should throw");
+        assert.fail('Should throw');
     } catch (e) {
         if (e.name === 'AssertionError') throw e;
-        assert(e.message.includes("0 available days"), "Expected 0 available days in msg: " + e.message);
-        assert(e.message.includes("max achievable 0 shifts"), "Expected 0 max shifts in msg: " + e.message);
+        assert(
+            e.message.includes('0 available days'),
+            'Expected 0 available days in msg: ' + e.message
+        );
+        assert(
+            e.message.includes('max achievable 0 shifts'),
+            'Expected 0 max shifts in msg: ' + e.message
+        );
     }
 });
 
-runTest("TEST 7: CUSTOM DATE RANGE MODE — CORRECT DAYS USED", () => {
+runTest('TEST 7: CUSTOM DATE RANGE MODE — CORRECT DAYS USED', () => {
     resetMocks();
-    global.doctors = ["A", "B", "C", "D", "E"];
+    global.doctors = ['A', 'B', 'C', 'D', 'E'];
     global.isCustomDateRange = true;
     global.scheduleDates = [];
     for (let i = 22; i <= 31; i++) global.scheduleDates.push(new Date(2026, 6, i));
     for (let i = 1; i <= 10; i++) global.scheduleDates.push(new Date(2026, 7, i));
 
-    mockDOM['inputSinglePoolQuota'].value = "A:6, B:10, C:8, D:8, E:8"; // sum 40
+    mockDOM['inputSinglePoolQuota'].value = 'A:6, B:10, C:8, D:8, E:8'; // sum 40
     // F4 parser requires date ranges to be formatted without spaces (dd/mm/yyyy-dd/mm/yyyy)
-    global.offData = [{ names: "A", date: "25/07/2026-05/08/2026" }];
+    global.offData = [{ names: 'A', date: '25/07/2026-05/08/2026' }];
     mockDOM['inputOffDutyPeriod'].value = '2';
 
     try {
         parseUIConfig();
-        assert.fail("Should throw");
+        assert.fail('Should throw');
     } catch (e) {
         if (e.name === 'AssertionError') throw e;
-        assert(e.message.includes("Quota 6 is impossible"), "Missing Quota 6 impossible: " + e.message);
-        assert(e.message.includes("8 available days"), "Missing 8 available days: " + e.message);
-        assert(e.message.includes("max achievable 4 shifts"), "Missing max 4 shifts: " + e.message);
+        assert(
+            e.message.includes('Quota 6 is impossible'),
+            'Missing Quota 6 impossible: ' + e.message
+        );
+        assert(e.message.includes('8 available days'), 'Missing 8 available days: ' + e.message);
+        assert(e.message.includes('max achievable 4 shifts'), 'Missing max 4 shifts: ' + e.message);
     }
 });
 
-runTest("TEST 8: MULTIPLE DOCTORS VIOLATIONS IN ONE RUN", () => {
+runTest('TEST 8: MULTIPLE DOCTORS VIOLATIONS IN ONE RUN', () => {
     resetMocks();
-    global.doctors = ["A", "B", "C", "D", "E"];
+    global.doctors = ['A', 'B', 'C', 'D', 'E'];
     mockDOM['chkAllowBlankDays'].checked = false;
     mockDOM['inputOffDutyPeriod'].value = '2';
-    mockDOM['inputSinglePoolQuota'].value = "A:16, B:16, C:10, D:10, E:8"; // sum 60
-    global.offData = [{ names: "A", date: "1-5" }, { names: "B", date: "20-25" }];
+    mockDOM['inputSinglePoolQuota'].value = 'A:16, B:16, C:10, D:10, E:8'; // sum 60
+    global.offData = [
+        { names: 'A', date: '1-5' },
+        { names: 'B', date: '20-25' },
+    ];
 
     try {
         parseUIConfig();
-        assert.fail("Should throw");
+        assert.fail('Should throw');
     } catch (e) {
         if (e.name === 'AssertionError') throw e;
-        assert(e.message.includes("Dr. A"), "Should mention Dr A");
-        assert(e.message.includes("Dr. B"), "Should mention Dr B");
+        assert(e.message.includes('Dr. A'), 'Should mention Dr A');
+        assert(e.message.includes('Dr. B'), 'Should mention Dr B');
     }
 });
 
-runTest("TEST 9: NO QUOTA SET — CHECK SKIPPED", () => {
+runTest('TEST 9: NO QUOTA SET — CHECK SKIPPED', () => {
     resetMocks();
-    global.doctors = ["A"];
-    mockDOM['inputSinglePoolQuota'].value = "";
+    global.doctors = ['A'];
+    mockDOM['inputSinglePoolQuota'].value = '';
     mockDOM['chkAllowBlankDays'].checked = true;
 
     parseUIConfig();
-    assert(lastToast === null, "No toast if no quota, got: " + (lastToast ? lastToast.msg : "null"));
+    assert(
+        lastToast === null,
+        'No toast if no quota, got: ' + (lastToast ? lastToast.msg : 'null')
+    );
 });
 
-runTest("TEST 10: 1-DAY REST GAP REDUCES MAX SHIFTS (DEFAULT)", () => {
+runTest('TEST 10: 1-DAY REST GAP REDUCES MAX SHIFTS (DEFAULT)', () => {
     resetMocks();
-    global.doctors = ["A", "B", "C", "D", "E"];
+    global.doctors = ['A', 'B', 'C', 'D', 'E'];
     mockDOM['inputOffDutyPeriod'].value = '2';
-    mockDOM['inputSinglePoolQuota'].value = "A:14, B:12, C:12, D:11, E:11"; // sum 60
-    global.offData = [{ names: "A", date: "1-5" }];
+    mockDOM['inputSinglePoolQuota'].value = 'A:14, B:12, C:12, D:11, E:11'; // sum 60
+    global.offData = [{ names: 'A', date: '1-5' }];
     mockDOM['chkAllowBlankDays'].checked = false;
 
     try {
         parseUIConfig();
-        assert.fail("Should throw");
+        assert.fail('Should throw');
     } catch (e) {
         if (e.name === 'AssertionError') throw e;
-        assert(e.message.includes("max achievable 13 shifts"), "Got: " + e.message);
+        assert(e.message.includes('max achievable 13 shifts'), 'Got: ' + e.message);
     }
 });
 

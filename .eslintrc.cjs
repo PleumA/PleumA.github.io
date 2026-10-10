@@ -27,7 +27,25 @@ module.exports = {
     addStructuredConflictPair: 'writable',
     toggleSpecialRuleUI: 'writable',
     toggleLockConditionUI: 'writable',
+    // Shared across the plain <script> files (translations.js, structuredInputs.js, app.js)
+    currentLang: 'writable',
+    translations: 'readonly',
+    SHORTAGE_MARKER: 'readonly',
+    esc: 'readonly',
+    doctors: 'writable',
+    isCustomDateRange: 'writable',
+    initStructuredInputs: 'readonly',
+    renderStructuredDoctorRoles: 'readonly',
+    explainSlotFailure: 'readonly',
+    pushToUndoStack: 'readonly',
   },
+  overrides: [
+    {
+      // Tests eval() translations.js + app.js, so app globals are invisible to ESLint
+      files: ['tests/**/*.js'],
+      rules: { 'no-undef': 'off' },
+    },
+  ],
   rules: {
     // Prettier handles formatting; keep these off to avoid conflicts
     'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],

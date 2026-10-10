@@ -5,8 +5,8 @@
   "scripts": {
     "build": "npx tailwindcss -i src/input.css -o dist/output.css --minify",
     "build:watch": "npx tailwindcss -i src/input.css -o dist/output.css --watch",
-    "lint": "eslint . --ext .js,.html",
-    "lint:fix": "eslint . --ext .js,.html --fix",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
     "format": "prettier --write .",
     "test": "node run-tests.js"
   },
