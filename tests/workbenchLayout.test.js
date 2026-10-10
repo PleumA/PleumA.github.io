@@ -158,6 +158,10 @@ runTest('phone CSS turns table rows into cards without sideways scroll', () => {
         /#scheduleTableBody td:empty\s*\{[^}]*display:\s*none/.test(block),
         'empty note cell not hidden'
     );
+    assert.ok(
+        /#scheduleTableBody td:nth-child\(2\)\s*\{[^}]*flex:\s*1 0 auto/.test(block),
+        'day cell does not fill line 1'
+    );
 });
 
 console.log(`\nPASSED: ${passedTests}/${totalTests}, FAILED: ${totalTests - passedTests}`);
