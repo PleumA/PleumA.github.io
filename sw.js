@@ -1,4 +1,4 @@
-const CACHE_NAME = 'doctor-scheduler-v3';
+const CACHE_NAME = 'doctor-scheduler-v4';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -9,36 +9,50 @@ const ASSETS_TO_CACHE = [
     './dist/output.css',
     './manifest.json',
     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
-    'https://unpkg.com/lucide@latest',
+    'https://unpkg.com/lucide@1.55.0',
     'https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap',
 ];
 
 self.addEventListener('install', (event) => {
+    self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
-        })
-    );
-});
-
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
-        })
+        caches.open(CACHE_NAME).then((cache) =>
+            // One failed CDN request must not abort the whole install
+            Promise.allSettled(ASSETS_TO_CACHE.map((url) => cache.add(url)))
+        )
     );
 });
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
+        caches
+            .keys()
+            .then((names) =>
+                Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+            )
+            .then(() => self.clients.claim())
+    );
+});
+
+self.addEventListener('fetch', (event) => {
+    const req = event.request;
+    if (req.method !== 'GET') return;
+    const sameOrigin = new URL(req.url).origin === self.location.origin;
+    const cached = (r) => caches.match(r).then((hit) => hit || Promise.reject(new Error('miss')));
+    const network = () =>
+        fetch(req).then((res) => {
+            if (res.ok) {
+                const copy = res.clone();
+                caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+            }
+            return res;
+        });
+    // Our own files: network first, so a deploy shows on the next load and offline still works.
+    // CDN files are version-pinned, so the cache is always right.
+    const response = sameOrigin ? network().catch(() => cached(req)) : cached(req).catch(network);
+    event.respondWith(
+        response.catch(() =>
+            req.mode === 'navigate' ? caches.match('./index.html') : Response.error()
+        )
     );
 });
