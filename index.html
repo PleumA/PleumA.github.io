@@ -218,6 +218,9 @@
 
         /* Phones: each schedule row becomes a card; date + day on one line, duties underneath */
         @media (max-width: 767px) {
+            header {
+                position: static !important;
+            }
             #tableViewContainer table {
                 min-width: 0;
             }
@@ -264,7 +267,7 @@
                 <div>
                     <h1 class="text-xl md:text-2xl font-bold tracking-tight" data-i18n="title">ระบบจัดตารางเวรอัตโนมัติ
                     </h1>
-                    <p class="text-teal-100 text-sm font-medium mt-0.5" data-i18n="subtitle">คำนวณอย่างชาญฉลาดด้วย Smart
+                    <p class="hidden md:block text-teal-100 text-sm font-medium mt-0.5" data-i18n="subtitle">คำนวณอย่างชาญฉลาดด้วย Smart
                         Solver • ปรับปรุงตารางด้วยตนเองได้</p>
                 </div>
             </div>

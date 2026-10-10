@@ -164,5 +164,18 @@ runTest('phone CSS turns table rows into cards without sideways scroll', () => {
     );
 });
 
+runTest('phone header scrolls away and drops the subtitle (<768px)', () => {
+    const css = [...document.querySelectorAll('style')].map((s) => s.textContent).join('\n');
+    assert.ok(
+        /@media \(max-width: 767px\)[\s\S]*?header\s*\{[^}]*position:\s*static/.test(css),
+        'header not static below 768px'
+    );
+    const sub = document.querySelector('[data-i18n="subtitle"]');
+    assert.ok(
+        sub.className.includes('hidden') && sub.className.includes('md:block'),
+        'subtitle not hidden on phones'
+    );
+});
+
 console.log(`\nPASSED: ${passedTests}/${totalTests}, FAILED: ${totalTests - passedTests}`);
 if (passedTests !== totalTests) process.exit(1);
