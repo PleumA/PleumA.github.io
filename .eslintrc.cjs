@@ -38,6 +38,8 @@ module.exports = {
     renderStructuredDoctorRoles: 'readonly',
     explainSlotFailure: 'readonly',
     pushToUndoStack: 'readonly',
+    // calendarExport.js
+    buildICS: 'readonly',
   },
   overrides: [
     {
