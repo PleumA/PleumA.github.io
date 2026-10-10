@@ -174,6 +174,12 @@ runTest('phone header scrolls away and drops the subtitle (<768px)', () => {
     assert.ok(/\bmd:sticky\b/.test(header.className), 'header should be sticky only from md up');
     assert.ok(!/(^|\s)sticky(\s|$)/.test(header.className), 'bare sticky class still on header');
     assert.ok(!/position:\s*static\s*!important/.test(css), '!important override still present');
+    // The critical CSS applies at every width, so it must not make the header sticky itself
+    const outsideMin = css.replace(/@media \(min-width[^{]*\{[\s\S]*?\n {8}\}/g, '');
+    assert.ok(
+        !/(^|[\s}])header\s*\{[^}]*position:\s*sticky/.test(outsideMin),
+        'a style rule sets position: sticky on header at every width'
+    );
     const sub = document.querySelector('[data-i18n="subtitle"]');
     assert.ok(
         sub.className.includes('hidden') && sub.className.includes('md:block'),
