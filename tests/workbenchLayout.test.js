@@ -137,10 +137,10 @@ runTest('fairness row: names render as text (no HTML injection), empty summary c
     assert.strictEqual(strip().innerHTML, '');
 });
 
-runTest('full summary table lives in a closed <details>', () => {
+runTest('full summary table lives in a <details> that starts open', () => {
     const d = document.getElementById('summaryTableBody').closest('details');
     assert.ok(d, 'summary table not inside <details>');
-    assert.strictEqual(d.open, false);
+    assert.strictEqual(d.open, true);
 });
 
 console.log(`\nPASSED: ${passedTests}/${totalTests}, FAILED: ${totalTests - passedTests}`);

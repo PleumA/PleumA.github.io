@@ -79,8 +79,8 @@ let darkMode =
 document.addEventListener('DOMContentLoaded', () => {
     // An open settings popover must not float over the inline layout after an iPad rotates to landscape
     window
-        .matchMedia('(min-width: 1024px)')
-        .addEventListener(
+        .matchMedia?.('(min-width: 1024px)')
+        ?.addEventListener(
             'change',
             (e) => e.matches && document.getElementById('settingsPanel')?.hidePopover?.()
         );
