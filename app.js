@@ -2848,9 +2848,18 @@ function applyManualOverrides(config) {
 
 // Toggle clear overrides
 window.clearManualOverrides = function () {
+    if (!Object.keys(manualOverrides).length) return;
     pushToUndoStack();
     manualOverrides = {};
-    generateSchedule();
+    // "Auto" is the stored solver result, so re-apply locally like undo (no solver run)
+    const config = resultConfig();
+    applyManualOverrides(config);
+    renderTableView(config);
+    renderCalendarView(config);
+    if (typeof renderPersonCentricView === 'function') renderPersonCentricView(config);
+    recalculateCounts(config);
+    renderSummaryTable(config);
+    updateStatsDashboard();
     showToast(
         currentLang === 'th'
             ? 'คืนค่าเริ่มต้นจากระบบคำนวณทั้งหมดแล้ว'
@@ -3096,12 +3105,21 @@ function updateTargetedCellDOM(day, slotIndex) {
         if (span) span.innerText = displayDoc;
     }
 
-    // A choice or reset closes this cell's dropdown
-    document
-        .querySelectorAll(
-            `#tablecelldropdown-${day}-${slotIndex}, #celldropdown-${day}-${slotIndex}`
-        )
-        .forEach((dd) => dd.classList.add('hidden'));
+    // A choice or reset refreshes (highlight, Reset to auto) and closes this cell's dropdowns;
+    // focus goes back to the cell button of whichever dropdown was open
+    const optionsHtml = getCellDropdownOptionsHtml(day, slotIndex, docName, resultConfig());
+    let focusBtn = null;
+    [
+        ['tablecelldropdown', btnTable],
+        ['celldropdown', btnCal],
+    ].forEach(([prefix, btn]) => {
+        const dd = document.getElementById(`${prefix}-${day}-${slotIndex}`);
+        if (!dd) return;
+        if (!dd.classList.contains('hidden')) focusBtn = btn;
+        dd.innerHTML = optionsHtml;
+        dd.classList.add('hidden');
+    });
+    if (focusBtn) focusBtn.focus();
 
     // 3. Rebuild Notes
     let noteHtmlTable = '';

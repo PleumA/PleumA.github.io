@@ -9,7 +9,7 @@ global.document = {
             mockDOM[id] = {
                 value: '',
                 checked: false,
-                classList: { add: () => {}, remove: () => {} },
+                classList: { add: () => {}, remove: () => {}, contains: () => true },
                 innerHTML: '',
                 setAttribute: () => {},
                 innerText: '',
@@ -19,7 +19,7 @@ global.document = {
                 insertBefore: () => {},
                 appendChild: () => {},
                 querySelector: () => ({
-                    classList: { add: () => {}, remove: () => {} },
+                    classList: { add: () => {}, remove: () => {}, contains: () => true },
                     innerHTML: '',
                 }),
             };
@@ -29,14 +29,20 @@ global.document = {
     createElement: () => ({
         setAttribute: () => {},
         appendChild: () => {},
-        classList: { add: () => {}, remove: () => {} },
+        classList: { add: () => {}, remove: () => {}, contains: () => true },
         click: () => {},
         remove: () => {},
         querySelector: () => ({ innerHTML: '' }),
     }),
-    body: { appendChild: () => {}, classList: { add: () => {}, remove: () => {} } },
+    body: {
+        appendChild: () => {},
+        classList: { add: () => {}, remove: () => {}, contains: () => true },
+    },
     addEventListener: () => {},
-    documentElement: { lang: 'en', classList: { add: () => {}, remove: () => {} } },
+    documentElement: {
+        lang: 'en',
+        classList: { add: () => {}, remove: () => {}, contains: () => true },
+    },
     querySelectorAll: () => [],
 };
 
