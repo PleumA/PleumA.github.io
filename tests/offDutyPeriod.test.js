@@ -22,7 +22,11 @@ global.localStorage = { getItem: () => 'en', setItem: () => {} };
 global.lucide = { createIcons: () => {} };
 
 let appJsCode =
-    fs.readFileSync('./translations.js', 'utf8') + '\n' + fs.readFileSync('./app.js', 'utf8');
+    fs.readFileSync('translations.js', 'utf8') +
+    '\n' +
+    fs.readFileSync('calendarExport.js', 'utf8') +
+    '\n' +
+    fs.readFileSync('app.js', 'utf8');
 
 // Mock showToast by renaming the original function so it doesn't conflict
 appJsCode = appJsCode.replace(

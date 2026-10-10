@@ -71,7 +71,11 @@ function resetMocks() {
 }
 
 let appJsCode =
-    fs.readFileSync('translations.js', 'utf8') + '\n' + fs.readFileSync('app.js', 'utf8');
+    fs.readFileSync('translations.js', 'utf8') +
+    '\n' +
+    fs.readFileSync('calendarExport.js', 'utf8') +
+    '\n' +
+    fs.readFileSync('app.js', 'utf8');
 appJsCode = appJsCode.replace(
     /document\.addEventListener\('DOMContentLoaded',\s*\(\)\s*=>\s*\{/g,
     'function dummyInit() {'
