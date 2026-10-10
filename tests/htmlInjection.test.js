@@ -124,5 +124,48 @@ const EVIL = '<img src=x onerror=alert(1)>';
         );
     });
 
+    await test('targeted cell update shows a non-doctor name once-escaped, as text', async () => {
+        reset(w);
+        await w.generateSchedule();
+        w.setViewMode('calendar');
+        w.eval(
+            `globalResult.schedule[1].selectedDocs[0] = { name: '<b>x</b>', role: 'Default' }; updateTargetedCellDOM(2, 0);`
+        );
+        ['btn-day-2-slot-0', 'btn-cal-day-2-slot-0'].forEach((id) => {
+            const btn = d.getElementById(id);
+            assert.strictEqual(btn.querySelector('span.truncate').textContent, '<b>x</b>', id);
+            assert.strictEqual(btn.querySelectorAll('b').length, 0, `${id} got a <b> element`);
+        });
+    });
+
+    await test('quotes in a name cannot break out of title attributes', async () => {
+        const quoted = 'x" onmouseover="window.__pwn=1';
+        reset(w, [quoted, 'B', 'C']);
+        setInput(w, 'chkUseSpecialRule', true);
+        setInput(w, 'inputSpecialDocs', quoted);
+        setInput(w, 'inputSpecialDays', '31');
+        setInput(w, 'inputOffDutyPeriod', '1');
+        w.eval(`offData = [{ id: 1, date: '1', names: ${JSON.stringify(quoted)} }];`);
+        await w.generateSchedule();
+        w.updateDoctorAssignment(1, 0, 0); // targeted-update path
+        assert.strictEqual(
+            d.querySelectorAll('[onmouseover]').length,
+            0,
+            'table: attribute injected'
+        );
+        w.setViewMode('calendar');
+        assert.strictEqual(
+            d.querySelectorAll('[onmouseover]').length,
+            0,
+            'calendar: attribute injected'
+        );
+        w.updateDoctorAssignment(1, 0, 0);
+        assert.strictEqual(
+            d.querySelectorAll('[onmouseover]').length,
+            0,
+            'targeted: attribute injected'
+        );
+    });
+
     done();
 })();

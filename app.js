@@ -2867,7 +2867,7 @@ function updateTargetedCellDOM(day, slotIndex) {
         calBadgeClass = badgeClass;
     }
 
-    let displayDoc = esc(docName);
+    let displayDoc = docName;
     if (docName === SHORTAGE_MARKER) {
         displayDoc = translations[currentLang].shortageSlot;
     } else if (docName === '-' || docName === '') {

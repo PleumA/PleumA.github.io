@@ -23,6 +23,15 @@ async function loadApp() {
     });
     const w = dom.window;
     w.lucide = { createIcons() {} };
+    // jsdom has no innerText; browsers treat assigning it as text, so mirror that with textContent
+    Object.defineProperty(w.HTMLElement.prototype, 'innerText', {
+        get() {
+            return this.textContent;
+        },
+        set(v) {
+            this.textContent = v;
+        },
+    });
     w.localStorage.setItem('schedule_lang', 'en');
     for (const f of ['structuredInputs.js', 'translations.js', 'calendarExport.js', 'app.js']) {
         const el = w.document.createElement('script');
