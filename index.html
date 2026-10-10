@@ -182,6 +182,7 @@
                     overflow-y: auto;
                     padding: 1rem;
                     background: #f8fafc;
+                    color: #1e293b;
                     box-shadow: 0 10px 40px rgb(0 0 0 / 0.25);
                 }
                 /* flex-col children would otherwise shrink and clip inside the fixed-height panel */
@@ -190,6 +191,7 @@
                 }
                 .dark #settingsPanel:popover-open {
                     background: #0f172a;
+                    color: #f1f5f9;
                 }
                 #settingsPanel::backdrop {
                     background: rgb(15 23 42 / 0.3);
@@ -242,6 +244,48 @@
             }
             #scheduleTableBody td:empty {
                 display: none;
+            }
+        }
+
+        /* Print: just the schedule table, full width, no controls or backgrounds */
+        @media print {
+            header,
+            footer,
+            #settingsPanel,
+            #scheduleToolbar,
+            #btnClearOverrides,
+            #fairnessStrip,
+            button[onclick='copySummary()'],
+            details > summary,
+            #btnTableView,
+            #btnCalendarView,
+            #btnPersonView,
+            #toast,
+            #mobileDoctorSheet,
+            #manualModal {
+                display: none !important;
+            }
+            body {
+                background: #fff !important;
+                color: #000 !important;
+            }
+            main {
+                display: block !important;
+                max-width: none !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            #tableViewContainer {
+                overflow: visible !important;
+            }
+            #tableViewContainer table {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+            * {
+                background: none !important;
+                color: #000 !important;
+                box-shadow: none !important;
             }
         }
     </style>
@@ -325,11 +369,11 @@
                             ตั้งค่าพื้นฐาน</h2>
                     </div>
                     <div class="flex items-center gap-1.5">
-                        <button onclick="exportConfigJSON()" data-i18n-title="exportConfigTitle" title="ส่งออกการตั้งค่า"
+                        <button onclick="exportConfigJSON()" data-i18n-title="exportConfigTitle" title="ส่งออกการตั้งค่า" data-i18n-aria="exportConfigTitle" aria-label="ส่งออกการตั้งค่า"
                             class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
                             <i data-lucide="download" class="w-4 h-4"></i>
                         </button>
-                        <button onclick="document.getElementById('importConfigFile').click()" data-i18n-title="importConfigTitle" title="นำเข้าการตั้งค่า"
+                        <button onclick="document.getElementById('importConfigFile').click()" data-i18n-title="importConfigTitle" title="นำเข้าการตั้งค่า" data-i18n-aria="importConfigTitle" aria-label="นำเข้าการตั้งค่า"
                             class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
                             <i data-lucide="upload" class="w-4 h-4"></i>
                         </button>
@@ -917,7 +961,7 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-2 justify-start sm:justify-end font-sans">
+                        <div id="scheduleToolbar" class="flex flex-wrap items-center gap-2 justify-start sm:justify-end font-sans">
                             <div class="flex flex-wrap items-center gap-2">
                             <!-- Reset Manual Overrides Button (Hidden by default, shown when manual overrides exist) -->
                             <button id="btnClearOverrides" onclick="clearManualOverrides()"
@@ -1027,10 +1071,11 @@
     </footer>
 
     <!-- Mobile Doctor Bottom Sheet -->
-    <div id="mobileDoctorSheet" class="fixed inset-0 bg-black/50 z-50 hidden">
-        <div
+    <div id="mobileDoctorSheet" class="fixed inset-0 bg-black/50 z-50 hidden"
+        onclick="if (event.target === this) closeMobileSheet()">
+        <div role="dialog" aria-modal="true" aria-labelledby="mobileSheetTitle"
             class="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto shadow-2xl">
-            <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white" data-i18n="changeDoctorTitle">เปลี่ยนแพทย์</h3>
+            <h3 id="mobileSheetTitle" class="text-lg font-bold mb-4 text-slate-800 dark:text-white" data-i18n="changeDoctorTitle">เปลี่ยนแพทย์</h3>
             <div id="mobileDoctorList"></div>
             <button onclick="closeMobileSheet()"
                 class="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl font-bold transition-colors" data-i18n="cancelBtn">ยกเลิก</button>
@@ -1038,12 +1083,12 @@
     </div>
 
     <!-- Manual Modal -->
-    <div id="manualModal"
+    <div id="manualModal" inert
         class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onclick="closeManualModal()"></div>
         <!-- Modal Content Card -->
-        <div
+        <div role="dialog" aria-modal="true" aria-labelledby="manualTitleHeading"
             class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col scale-95 transition-transform duration-300">
             <!-- Header -->
             <div class="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
@@ -1051,10 +1096,10 @@
                     <div class="bg-teal-50 dark:bg-teal-950/50 p-2.5 rounded-xl text-teal-600 dark:text-teal-400">
                         <i data-lucide="help-circle" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800 dark:text-white" data-i18n="manualTitle">
+                    <h3 id="manualTitleHeading" class="text-lg font-bold text-slate-800 dark:text-white" data-i18n="manualTitle">
                         คู่มือการใช้งานระบบจัดตารางเวร</h3>
                 </div>
-                <button onclick="closeManualModal()"
+                <button onclick="closeManualModal()" aria-label="ปิด" data-i18n-aria="closeBtn"
                     class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
@@ -1096,7 +1141,7 @@
                             <span data-i18n="manualSection3Title">3. แพทย์ที่ขัดแย้งกัน (Conflict List)</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection3Body">
-                            เลือกคู่แพทย์ที่ไม่ควรอยู่เวรด้วยกันผ่านเมนูเลือก ระบบจะไม่จัดสองคนนี้ในวันเดียวกัน หากแก้ตารางด้วยตนเองจนเกิดการชนกัน จะมีป้ายเตือนแสดงขึ้น
+                            เลือกคู่แพทย์ที่ไม่ควรอยู่เวรด้วยกันผ่านเมนูเลือก ระบบจะไม่จัดสองคนนี้ในวันเดียวกันเมื่อมีแพทย์เพียงพอ หากปิด Allow Blank Days และไม่มีใครว่างแล้ว ระบบอาจยอมให้คู่นี้อยู่วันเดียวกันเพื่อให้ช่องเวรไม่ว่าง และจะแสดงป้ายเตือน การแก้ตารางด้วยตนเองจนเกิดการชนกันก็แสดงป้ายเตือนเช่นกัน
                         </p>
                     </div>
                     <!-- Section 4 -->
@@ -1107,7 +1152,7 @@
                             <span data-i18n="manualSection4Title">4. วันหยุดและวันพัก (Off Requests)</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection4Body">
-                            ระบบไม่จัดเวรในวันที่ขอหยุดหรือวันก่อนหน้า 1 วัน ไม่จัดเวรวันหยุดติดกัน และเว้นระยะพักเวรตามที่ตั้งไว้ กรอกวันขอหยุดได้เป็นวันเดียว เช่น <code>5</code> เป็นรายการ เช่น <code>3,7</code> หรือเป็นช่วง เช่น <code>2-5</code> ในโหมดช่วงวันที่กำหนดเองให้กรอก <code>25/02/2026-04/03/2026</code> ระบบจะเตือนเมื่อการแก้ตารางไปชนวันขอหยุด ทั้งแบบช่วง แบบรายการ และวันที่ในช่วงกำหนดเอง
+                            ระบบจัดเวรหลีกเลี่ยงวันที่ขอหยุด วันก่อนวันขอหยุด วันหยุดติดกัน และเว้นระยะพักเวรตามที่ตั้งไว้ เมื่อมีแพทย์เพียงพอ หากปิด Allow Blank Days และไม่มีใครว่างแล้ว ระบบอาจลดระยะพักเวร วันหยุดติดกัน หรือวันก่อนวันขอหยุดลงเพื่อให้ช่องเวรไม่ว่าง แต่จะไม่จัดแพทย์ลงในวันที่ขอหยุดจริง กรอกวันขอหยุดได้เป็นวันเดียว เช่น <code>5</code> เป็นรายการ เช่น <code>3,7</code> หรือเป็นช่วง เช่น <code>2-5</code> ในโหมดช่วงวันที่กำหนดเองให้กรอก <code>25/02/2026-04/03/2026</code> ระบบจะเตือนเมื่อการแก้ตารางไปชนวันขอหยุด ทั้งแบบช่วง แบบรายการ และวันที่ในช่วงกำหนดเอง
                         </p>
                     </div>
                     <!-- Section 5 -->

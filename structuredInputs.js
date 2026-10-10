@@ -172,11 +172,11 @@ function renderStructuredRoleSlots() {
         <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
             <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${esc(role)}</span>
             <div class="flex items-center gap-3">
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleSlot(${jsArg(role)}, -1)">
+                <button type="button" aria-label="${translations[currentLang].ariaDecrease} ${esc(role)}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleSlot(${jsArg(role)}, -1)">
                     <i data-lucide="minus" class="w-4 h-4"></i>
                 </button>
                 <span class="w-6 text-center text-sm font-bold">${count}</span>
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleSlot(${jsArg(role)}, 1)">
+                <button type="button" aria-label="${translations[currentLang].ariaIncrease} ${esc(role)}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleSlot(${jsArg(role)}, 1)">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -250,11 +250,11 @@ function renderStructuredRoleQuotas() {
         <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
             <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${esc(role)}</span>
             <div class="flex items-center gap-3">
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleQuota(${jsArg(role)}, -1)">
+                <button type="button" aria-label="${translations[currentLang].ariaDecrease} ${esc(role)}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleQuota(${jsArg(role)}, -1)">
                     <i data-lucide="minus" class="w-4 h-4"></i>
                 </button>
                 <span class="w-6 text-center text-sm font-bold">${displayCount}</span>
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleQuota(${jsArg(role)}, 1)">
+                <button type="button" aria-label="${translations[currentLang].ariaIncrease} ${esc(role)}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleQuota(${jsArg(role)}, 1)">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -327,11 +327,11 @@ function renderStructuredSinglePoolQuotas() {
         <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
             <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${esc(doc)}</span>
             <div class="flex items-center gap-3">
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateSinglePoolQuota(${jsArg(doc)}, -1)">
+                <button type="button" aria-label="${translations[currentLang].ariaDecrease} ${esc(doc)}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateSinglePoolQuota(${jsArg(doc)}, -1)">
                     <i data-lucide="minus" class="w-4 h-4"></i>
                 </button>
                 <span class="w-6 text-center text-sm font-bold">${displayCount}</span>
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateSinglePoolQuota(${jsArg(doc)}, 1)">
+                <button type="button" aria-label="${translations[currentLang].ariaIncrease} ${esc(doc)}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateSinglePoolQuota(${jsArg(doc)}, 1)">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -440,7 +440,7 @@ function renderStructuredConflicts(rows) {
                 <option value="">--</option>
                 ${doc2Options}
             </select>
-            <button type="button" class="text-slate-400 hover:text-red-500" onclick="removeStructuredConflict(${idx})">
+            <button type="button" aria-label="${translations[currentLang].ariaRemove} ${esc(doc1)} / ${esc(doc2)}" class="text-slate-400 hover:text-red-500" onclick="removeStructuredConflict(${idx})">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
         </div>
@@ -506,7 +506,7 @@ function renderStructuredChips(hiddenInputId, containerId, uiInputId) {
             'chip-tag bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-900/50 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none scale-95 duration-200';
         tag.innerHTML = `
             <span>${esc(item)}</span>
-            <button type="button" onclick="event.stopPropagation(); removeStructuredChip('${hiddenInputId}', ${idx})" class="text-teal-400 hover:text-teal-600 transition-colors">
+            <button type="button" aria-label="${translations[currentLang].ariaRemove} ${esc(item)}" onclick="event.stopPropagation(); removeStructuredChip('${hiddenInputId}', ${idx})" class="text-teal-400 hover:text-teal-600 transition-colors">
                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
             </button>
         `;

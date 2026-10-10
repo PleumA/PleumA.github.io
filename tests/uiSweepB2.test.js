@@ -103,6 +103,7 @@ const key = (w, k, e = {}) =>
 
     await test('B6 manual modal: inert when closed, dialog, Escape on document', () => {
         const modal = d.getElementById('manualModal');
+        w.closeManualModal(); // first visit opens it on its own
         assert.ok(modal.hasAttribute('inert'), 'inert while closed');
         w.openManualModal();
         assert.ok(!modal.hasAttribute('inert'));

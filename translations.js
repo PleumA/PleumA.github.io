@@ -73,6 +73,13 @@ const translations = {
         okBtn: 'ตกลง',
         newRoleOption: '＋ บทบาทใหม่',
         roleSlotsMinOne: 'ต้องมีอย่างน้อย 1 เวรต่อวัน',
+        extraSlotPlaceholder: 'เช่น 2 หรือ R1:1, R2:1',
+        pageTitle: 'ระบบจัดตารางเวรอัตโนมัติ & บันทึกตารางเวร',
+        metaDescription: 'ระบบจัดตารางเวรอัตโนมัติ – คำนวณและปรับแต่งตารางเวรแพทย์อย่างชาญฉลาด',
+        ariaDecrease: 'ลด',
+        ariaIncrease: 'เพิ่ม',
+        ariaRemove: 'ลบ',
+        closeBtn: 'ปิด',
         cellAria: 'วันที่ {day} ช่อง {slot} ปัจจุบัน {name} คลิกเพื่อเปลี่ยน',
         addDatePlaceholder: 'เพิ่มวัน...',
         customSlotsDesc: 'ระบุจำนวนคนที่ต้องการใช้เฉพาะบางวันได้',
@@ -206,10 +213,10 @@ const translations = {
             "กำหนดจำนวนผู้ปฏิบัติงานต่อวันด้วยปุ่มเพิ่ม/ลด (Stepper) และปรับเฉพาะบางวันได้ใน 'กำหนดพิเศษ' ในส่วน 'กำหนดพิเศษ' คุณยังล็อกแพทย์ให้อยู่เวรวันใดวันหนึ่งได้ แพทย์ที่ถูกล็อกต้องผ่านกฎเดียวกับคนอื่น ทั้งความขัดแย้ง ระยะพักเวร วันหยุดติดกัน และวันก่อนวันหยุดขอ หากวันนั้นอยู่เวรไม่ได้ ระบบจะจัดคนอื่นแทนตามปกติ",
         manualSection3Title: '3. แพทย์ที่ขัดแย้งกัน (Conflict List)',
         manualSection3Body:
-            'เลือกคู่แพทย์ที่ไม่ควรอยู่เวรด้วยกันผ่านเมนูเลือก ระบบจะไม่จัดสองคนนี้ในวันเดียวกัน หากแก้ตารางด้วยตนเองจนเกิดการชนกัน จะมีป้ายเตือนแสดงขึ้น',
+            'เลือกคู่แพทย์ที่ไม่ควรอยู่เวรด้วยกันผ่านเมนูเลือก ระบบจะไม่จัดสองคนนี้ในวันเดียวกันเมื่อมีแพทย์เพียงพอ หากปิด Allow Blank Days และไม่มีใครว่างแล้ว ระบบอาจยอมให้คู่นี้อยู่วันเดียวกันเพื่อให้ช่องเวรไม่ว่าง และจะแสดงป้ายเตือน การแก้ตารางด้วยตนเองจนเกิดการชนกันก็แสดงป้ายเตือนเช่นกัน',
         manualSection4Title: '4. วันหยุดและวันพัก (Off Requests)',
         manualSection4Body:
-            'ระบบไม่จัดเวรในวันที่ขอหยุดหรือวันก่อนหน้า 1 วัน ไม่จัดเวรวันหยุดติดกัน และเว้นระยะพักเวรตามที่ตั้งไว้ กรอกวันขอหยุดได้เป็นวันเดียว เช่น <code>5</code> เป็นรายการ เช่น <code>3,7</code> หรือเป็นช่วง เช่น <code>2-5</code> ในโหมดช่วงวันที่กำหนดเองให้กรอก <code>25/02/2026-04/03/2026</code> ระบบจะเตือนเมื่อการแก้ตารางไปชนวันขอหยุด ทั้งแบบช่วง แบบรายการ และวันที่ในช่วงกำหนดเอง',
+            'ระบบจัดเวรหลีกเลี่ยงวันที่ขอหยุด วันก่อนวันขอหยุด วันหยุดติดกัน และเว้นระยะพักเวรตามที่ตั้งไว้ เมื่อมีแพทย์เพียงพอ หากปิด Allow Blank Days และไม่มีใครว่างแล้ว ระบบอาจลดระยะพักเวร วันหยุดติดกัน หรือวันก่อนวันขอหยุดลงเพื่อให้ช่องเวรไม่ว่าง แต่จะไม่จัดแพทย์ลงในวันที่ขอหยุดจริง กรอกวันขอหยุดได้เป็นวันเดียว เช่น <code>5</code> เป็นรายการ เช่น <code>3,7</code> หรือเป็นช่วง เช่น <code>2-5</code> ในโหมดช่วงวันที่กำหนดเองให้กรอก <code>25/02/2026-04/03/2026</code> ระบบจะเตือนเมื่อการแก้ตารางไปชนวันขอหยุด ทั้งแบบช่วง แบบรายการ และวันที่ในช่วงกำหนดเอง',
         manualSection5Title: '5. การแก้ไข ย้อนกลับ และตรวจสอบตาราง',
         manualSection5Body:
             'ลากและวาง (Drag & Drop) ชื่อแพทย์ในตาราง ปฏิทิน และมุมมองบุคคลเพื่อสลับตัวด้วยตนเอง ระบบจะคำนวณสถิติใหม่และแสดงป้ายเตือนทันที กดปุ่มย้อนกลับ (Undo) หรือ <b>Ctrl+Z</b> เพื่อย้อนการแก้ไขทั้งหมด รวมถึงการสลับด้วยการลาก (ถ้าเคอร์เซอร์อยู่ในช่องพิมพ์ Ctrl+Z จะย้อนข้อความตามปกติ) เมื่อเปลี่ยนเดือน ปี หรือช่วงวันที่ การแก้ไขด้วยตนเองจะถูกล้างอัตโนมัติและมีข้อความแจ้งเตือน ส่วนการลบแพทย์ (เช่น ด้วย Backspace) ไม่สามารถย้อนกลับได้',
@@ -263,6 +270,14 @@ const translations = {
         okBtn: 'OK',
         newRoleOption: '＋ New role',
         roleSlotsMinOne: 'At least 1 slot per day is required',
+        extraSlotPlaceholder: 'e.g. 2 or R1:1, R2:1',
+        pageTitle: 'Automatic On-Call Scheduler & Schedule Saver',
+        metaDescription:
+            'Automatic on-call scheduler: calculate and fine-tune doctor duty schedules.',
+        ariaDecrease: 'Decrease',
+        ariaIncrease: 'Increase',
+        ariaRemove: 'Remove',
+        closeBtn: 'Close',
         cellAria: 'Day {day}, slot {slot}. Current: {name}. Click to change.',
         addDatePlaceholder: 'Add date...',
         customSlotsDesc: 'Specify slot count for specific dates',
@@ -398,10 +413,10 @@ const translations = {
             "Set daily needs with the numeric steppers, and change specific days in 'Custom Daily Slots'. There you can also lock a doctor to a day. A locked doctor follows the same rules as everyone else: conflicts, rest period, consecutive holidays and the day before an off day. If they cannot work that day, the normal fill takes over.",
         manualSection3Title: '3. Conflict / Hate List',
         manualSection3Body:
-            'Pick pairs of doctors who should not work together using the dropdowns. The scheduler never puts them on the same day. If a manual edit creates a clash, a warning badge appears.',
+            'Pick pairs of doctors who should not work together using the dropdowns. The scheduler keeps them on separate days whenever enough doctors are available. If Allow Blank Days is off and nobody else is free, it may put the pair together to fill the slot, and a warning badge appears. A manual edit that creates a clash shows the same badge.',
         manualSection4Title: '4. Holidays & Off Requests',
         manualSection4Body:
-            'No duties on an off day or the day before, no consecutive holiday duties, and the configured rest period is kept. Enter off days as a single day (<code>5</code>), a list (<code>3,7</code>) or a range (<code>2-5</code>); in custom range mode use <code>25/02/2026-04/03/2026</code>. Warnings appear when a manual edit lands on an off request, for ranges, lists and custom-range dates alike.',
+            'Off days, the day before an off day, consecutive holiday duties and the configured rest period are avoided whenever enough doctors are available. If Allow Blank Days is off and nobody else is free, the scheduler may shorten the rest period, allow consecutive holidays or use the day before an off day to fill the slot, but it never assigns someone on their actual off day. Enter off days as a single day (<code>5</code>), a list (<code>3,7</code>) or a range (<code>2-5</code>); in custom range mode use <code>25/02/2026-04/03/2026</code>. Warnings appear when a manual edit lands on an off request, for ranges, lists and custom-range dates alike.',
         manualSection5Title: '5. Editing, Undo & Warnings',
         manualSection5Body:
             'Drag and drop doctors in the Table, Calendar and Person views to swap them by hand. Stats and warnings update immediately. Undo (button or <b>Ctrl+Z</b>) reverts edits, including drag-and-drop swaps; inside a text box Ctrl+Z undoes typing as usual. Switching month, year or custom range clears your manual edits and a message tells you. Removing a doctor (for example with Backspace) cannot be undone.',

@@ -18,6 +18,7 @@ global.document = {
         return mockDOM[id];
     },
     querySelectorAll: () => [],
+    querySelector: () => null,
     documentElement: { lang: '' },
 };
 global.window = {

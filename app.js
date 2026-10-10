@@ -451,6 +451,9 @@ function applyTranslations() {
 
     // Set document language attribute
     document.documentElement.lang = lang === 'th' ? 'th' : 'en';
+    document.title = translations[lang].pageTitle;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', translations[lang].metaDescription);
 
     // Update simple text elements
     const elements = document.querySelectorAll('[data-i18n]');
@@ -544,8 +547,16 @@ function applyTranslations() {
     renderOffRequests();
     renderExtraSlots();
     renderSpecialDocsCheckboxList();
-    // Role rows hold language-dependent text (the "new role" option, the no-doctors warning)
-    if (typeof renderStructuredDoctorRoles === 'function') renderStructuredDoctorRoles();
+    // Rendered rows hold language-dependent text (aria-labels, the "new role" option, the no-doctors warning)
+    if (typeof renderStructuredChips === 'function') {
+        renderDoctorTags();
+        renderStructuredChips(
+            'inputSpecialHols',
+            'structuredSpecialHolsContainer',
+            'inputSpecialHolsUI'
+        );
+        renderStructuredChips('inputNoDuty', 'structuredNoDutyContainer', 'inputNoDutyUI');
+    }
 }
 
 // Cell button aria-label; displayDoc is already escaped (or a translated label)
@@ -651,7 +662,7 @@ function renderDoctorTags() {
             'doctor-tag bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-900/50 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none scale-95 duration-200';
         tag.innerHTML = `
             <span></span>
-            <button type="button" onclick="event.stopPropagation(); removeDoctor(${index})" class="text-teal-400 hover:text-teal-600 transition-colors">
+            <button type="button" aria-label="${translations[currentLang].ariaRemove} ${esc(doc)}" onclick="event.stopPropagation(); removeDoctor(${index})" class="text-teal-400 hover:text-teal-600 transition-colors">
                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
             </button>
         `;
@@ -1028,9 +1039,9 @@ function renderExtraSlots() {
             </div>
             <div class="w-28 shrink-0">
                 <label class="text-[10px] text-slate-500 block">${translations[currentLang].defaultSlots}</label>
-                <input type="text" value="${esc(item.slots)}" onchange="updateExtraSlot(${item.id}, 'slots', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-xs outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100" placeholder="เช่น 2 หรือ R1:1, R2:1">
+                <input type="text" value="${esc(item.slots)}" onchange="updateExtraSlot(${item.id}, 'slots', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-xs outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100" placeholder="${esc(translations[currentLang].extraSlotPlaceholder)}">
             </div>
-            <button onclick="deleteExtraSlot(${item.id})" class="text-slate-400 hover:text-red-500 p-1 rounded transition-colors mt-4"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            <button onclick="deleteExtraSlot(${item.id})" aria-label="${translations[currentLang].ariaRemove} ${esc(item.date)}" class="text-slate-400 hover:text-red-500 p-1 rounded transition-colors mt-4"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         `;
         container.appendChild(div);
     });
@@ -3980,7 +3991,9 @@ function getCellDropdownOptionsHtml(day, slotIndex, currentDoc, config) {
 
 window.closeMobileSheet = function () {
     const sheet = document.getElementById('mobileDoctorSheet');
-    if (sheet) sheet.classList.add('hidden');
+    if (!sheet) return;
+    sheet.classList.add('hidden');
+    FocusTrap.deactivate(sheet.querySelector('[role="dialog"]'));
 };
 
 // Keep closeMobileModal in case it's called anywhere else by accident
@@ -4010,9 +4023,10 @@ window.openCellDropdown = function (event, dropdownId) {
         const slotIndex = parseInt(parts.pop());
         const day = parseInt(parts.pop());
 
+        const ctx = resultCtx();
         let currentDoc = '';
-        if (globalResult && globalResult.schedule) {
-            const row = globalResult.schedule.find((r) => r.day === day);
+        if (ctx.schedule) {
+            const row = ctx.schedule.find((r) => r.day === day);
             if (row && row.selectedDocs && row.selectedDocs[slotIndex]) {
                 currentDoc = row.selectedDocs[slotIndex].name;
             }
@@ -4022,13 +4036,13 @@ window.openCellDropdown = function (event, dropdownId) {
         if (!listContainer) return;
 
         let optionsHtml = '';
-        const config = resultConfig();
-        const { doctorRoles } = config;
-        const { doctors } = globalResult;
+        const { doctorRoles } = ctx.config;
+        const { doctors } = ctx;
+        const T = translations[currentLang];
 
         const isOverridden = manualOverrides[day] && manualOverrides[day][slotIndex] !== undefined;
         if (isOverridden) {
-            optionsHtml += `<button onclick="resetSlotToAuto(${day}, ${slotIndex}); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-indigo-600 dark:text-indigo-400 font-bold transition-colors">คืนค่าระบบคำนวณ</button>`;
+            optionsHtml += `<button onclick="resetSlotToAuto(${day}, ${slotIndex}); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-indigo-600 dark:text-indigo-400 font-bold transition-colors">${T.resetCellBtn}</button>`;
         }
 
         doctors.forEach((doc, index) => {
@@ -4041,11 +4055,17 @@ window.openCellDropdown = function (event, dropdownId) {
             optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, ${index}); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left ${isCurrent} transition-colors">${esc(displayName)}</button>`;
         });
 
-        optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -1); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-red-600 dark:text-red-400 font-bold transition-colors">⚠️ ขาดคน</button>`;
-        optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -2); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-slate-400 dark:text-slate-500 font-bold transition-colors">- ว่าง</button>`;
+        optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -1); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-red-600 dark:text-red-400 font-bold transition-colors">${T.shortageSlot}</button>`;
+        optionsHtml += `<button onclick="updateDoctorAssignment(${day}, ${slotIndex}, -2); closeMobileSheet();" class="w-full min-h-[48px] py-3 text-lg border-b border-slate-100 dark:border-slate-800 text-left text-slate-400 dark:text-slate-500 font-bold transition-colors">${T.emptySlot}</button>`;
 
         listContainer.innerHTML = optionsHtml;
-        document.getElementById('mobileDoctorSheet').classList.remove('hidden');
+        const sheet = document.getElementById('mobileDoctorSheet');
+        sheet.classList.remove('hidden');
+        FocusTrap.activate(
+            sheet.querySelector('[role="dialog"]'),
+            window.closeMobileSheet,
+            event.currentTarget
+        );
     } else {
         const dropdown = document.getElementById(dropdownId);
         if (dropdown) {
@@ -4509,19 +4529,24 @@ const FocusTrap = {
         '[tabindex]:not([tabindex="-1"])',
     ].join(','),
 
-    activate(container) {
-        this._previouslyFocused = document.activeElement;
+    // One trap at a time. Escape and Tab are caught on the document so they work wherever focus is.
+    // returnTo: element to refocus on close (Safari does not focus a button when it is clicked)
+    activate(container, onClose, returnTo) {
+        this.deactivate();
+        this._previouslyFocused = returnTo || document.activeElement;
         this._trap = container;
+        this._onClose = onClose;
         const focusable = container.querySelectorAll(this._focusableSelectors);
         if (focusable.length) focusable[0].focus();
-        container.addEventListener('keydown', this._handleKeyDown);
+        document.addEventListener('keydown', this._handleKeyDown);
     },
 
-    deactivate() {
-        if (this._trap) {
-            this._trap.removeEventListener('keydown', this._handleKeyDown);
-            this._trap = null;
-        }
+    // With a container, only releases that container's own trap
+    deactivate(container) {
+        if (container && container !== this._trap) return;
+        document.removeEventListener('keydown', this._handleKeyDown);
+        this._trap = null;
+        this._onClose = null;
         if (this._previouslyFocused && this._previouslyFocused.focus) {
             this._previouslyFocused.focus();
         }
@@ -4532,7 +4557,7 @@ const FocusTrap = {
         const trap = FocusTrap._trap;
         if (!trap) return;
         if (e.key === 'Escape') {
-            window.closeManualModal();
+            if (FocusTrap._onClose) FocusTrap._onClose();
             return;
         }
         if (e.key !== 'Tab') return;
@@ -4544,12 +4569,12 @@ const FocusTrap = {
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
         if (e.shiftKey) {
-            if (document.activeElement === first) {
+            if (document.activeElement === first || !trap.contains(document.activeElement)) {
                 e.preventDefault();
                 last.focus();
             }
         } else {
-            if (document.activeElement === last) {
+            if (document.activeElement === last || !trap.contains(document.activeElement)) {
                 e.preventDefault();
                 first.focus();
             }
@@ -4560,6 +4585,7 @@ const FocusTrap = {
 window.openManualModal = function () {
     const modal = document.getElementById('manualModal');
     if (modal) {
+        modal.removeAttribute('inert');
         modal.classList.remove('opacity-0', 'pointer-events-none');
         modal.classList.add('opacity-100');
         const card = modal.querySelector('.relative');
@@ -4569,13 +4595,14 @@ window.openManualModal = function () {
         }
         // Activate focus trap
         const trapTarget = card || modal;
-        FocusTrap.activate(trapTarget);
+        FocusTrap.activate(trapTarget, window.closeManualModal);
     }
 };
 
 window.closeManualModal = function () {
     const modal = document.getElementById('manualModal');
     if (modal) {
+        modal.setAttribute('inert', '');
         modal.classList.remove('opacity-100');
         modal.classList.add('opacity-0', 'pointer-events-none');
         const card = modal.querySelector('.relative');
@@ -4584,7 +4611,7 @@ window.closeManualModal = function () {
             card.classList.add('scale-95');
         }
         // Deactivate focus trap and restore focus
-        FocusTrap.deactivate();
+        FocusTrap.deactivate(card || modal);
     }
 };
 
