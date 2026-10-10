@@ -104,6 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chkCustom) {
         chkCustom.addEventListener('change', function (e) {
             isCustomDateRange = e.target.checked;
+            // The chip inputs switch between text and date entry
+            renderStructuredChips(
+                'inputSpecialHols',
+                'structuredSpecialHolsContainer',
+                'inputSpecialHolsUI'
+            );
+            renderStructuredChips('inputNoDuty', 'structuredNoDutyContainer', 'inputNoDutyUI');
             const customContainer = document.getElementById('customDateRangeContainer');
             const monthYearContainer = document.getElementById('standardMonthYearContainer');
             const btnCalendarView = document.getElementById('btnCalendarView');

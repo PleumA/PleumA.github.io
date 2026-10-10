@@ -39,6 +39,8 @@ module.exports = {
     isCustomDateRange: 'writable',
     initStructuredInputs: 'readonly',
     renderStructuredDoctorRoles: 'readonly',
+    renderStructuredChips: 'readonly',
+    showToast: 'writable',
     explainSlotFailure: 'readonly',
     pushToUndoStack: 'readonly',
     // calendarExport.js

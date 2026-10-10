@@ -3,6 +3,10 @@
 // Name passed to an inline handler: a JSON string literal, HTML-escaped for the attribute.
 const jsArg = (v) => esc(JSON.stringify(v));
 
+// Same ceiling as the per-day slots input; quotas are monthly, so up to the 90-day custom range
+const MAX_ROLE_SLOTS = 10;
+const MAX_QUOTA = 90;
+
 function initStructuredInputs() {
     renderStructuredDoctorRoles();
     renderStructuredRoleSlots();
@@ -88,7 +92,7 @@ function renderStructuredDoctorRoles() {
         html += `
         <div class="flex items-center gap-2 mb-2">
             <input type="text" class="doc-role-name flex-1 min-w-0 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300" value="${esc(doc)}" readonly>
-            <select class="doc-role-select w-[100px] flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100" onchange="handleDocRoleSelectChange(this)">
+            <select data-prev="${esc(role)}" class="doc-role-select w-[100px] flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100" onchange="handleDocRoleSelectChange(this)">
                 ${roleOptions}
             </select>
         </div>
@@ -107,19 +111,21 @@ function handleDocRoleSelectChange(selectElem) {
             currentLang === 'th' ? 'ป้อนชื่อบทบาทใหม่ (เช่น R3)' : 'Enter new role name (e.g., R3)'
         );
         const rName = sanitizeName(newRole);
-        if (rName) {
-            const selects = document.querySelectorAll('.doc-role-select');
-            selects.forEach((sel) => {
+        if (!rName) {
+            selectElem.value = selectElem.dataset.prev; // cancelled or empty: keep the old role
+            return;
+        }
+        if (![...selectElem.options].some((o) => o.value === rName)) {
+            document.querySelectorAll('.doc-role-select').forEach((sel) => {
                 const opt = document.createElement('option');
                 opt.value = rName;
                 opt.textContent = rName;
                 sel.insertBefore(opt, sel.lastElementChild);
             });
-            selectElem.value = rName;
-        } else {
-            selectElem.selectedIndex = 0;
         }
+        selectElem.value = rName;
     }
+    selectElem.dataset.prev = selectElem.value;
     syncStructuredDoctorRoles();
 }
 
@@ -195,13 +201,17 @@ function updateRoleSlot(role, delta) {
         }
     });
     if (slotsMap[role] === undefined) slotsMap[role] = 1;
-    slotsMap[role] += delta;
-    if (slotsMap[role] < 0) slotsMap[role] = 0;
+    slotsMap[role] = Math.min(MAX_ROLE_SLOTS, Math.max(0, slotsMap[role] + delta));
 
     const activeRoles = getUniqueRolesFromInput();
     activeRoles.forEach((r) => {
         if (slotsMap[r] === undefined) slotsMap[r] = 1;
     });
+    // Every role at 0 would leave nobody to schedule
+    if (activeRoles.reduce((n, r) => n + slotsMap[r], 0) < 1) {
+        showToast(translations[currentLang].roleSlotsMinOne);
+        return;
+    }
 
     const newParts = [];
     for (const [r, c] of Object.entries(slotsMap)) {
@@ -270,9 +280,10 @@ function updateRoleQuota(role, delta) {
     });
 
     if (quotasMap[role] === undefined) {
-        quotasMap[role] = delta > 0 ? 1 : 0;
+        if (delta < 0) return; // nothing to lower yet
+        quotasMap[role] = 1;
     } else {
-        quotasMap[role] += delta;
+        quotasMap[role] = Math.min(MAX_QUOTA, quotasMap[role] + delta);
     }
 
     if (quotasMap[role] < 0) delete quotasMap[role];
@@ -346,9 +357,10 @@ function updateSinglePoolQuota(doc, delta) {
     });
 
     if (quotasMap[doc] === undefined) {
-        quotasMap[doc] = delta > 0 ? 1 : 0;
+        if (delta < 0) return; // nothing to lower yet
+        quotasMap[doc] = 1;
     } else {
-        quotasMap[doc] += delta;
+        quotasMap[doc] = Math.min(MAX_QUOTA, quotasMap[doc] + delta);
     }
 
     if (quotasMap[doc] < 0) delete quotasMap[doc];
@@ -442,7 +454,6 @@ function addStructuredConflictPair() {
     const rows = readConflictRows();
     rows.push(['', '']);
     renderStructuredConflicts(rows);
-    syncStructuredConflicts();
 }
 
 function removeStructuredConflict(idx) {
@@ -464,8 +475,12 @@ function syncStructuredConflicts(skipSchedule = false) {
             newParts.push(`${d1}:${d2}`);
         }
     });
-    document.getElementById('inputConflicts').value = newParts.join(', ');
-    if (!skipSchedule && typeof generateSchedule === 'function') generateSchedule();
+    const hidden = document.getElementById('inputConflicts');
+    const next = newParts.join(', ');
+    // Half-filled rows live only in the DOM, so they never change the schedule
+    const changed = hidden.value !== next;
+    hidden.value = next;
+    if (changed && !skipSchedule && typeof generateSchedule === 'function') generateSchedule();
 }
 
 // 5 & 6. Chips (Special Holidays & No-Duty Days)
@@ -535,84 +550,48 @@ function setupChipInputListener(hiddenInputId, containerId, uiInputId) {
     if (container && uiInput) {
         container.addEventListener('click', () => uiInput.focus());
 
+        // Date inputs report a value while the year is still being typed (year 2 -> 0002),
+        // so only a four-digit year counts as a finished date.
+        const commit = () => {
+            let v = uiInput.value.trim().replace(/,/g, '');
+            if (uiInput.type === 'date') {
+                if (!v || parseInt(v.split('-')[0], 10) < 1000) return;
+                const dateObj = parseISODate(v);
+                v =
+                    ('0' + dateObj.getDate()).slice(-2) +
+                    '/' +
+                    ('0' + (dateObj.getMonth() + 1)).slice(-2) +
+                    '/' +
+                    dateObj.getFullYear();
+            }
+            if (!v) return;
+            const hiddenInput = document.getElementById(hiddenInputId);
+            const items = hiddenInput.value
+                ? hiddenInput.value
+                      .split(',')
+                      .map((s) => s.trim())
+                      .filter((s) => s)
+                : [];
+            if (!items.includes(v)) {
+                items.push(v);
+                hiddenInput.value = items.join(', ');
+                renderStructuredChips(hiddenInputId, containerId, uiInputId);
+                if (typeof generateSchedule === 'function') generateSchedule();
+            }
+            uiInput.value = '';
+        };
+
         uiInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ',') {
                 e.preventDefault();
-                const v = uiInput.value.trim().replace(/,/g, '');
-                if (v) {
-                    const hiddenInput = document.getElementById(hiddenInputId);
-                    const items = hiddenInput.value
-                        ? hiddenInput.value
-                              .split(',')
-                              .map((s) => s.trim())
-                              .filter((s) => s)
-                        : [];
-                    if (!items.includes(v)) {
-                        items.push(v);
-                        hiddenInput.value = items.join(', ');
-                        if (hiddenInputId === 'inputSpecialHols') {
-                            renderStructuredChips(
-                                'inputSpecialHols',
-                                'structuredSpecialHolsContainer',
-                                'inputSpecialHolsUI'
-                            );
-                        } else if (hiddenInputId === 'inputNoDuty') {
-                            renderStructuredChips(
-                                'inputNoDuty',
-                                'structuredNoDutyContainer',
-                                'inputNoDutyUI'
-                            );
-                        }
-                        if (typeof generateSchedule === 'function') generateSchedule();
-                    }
-                    uiInput.value = '';
-                }
+                commit();
             }
         });
-
-        // Listen to change for date pickers
-        uiInput.addEventListener('change', (e) => {
-            if (uiInput.type === 'date') {
-                const v = uiInput.value;
-                if (v) {
-                    // Convert YYYY-MM-DD to DD/MM/YYYY for compatibility if needed, but simple v is fine if user types it.
-                    // Actually existing parser uses standard string.
-                    const dateObj = parseISODate(v);
-                    const formatted =
-                        ('0' + dateObj.getDate()).slice(-2) +
-                        '/' +
-                        ('0' + (dateObj.getMonth() + 1)).slice(-2) +
-                        '/' +
-                        dateObj.getFullYear();
-
-                    const hiddenInput = document.getElementById(hiddenInputId);
-                    const items = hiddenInput.value
-                        ? hiddenInput.value
-                              .split(',')
-                              .map((s) => s.trim())
-                              .filter((s) => s)
-                        : [];
-                    if (!items.includes(formatted)) {
-                        items.push(formatted);
-                        hiddenInput.value = items.join(', ');
-                        if (hiddenInputId === 'inputSpecialHols') {
-                            renderStructuredChips(
-                                'inputSpecialHols',
-                                'structuredSpecialHolsContainer',
-                                'inputSpecialHolsUI'
-                            );
-                        } else if (hiddenInputId === 'inputNoDuty') {
-                            renderStructuredChips(
-                                'inputNoDuty',
-                                'structuredNoDutyContainer',
-                                'inputNoDutyUI'
-                            );
-                        }
-                        if (typeof generateSchedule === 'function') generateSchedule();
-                    }
-                    uiInput.value = '';
-                }
-            }
+        uiInput.addEventListener('change', () => {
+            if (uiInput.type === 'date') commit();
+        });
+        uiInput.addEventListener('blur', () => {
+            if (uiInput.type === 'date') commit();
         });
     }
 }
