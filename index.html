@@ -236,11 +236,11 @@
         </div>
     </header>
 
-    <main id="main-content" class="max-w-7xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:overflow-hidden">
+    <main id="main-content" class="max-w-7xl mx-auto w-full px-4 py-8 flex flex-col lg:flex-row gap-8 lg:overflow-hidden">
 
         <!-- Left Column: Config -->
         <section
-            class="lg:col-span-4 flex flex-col gap-6 lg:block lg:space-y-6 lg:h-[calc(100vh-150px)] lg:overflow-y-auto lg:flex-shrink-0">
+            class="lg:w-[340px] lg:shrink-0 flex flex-col gap-6 lg:block lg:space-y-6 lg:h-[calc(100vh-150px)] lg:overflow-y-auto">
 
             <!-- Basic Config -->
             <div
@@ -413,14 +413,15 @@
             </div>
 
             <!-- Dynamic Slots Settings -->
-            <div
-                class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
-                <div
-                    class="bg-slate-50/50 dark:bg-slate-800/40 px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+            <details
+                class="group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+                <summary
+                    class="bg-slate-50/50 dark:bg-slate-800/40 px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                     <i data-lucide="users" class="w-5 h-5 text-indigo-500"></i>
                     <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200" data-i18n="docsPerDay">
                         จำนวนแพทย์ต่อวัน</h2>
-                </div>
+                    <i data-lucide="chevron-down" class="w-4 h-4 ml-auto text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true"></i>
+                </summary>
                 <div class="p-5 space-y-4">
                     <div id="defaultSlotsContainer">
                         <label
@@ -455,7 +456,7 @@
                         <div id="extraSlotsList" class="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar"></div>
                     </div>
                 </div>
-            </div>
+            </details>
 
             <!-- Off Requests -->
             <div
@@ -479,13 +480,14 @@
             </div>
 
             <!-- Advanced Settings -->
-            <div
-                class="bg-slate-50 dark:bg-slate-900/50 rounded-2xl shadow-inner border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-200/60 dark:border-slate-800 flex items-center gap-2">
+            <details
+                class="group bg-slate-50 dark:bg-slate-900/50 rounded-2xl shadow-inner border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <summary class="px-5 py-4 border-b border-slate-200/60 dark:border-slate-800 flex items-center gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                     <i data-lucide="sliders" class="w-5 h-5 text-teal-600 dark:text-teal-400"></i>
                     <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200" data-i18n="advSettings">
                         เงื่อนไขการจัดเวรขั้นสูง</h2>
-                </div>
+                    <i data-lucide="chevron-down" class="w-4 h-4 ml-auto text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true"></i>
+                </summary>
                 <div class="p-5 space-y-4 text-sm">
                     <div class="flex items-center justify-between p-2">
                         <div>
@@ -622,7 +624,7 @@
                             *ระบุคู่ที่ขัดแย้งกันเพื่อให้ระบบไม่จัดให้อยู่เวรด้วยกัน</p>
                     </div>
                 </div>
-            </div>
+            </details>
 
             <!-- Special Rule -->
             <div id="specialRuleContainer"
@@ -710,7 +712,7 @@
 
         <!-- Right Column: Results -->
         <section
-            class="lg:col-span-8 flex flex-col gap-6 lg:sticky lg:top-[86px] lg:h-[calc(100vh-150px)] lg:overflow-y-auto">
+            class="lg:flex-1 lg:min-w-0 flex flex-col gap-6 lg:sticky lg:top-[86px] lg:h-[calc(100vh-150px)] lg:overflow-y-auto">
 
             <!-- Empty State -->
             <div id="emptyState"
@@ -903,7 +905,7 @@
 
                     <!-- View Container: Table Mode -->
                     <div id="tableViewContainer"
-                        class="mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 max-h-[600px] custom-scrollbar -webkit-overflow-scrolling-touch">
+                        class="mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 custom-scrollbar -webkit-overflow-scrolling-touch">
                         <table class="w-full text-left text-sm border-collapse min-w-[750px]">
                             <thead class="sticky top-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-sm"
                                 id="scheduleTableHeader">
@@ -918,7 +920,7 @@
 
                     <!-- View Container: Calendar Mode -->
                     <div id="calendarViewContainer"
-                        class="hidden mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 p-4 bg-slate-50/40 dark:bg-slate-950/20 max-h-[600px] custom-scrollbar -webkit-overflow-scrolling-touch">
+                        class="hidden mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 p-4 bg-slate-50/40 dark:bg-slate-950/20 custom-scrollbar -webkit-overflow-scrolling-touch">
                         <div class="w-full md:min-w-[700px]">
                             <div class="hidden md:grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 mb-2"
                                 id="calendarHeaderDays">
@@ -938,7 +940,7 @@
 
                     <!-- View Container: Person Mode -->
                     <div id="personViewContainer"
-                        class="hidden mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 p-4 bg-white/50 dark:bg-slate-950/20 max-h-[600px] custom-scrollbar -webkit-overflow-scrolling-touch">
+                        class="hidden mt-4 block w-full overflow-x-auto overflow-y-auto flex-1 p-4 bg-white/50 dark:bg-slate-950/20 custom-scrollbar -webkit-overflow-scrolling-touch">
                         <div class="min-w-[700px]">
                             <table class="w-full text-sm text-left">
                                 <thead id="personViewHeader">
