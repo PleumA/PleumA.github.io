@@ -81,6 +81,7 @@ appJsCode = appJsCode.replace(/let doctors = /g, 'global.doctors = ');
 appJsCode = appJsCode.replace(/let offData = /g, 'global.offData = ');
 appJsCode = appJsCode.replace(/let extraSlotsData = /g, 'global.extraSlotsData = ');
 appJsCode = appJsCode.replace(/let manualOverrides = /g, 'global.manualOverrides = ');
+appJsCode = appJsCode.replace(/let pendingOverrides = /g, 'global.pendingOverrides = ');
 appJsCode = appJsCode.replace(
     /function showToast\(msg, isError = false\) \{/,
     'function showToast(msg, isError = false) { toastMessages.push({msg, isError});'
@@ -158,7 +159,8 @@ try {
                 try {
                     assert.deepStrictEqual(doctors, ['Charlie', 'Dave']);
                     assert.deepStrictEqual(offData, [{ id: 1, date: 5, names: 'Charlie' }]);
-                    assert.deepStrictEqual(manualOverrides, { 2: { 1: 'Dave' } });
+                    // imported overrides wait for a run to commit
+                    assert.deepStrictEqual(pendingOverrides, { 2: { 1: 'Dave' } });
                     assert.strictEqual(mockDOM['inputMonth'].value, '12');
                     assert.strictEqual(mockDOM['chkRoleBased'].checked, true);
 
@@ -313,9 +315,9 @@ function runTest5() {
 
                     try {
                         assert.deepStrictEqual(
-                            manualOverrides,
+                            pendingOverrides,
                             { 3: { 0: 'Bob' } },
-                            'manualOverrides[3][0] must match after import'
+                            'imported overrides[3][0] must match after import'
                         );
                         console.log('✅ TEST 5 PASSED: MANUAL OVERRIDES PRESERVED IN ROUND-TRIP');
                         passed++;

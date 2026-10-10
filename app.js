@@ -15,6 +15,8 @@ let scheduleDates = [];
 let manualOverrides = {};
 // Period the manual overrides belong to; null means "adopt the next run's period" (set by import)
 let overridesPeriod = null;
+// Overrides from an imported file: adopted into manualOverrides only when a run commits
+let pendingOverrides = null;
 const warnedChips = new Set(); // day chips already reported as dropped
 let quota = {};
 
@@ -707,18 +709,7 @@ function removeDoctor(index) {
     if (!name) return;
     // Not undoable: undo would resurrect the removed doctor as a ghost in the schedule
     doctors = doctors.filter((_, i) => i !== index);
-
-    // Also clean up overrides for this doctor
-    Object.keys(manualOverrides).forEach((day) => {
-        Object.keys(manualOverrides[day]).forEach((slot) => {
-            if (manualOverrides[day][slot] === name) {
-                delete manualOverrides[day][slot];
-            }
-        });
-        if (Object.keys(manualOverrides[day]).length === 0) {
-            delete manualOverrides[day];
-        }
-    });
+    // Their overrides are pruned when a run commits (a failed run still shows this doctor)
 
     // ...and from off requests and the locked-doctor list
     offData.forEach((req) => {
@@ -2704,14 +2695,19 @@ async function runScheduleOnce() {
         committed = true;
 
         // Commit-only: a changed period discards the old period's manual edits
-        if (overridesPeriod !== null && overridesPeriod !== key) {
+        if (pendingOverrides) {
+            manualOverrides = pendingOverrides;
+            undoStack.length = 0;
+        } else if (overridesPeriod !== null && overridesPeriod !== key) {
             if (Object.keys(manualOverrides).length > 0) {
                 showToast(translations[currentLang].overridesCleared);
             }
             manualOverrides = {};
             undoStack.length = 0;
         }
+        pendingOverrides = null;
         overridesPeriod = key;
+        pruneOverrides(globalResult.doctors);
 
         // Apply manual overrides saved previously
         applyManualOverrides(config);
@@ -2803,6 +2799,18 @@ const resultCtx = () =>
         year: parseInt(document.getElementById('inputYear').value),
     };
 const resultConfig = () => resultCtx().config;
+
+// Drop overrides naming a doctor who is not in the given list
+function pruneOverrides(docs) {
+    Object.keys(manualOverrides).forEach((day) => {
+        Object.keys(manualOverrides[day]).forEach((slot) => {
+            const n = manualOverrides[day][slot];
+            if (n !== SHORTAGE_MARKER && n !== '-' && !docs.includes(n))
+                delete manualOverrides[day][slot];
+        });
+        if (Object.keys(manualOverrides[day]).length === 0) delete manualOverrides[day];
+    });
+}
 
 // Apply manual edits to the current global result
 function applyManualOverrides(config) {
@@ -4792,9 +4800,7 @@ function applyConfig(config) {
     if (config.doctors) doctors = config.doctors;
     if (config.offData) offData = config.offData;
     if (config.extraSlotsData) extraSlotsData = config.extraSlotsData;
-    manualOverrides = config.manualOverrides || {};
-    undoStack.length = 0; // history from the previous file cannot apply to this one
-    overridesPeriod = null; // the first run adopts the imported period, keeping imported overrides
+    pendingOverrides = config.manualOverrides || {}; // adopted, with an undo reset, on commit
 
     if (config.quota) {
         quota = config.quota;
@@ -4930,8 +4936,7 @@ window.importConfigJSON = function (event) {
     const reader = new FileReader();
     reader.onload = function (e) {
         const snapshot = JSON.parse(JSON.stringify(getCurrentConfig()));
-        const savedPeriod = overridesPeriod;
-        const savedUndo = JSON.parse(JSON.stringify(undoStack));
+        const savedPending = pendingOverrides;
         let applied = false;
         try {
             const checked = sanitizeConfig(JSON.parse(e.target.result));
@@ -4952,10 +4957,7 @@ window.importConfigJSON = function (event) {
                 } catch (restoreError) {
                     console.error('Rollback failed:', restoreError);
                 }
-                // applyConfig resets these; put back what the old session had
-                overridesPeriod = savedPeriod;
-                undoStack.length = 0;
-                undoStack.push(...savedUndo);
+                pendingOverrides = savedPending; // applyConfig set it
                 throw error;
             }
 
@@ -4991,14 +4993,7 @@ window.undoLastAction = function () {
     if (undoStack.length > 0) {
         manualOverrides = undoStack.pop();
         // A doctor removed since the snapshot must not come back as a ghost
-        Object.keys(manualOverrides).forEach((day) => {
-            Object.keys(manualOverrides[day]).forEach((slot) => {
-                const n = manualOverrides[day][slot];
-                if (n !== SHORTAGE_MARKER && n !== '-' && !resultCtx().doctors.includes(n))
-                    delete manualOverrides[day][slot];
-            });
-            if (Object.keys(manualOverrides[day]).length === 0) delete manualOverrides[day];
-        });
+        pruneOverrides(resultCtx().doctors);
         const config = resultConfig();
         applyManualOverrides(config);
         renderTableView(config);
