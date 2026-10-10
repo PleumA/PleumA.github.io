@@ -141,12 +141,11 @@ runTest('Test 9: CONFLICT LIST - Parse pairs correctly', () => {
 
 runTest('Test 10: CONFLICT LIST - Add new pair', () => {
     document.getElementById('inputConflicts').value = 'A:B';
+    window.renderStructuredConflicts(); // rows come from the screen, so show them first
     window.addStructuredConflictPair();
     const container = document.getElementById('structuredConflictsContainer');
     const rows = container.querySelectorAll('.flex');
     assert.strictEqual(rows.length, 2);
-    // When adding a new pair, it pushes empty value initially, but syncStructuredConflicts will filter it out if we sync.
-    // Wait, the input value is checked before sync? In my test I'll just check the DOM length.
 });
 
 runTest('Test 11: SPECIAL HOLIDAYS - Parse chips', () => {

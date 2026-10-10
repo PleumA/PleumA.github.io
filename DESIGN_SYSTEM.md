@@ -25,7 +25,7 @@ Dark-mode variants use the `dark:` prefix and slate-800/900/950 backgrounds.
 - **Base size**: 16 px / `text-base`
 - **Headings**: `font-bold text-slate-700 dark:text-slate-200`
 - **Helper text**: `text-[11px] text-slate-500 dark:text-slate-400`
-- **Labels**: `text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400`
+- **Labels**: `text-xs font-bold text-slate-600 dark:text-slate-400` (sentence case: Thai has no case, so all-caps would make English look heavier)
 
 ---
 

@@ -366,28 +366,39 @@ function updateSinglePoolQuota(doc, delta) {
 }
 
 // 4. Conflicts
-function renderStructuredConflicts() {
+// Rows exactly as shown, half-filled ones included; the hidden input only keeps complete pairs
+function readConflictRows() {
+    const container = document.getElementById('structuredConflictsContainer');
+    return [...container.querySelectorAll('.flex')].map((row) => [
+        row.querySelector('.conflict-doc-1').value,
+        row.querySelector('.conflict-doc-2').value,
+    ]);
+}
+
+function renderStructuredConflicts(rows) {
     const container = document.getElementById('structuredConflictsContainer');
     if (!container) return;
-    const val = document.getElementById('inputConflicts').value;
-    const pairs = val
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => s);
+    if (!rows) {
+        const val = document.getElementById('inputConflicts').value;
+        rows = val
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s)
+            .map((p) => {
+                let parts = p.includes(':')
+                    ? p.split(':')
+                    : p.includes(' conflicts with ')
+                      ? p.split(' conflicts with ')
+                      : [];
+                if (parts.length < 2) parts = [p, ''];
+                return [parts[0].trim(), parts[1].trim()];
+            });
+    }
 
     const activeDocs = typeof doctors !== 'undefined' ? doctors : [];
 
     let html = '';
-    pairs.forEach((p, idx) => {
-        let parts = p.includes(':')
-            ? p.split(':')
-            : p.includes(' conflicts with ')
-              ? p.split(' conflicts with ')
-              : [];
-        if (parts.length < 2) parts = [p, ''];
-        const doc1 = parts[0].trim();
-        const doc2 = parts[1].trim();
-
+    rows.forEach(([doc1, doc2], idx) => {
         let doc1Options = activeDocs
             .map(
                 (d) =>
@@ -428,34 +439,20 @@ function renderStructuredConflicts() {
 }
 
 function addStructuredConflictPair() {
-    const val = document.getElementById('inputConflicts').value;
-    const parts = val
-        ? val
-              .split(',')
-              .map((s) => s.trim())
-              .filter((s) => s)
-        : [];
-    parts.push(`:`);
-    document.getElementById('inputConflicts').value = parts.join(', ');
-    renderStructuredConflicts();
+    const rows = readConflictRows();
+    rows.push(['', '']);
+    renderStructuredConflicts(rows);
     syncStructuredConflicts();
 }
 
 function removeStructuredConflict(idx) {
-    const val = document.getElementById('inputConflicts').value;
-    const parts = val
-        ? val
-              .split(',')
-              .map((s) => s.trim())
-              .filter((s) => s)
-        : [];
-    parts.splice(idx, 1);
-    document.getElementById('inputConflicts').value = parts.join(', ');
-    renderStructuredConflicts();
+    const rows = readConflictRows();
+    rows.splice(idx, 1);
+    renderStructuredConflicts(rows);
     syncStructuredConflicts();
 }
 
-function syncStructuredConflicts() {
+function syncStructuredConflicts(skipSchedule = false) {
     const container = document.getElementById('structuredConflictsContainer');
     if (!container) return;
     const rows = container.querySelectorAll('.flex');
@@ -468,7 +465,7 @@ function syncStructuredConflicts() {
         }
     });
     document.getElementById('inputConflicts').value = newParts.join(', ');
-    if (typeof generateSchedule === 'function') generateSchedule();
+    if (!skipSchedule && typeof generateSchedule === 'function') generateSchedule();
 }
 
 // 5 & 6. Chips (Special Holidays & No-Duty Days)

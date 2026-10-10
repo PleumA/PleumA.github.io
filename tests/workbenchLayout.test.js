@@ -162,14 +162,18 @@ runTest('phone CSS turns table rows into cards without sideways scroll', () => {
         /#scheduleTableBody td:nth-child\(2\)\s*\{[^}]*flex:\s*1 0 auto/.test(block),
         'day cell does not fill line 1'
     );
+    assert.ok(
+        /#scheduleTableBody td:nth-child\(2\)\s*\{[^}]*min-width:\s*60%/.test(block),
+        'day cell lost min-width: 60%, which is what pushes the duties to line 2'
+    );
 });
 
 runTest('phone header scrolls away and drops the subtitle (<768px)', () => {
     const css = [...document.querySelectorAll('style')].map((s) => s.textContent).join('\n');
-    assert.ok(
-        /@media \(max-width: 767px\)[\s\S]*?header\s*\{[^}]*position:\s*static/.test(css),
-        'header not static below 768px'
-    );
+    const header = document.querySelector('header');
+    assert.ok(/\bmd:sticky\b/.test(header.className), 'header should be sticky only from md up');
+    assert.ok(!/(^|\s)sticky(\s|$)/.test(header.className), 'bare sticky class still on header');
+    assert.ok(!/position:\s*static\s*!important/.test(css), '!important override still present');
     const sub = document.querySelector('[data-i18n="subtitle"]');
     assert.ok(
         sub.className.includes('hidden') && sub.className.includes('md:block'),

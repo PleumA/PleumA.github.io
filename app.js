@@ -469,6 +469,12 @@ function applyTranslations() {
         if (v) el.setAttribute('title', v);
     });
 
+    // Update aria-label attributes
+    document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+        const v = translations[lang][el.getAttribute('data-i18n-aria')];
+        if (v) el.setAttribute('aria-label', v);
+    });
+
     // Update HTML elements (preserves rich formatting like <code> tags)
     const htmlElements = document.querySelectorAll('[data-i18n-html]');
     htmlElements.forEach((el) => {
@@ -640,6 +646,12 @@ function renderDoctorTags() {
     if (typeof renderStructuredDoctorRoles === 'function') renderStructuredDoctorRoles();
     if (typeof window.renderStructuredSinglePoolQuotas === 'function')
         window.renderStructuredSinglePoolQuotas();
+    // Conflict dropdowns list the doctors, so they follow adds and removes too
+    if (
+        typeof window.readConflictRows === 'function' &&
+        document.getElementById('structuredConflictsContainer')
+    )
+        window.renderStructuredConflicts(window.readConflictRows());
 }
 
 function addDoctor(name) {
@@ -692,6 +704,17 @@ function removeDoctor(index) {
         .map((d) => d.trim())
         .filter((d) => d && d !== name)
         .join(', ');
+
+    // A conflict row naming the removed doctor loses that side; the caller regenerates below
+    if (
+        typeof window.readConflictRows === 'function' &&
+        document.getElementById('structuredConflictsContainer')
+    ) {
+        window.renderStructuredConflicts(
+            window.readConflictRows().map((r) => r.map((n) => (n === name ? '' : n)))
+        );
+        window.syncStructuredConflicts(true);
+    }
 
     syncDoctorsToInput();
     syncDoctorRolesInput();
@@ -3046,9 +3069,6 @@ window.updateDoctorAssignment = function (day, slotIndex, docIndex) {
 
     updateTargetedCellDOM(day, slotIndex);
 
-    const btnConfirm = document.getElementById('btnConfirmChanges');
-    if (btnConfirm) btnConfirm.classList.remove('hidden');
-
     showToast(
         currentLang === 'th'
             ? `อัปเดตเวรวันที่ ${day} สำเร็จ!`
@@ -3259,9 +3279,6 @@ window.resetSlotToAuto = function (day, slotIndex) {
 
         updateTargetedCellDOM(day, slotIndex);
 
-        const btnConfirm = document.getElementById('btnConfirmChanges');
-        if (btnConfirm) btnConfirm.classList.remove('hidden');
-
         const config = parseUIConfig();
         recalculateCounts(config);
         renderSummaryTable(config);
@@ -3273,19 +3290,6 @@ window.resetSlotToAuto = function (day, slotIndex) {
             ? `คืนค่าระบบคำนวณ วันที่ ${day} สำเร็จ!`
             : `Reset Day ${day} to automatic solver`
     );
-};
-
-window.confirmChanges = function () {
-    if (!globalResult) return;
-    const config = parseUIConfig();
-    recalculateCounts(config);
-    renderSummaryTable(config);
-    updateStatsDashboard();
-
-    const btnConfirm = document.getElementById('btnConfirmChanges');
-    if (btnConfirm) btnConfirm.classList.add('hidden');
-
-    showToast(currentLang === 'th' ? 'อัปเดตสถิติเรียบร้อยแล้ว' : 'Stats updated successfully');
 };
 
 // Stats Dashboard Rendering
@@ -4317,11 +4321,18 @@ window.exportCalendar = function (target) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), 60000); // slow phones need the Blob for a while
 
     if (target === 'google') {
-        window.open('https://calendar.google.com/calendar/r/settings/export', '_blank', 'noopener');
-        showToast(t.calendarGoogleHint);
+        // No 'noopener' feature string: it forces window.open to return null, which would hide a
+        // blocked pop-up. Drop the opener by hand instead.
+        const win = window.open('https://calendar.google.com/calendar/r/settings/export', '_blank');
+        if (win) {
+            win.opener = null;
+            showToast(t.calendarGoogleHint);
+        } else {
+            showToast(t.calendarPopupBlocked, true);
+        }
     } else {
         showToast(t.calendarAppleHint);
     }

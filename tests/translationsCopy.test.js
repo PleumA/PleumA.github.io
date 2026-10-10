@@ -63,6 +63,14 @@ runTest('every title attribute is translatable or already Thai', () => {
     assert.deepStrictEqual(offenders, []);
 });
 
+runTest('every aria-label is translatable or already Thai', () => {
+    const offenders = (html.match(/<[^>]*\saria-label="[^"]*"[^>]*>/g) || []).filter((tag) => {
+        const label = tag.match(/\saria-label="([^"]*)"/)[1];
+        return !/data-i18n-aria=/.test(tag) && !/[\u0E00-\u0E7F]/.test(label);
+    });
+    assert.deepStrictEqual(offenders, []);
+});
+
 runTest('no all-caps label classes (Thai has no case, so EN would look bigger)', () => {
     const offenders = [];
     for (const f of ['index.html', 'app.js', 'structuredInputs.js']) {

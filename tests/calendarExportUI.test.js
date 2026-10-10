@@ -106,6 +106,7 @@ runTest('every new translation key exists in th and en', () => {
         'calendarNoEvents',
         'calendarAppleHint',
         'calendarGoogleHint',
+        'calendarPopupBlocked',
     ];
     const t = window.eval('translations');
     keys.forEach((k) => {
@@ -145,6 +146,31 @@ runTest('person scope exports only that person', () => {
     window.exportCalendar('apple');
     assert.strictEqual((lastICS.match(/BEGIN:VEVENT/g) || []).length, 1);
     assert.ok(lastICS.includes('SUMMARY:Duty: Alice'));
+});
+
+runTest('Blob URL is revoked after 60 s, not 1 s', () => {
+    reset();
+    const delays = [];
+    const realSet = window.setTimeout;
+    window.setTimeout = (fn, ms) => {
+        delays.push(ms);
+        return 0;
+    };
+    try {
+        window.exportCalendar('apple');
+    } finally {
+        window.setTimeout = realSet;
+    }
+    assert.ok(delays.includes(60000), `timeouts: ${delays}`);
+});
+
+runTest('Google export: a blocked pop-up shows a toast with the import link', () => {
+    reset();
+    window.open = () => null;
+    window.exportCalendar('google');
+    const msg = document.getElementById('toastMsg').textContent;
+    assert.ok(msg.includes('https://calendar.google.com/calendar/r/settings/export'), msg);
+    window.open = (url) => opened.push(url);
 });
 
 runTest('no schedule → no download', () => {
