@@ -61,5 +61,13 @@ runTest('index.html has no Thai " / English" duplicate in visible text or attrib
     assert.deepStrictEqual(offenders, []);
 });
 
+runTest('every title attribute is translatable or already Thai', () => {
+    const offenders = (html.match(/<[^>]*\stitle="[^"]*"[^>]*>/g) || []).filter((tag) => {
+        const title = tag.match(/\stitle="([^"]*)"/)[1];
+        return !/data-i18n-title=/.test(tag) && !/[\u0E00-\u0E7F]/.test(title);
+    });
+    assert.deepStrictEqual(offenders, []);
+});
+
 console.log(`\nPASSED: ${passed}/${total}, FAILED: ${total - passed}`);
 if (passed !== total) process.exit(1);

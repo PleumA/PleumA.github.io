@@ -204,7 +204,7 @@
                 <!-- Theme Toggle Button -->
                 <button onclick="toggleDarkMode()" id="btnDarkMode"
                     class="bg-white/10 hover:bg-white/20 border border-white/10 p-2.5 rounded-xl transition-all active:scale-95 text-white flex items-center justify-center"
-                    title="Toggle Dark/Light Mode"
+                    data-i18n-title="darkModeTitle" title="สลับโหมดมืด/สว่าง"
                     aria-label="Toggle dark/light mode">
                     <i data-lucide="moon" id="iconDarkMode" class="w-5 h-5" aria-hidden="true"></i>
                 </button>
@@ -212,7 +212,7 @@
                 <!-- Language Toggle Button -->
                 <button onclick="toggleLanguage()" id="btnLanguage"
                     class="bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-2.5 rounded-xl transition-all active:scale-95 text-white font-bold text-sm tracking-wide"
-                    title="Switch Language"
+                    data-i18n-title="langSwitchTitle" title="เปลี่ยนภาษา"
                     aria-label="Switch language between Thai and English">
                     EN
                 </button>
@@ -253,11 +253,11 @@
                             ตั้งค่าพื้นฐาน</h2>
                     </div>
                     <div class="flex items-center gap-1.5">
-                        <button onclick="exportConfigJSON()" title="Export Config"
+                        <button onclick="exportConfigJSON()" data-i18n-title="exportConfigTitle" title="ส่งออกการตั้งค่า"
                             class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
                             <i data-lucide="download" class="w-4 h-4"></i>
                         </button>
-                        <button onclick="document.getElementById('importConfigFile').click()" title="Import Config"
+                        <button onclick="document.getElementById('importConfigFile').click()" data-i18n-title="importConfigTitle" title="นำเข้าการตั้งค่า"
                             class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors flex items-center justify-center">
                             <i data-lucide="upload" class="w-4 h-4"></i>
                         </button>
