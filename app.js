@@ -530,7 +530,16 @@ function applyTranslations() {
     renderOffRequests();
     renderExtraSlots();
     renderSpecialDocsCheckboxList();
+    // Role rows hold language-dependent text (the "new role" option, the no-doctors warning)
+    if (typeof renderStructuredDoctorRoles === 'function') renderStructuredDoctorRoles();
 }
+
+// Cell button aria-label; displayDoc is already escaped (or a translated label)
+const cellAria = (day, slot, name) =>
+    translations[currentLang].cellAria
+        .replace('{day}', day)
+        .replace('{slot}', slot + 1)
+        .replace('{name}', () => name);
 
 function updateDayNamesLanguage() {
     if (!globalResult) return;
@@ -630,7 +639,7 @@ function renderDoctorTags() {
     doctors.forEach((doc, index) => {
         const tag = document.createElement('span');
         tag.className =
-            'doctor-tag bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-900/50 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none animate-in fade-in scale-95 duration-200';
+            'doctor-tag bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-900/50 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none scale-95 duration-200';
         tag.innerHTML = `
             <span></span>
             <button type="button" onclick="event.stopPropagation(); removeDoctor(${index})" class="text-teal-400 hover:text-teal-600 transition-colors">
@@ -3696,7 +3705,7 @@ function renderTableView(config) {
                 colsHtml += `
                     <td class="py-3.5 px-4">
                         <div class="relative group/cell inline-block min-w-[110px]">
-                            <button id="btn-day-${row.day}-slot-${i}" aria-label="Day ${row.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." 
+                            <button id="btn-day-${row.day}-slot-${i}" aria-label="${cellAria(row.day, i, displayDoc)}" 
                                 draggable="true" ondragstart="handleDragStart(event, ${row.day}, ${i}, ${docIndexToPass})" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${row.day}, ${i}, ${docIndexToPass})"
                                 onclick="openCellDropdown(event, 'tablecelldropdown-${row.day}-${i}')" class="w-full text-left text-sm px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing">
                                 <span class="truncate" aria-hidden="true">${displayDoc}</span>
@@ -3822,7 +3831,7 @@ function renderCalendarView(config) {
 
                 docsHtml += `
                     <div class="relative group/cell">
-                        <button id="btn-cal-day-${dayRow.day}-slot-${i}" aria-label="Day ${dayRow.day}, slot ${i + 1}. Current: ${displayDoc}. Click to change." 
+                        <button id="btn-cal-day-${dayRow.day}-slot-${i}" aria-label="${cellAria(dayRow.day, i, displayDoc)}" 
                             draggable="true" ondragstart="handleDragStart(event, ${dayRow.day}, ${i}, ${docIndexToPass})" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${dayRow.day}, ${i}, ${docIndexToPass})"
                             onclick="openCellDropdown(event, 'celldropdown-${dayRow.day}-${i}')" class="w-full text-left text-[11px] px-2 py-1 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing">
                             <span class="truncate" aria-hidden="true">${displayDoc}</span>

@@ -76,7 +76,7 @@ function renderStructuredDoctorRoles() {
     activeDocs.forEach((doc) => {
         const role = roleMap[doc] || availableRoles[0]; // match or default
 
-        const newRoleText = currentLang === 'th' ? '＋ บทบาทใหม่' : '＋ New role';
+        const newRoleText = translations[currentLang].newRoleOption;
         let roleOptions = availableRoles
             .map(
                 (r) =>
@@ -488,7 +488,7 @@ function renderStructuredChips(hiddenInputId, containerId, uiInputId) {
     items.forEach((item, idx) => {
         const tag = document.createElement('span');
         tag.className =
-            'chip-tag bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-900/50 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none animate-in fade-in scale-95 duration-200';
+            'chip-tag bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-900/50 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none scale-95 duration-200';
         tag.innerHTML = `
             <span>${esc(item)}</span>
             <button type="button" onclick="event.stopPropagation(); removeStructuredChip('${hiddenInputId}', ${idx})" class="text-teal-400 hover:text-teal-600 transition-colors">

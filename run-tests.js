@@ -15,7 +15,10 @@ for (const file of testFiles) {
     console.log(`========================================================`);
 
     // Use spawnSync so we can capture both stdout and stderr
-    const result = spawnSync('node', [path.join(testsDir, file)], { encoding: 'utf8' });
+    const result = spawnSync('node', [path.join(testsDir, file)], {
+        encoding: 'utf8',
+        timeout: Number(process.env.TEST_TIMEOUT_MS) || 180000, // a hanging suite must not block CI forever
+    });
     const output = (result.stdout || '') + (result.stderr || '');
     process.stdout.write(output);
 
@@ -28,9 +31,15 @@ for (const file of testFiles) {
         // named "throws TypeError" passes) is a hidden failure
         /UNHANDLED/.test(output) ||
         /^\s*(Uncaught\s+)?(TypeError|ReferenceError)\b/m.test(output);
-    if (hasFailed) {
+    const timedOut = result.error && result.error.code === 'ETIMEDOUT';
+    if (result.error) {
+        process.stdout.write(
+            `\n❌ [FAILED] ${file} ${timedOut ? 'timed out' : 'could not run'}: ${result.error.message}\n`
+        );
+    }
+    if (hasFailed || result.error) {
         allPassed = false;
-        if (result.status !== 0)
+        if (result.status !== 0 && !result.error)
             process.stdout.write(`\n❌ [FAILED] ${file} exited with code ${result.status}\n`);
     }
     console.log('\n'); // Spacing between suites

@@ -791,10 +791,10 @@
             </div>
 
             <!-- Results Container -->
-            <div id="resultsContainer" class="hidden animate-in fade-in duration-500 flex flex-col gap-6">
+            <div id="resultsContainer" class="hidden duration-500 flex flex-col gap-6">
 
                 <!-- Stats Dashboard Grid -->
-                <div id="statsDashboard" class="grid grid-cols-2 md:grid-cols-3 gap-4 animate-in fade-in duration-500">
+                <div id="statsDashboard" class="grid grid-cols-2 md:grid-cols-3 gap-4 duration-500">
                     <div
                         class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3">
                         <div class="bg-teal-50 dark:bg-teal-950/40 p-2.5 rounded-xl text-teal-600 dark:text-teal-400">
@@ -1118,7 +1118,7 @@
                             <span data-i18n="manualSection5Title">5. การแก้ไข ย้อนกลับ และตรวจสอบตาราง</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection5Body">
-                            ลากและวาง (Drag & Drop) ชื่อแพทย์ในตาราง ปฏิทิน และมุมมองบุคคลเพื่อสลับตัวด้วยตนเอง ระบบจะคำนวณสถิติใหม่และแสดงป้ายเตือนทันที กดปุ่มย้อนกลับ (Undo) หรือ <b>Ctrl+Z</b> เพื่อย้อนการแก้ไขทั้งหมด รวมถึงการสลับด้วยการลาก (ถ้าเคอร์เซอร์อยู่ในช่องพิมพ์ Ctrl+Z จะย้อนข้อความตามปกติ) เมื่อเปลี่ยนเดือน ปี หรือช่วงวันที่ การแก้ไขด้วยตนเองจะถูกล้างอัตโนมัติและมีข้อความแจ้งเตือน ส่วนการลบแพทย์ด้วย Backspace ก็ย้อนกลับได้เช่นกัน
+                            ลากและวาง (Drag & Drop) ชื่อแพทย์ในตาราง ปฏิทิน และมุมมองบุคคลเพื่อสลับตัวด้วยตนเอง ระบบจะคำนวณสถิติใหม่และแสดงป้ายเตือนทันที กดปุ่มย้อนกลับ (Undo) หรือ <b>Ctrl+Z</b> เพื่อย้อนการแก้ไขทั้งหมด รวมถึงการสลับด้วยการลาก (ถ้าเคอร์เซอร์อยู่ในช่องพิมพ์ Ctrl+Z จะย้อนข้อความตามปกติ) เมื่อเปลี่ยนเดือน ปี หรือช่วงวันที่ การแก้ไขด้วยตนเองจะถูกล้างอัตโนมัติและมีข้อความแจ้งเตือน ส่วนการลบแพทย์ (เช่น ด้วย Backspace) ไม่สามารถย้อนกลับได้
                         </p>
                     </div>
                     <!-- Section 6 -->
@@ -1129,7 +1129,7 @@
                             <span data-i18n="manualSection6Title">6. การบันทึก/โหลดและการใช้งานออฟไลน์</span>
                         </h4>
                         <p class="text-slate-600 dark:text-slate-300 text-[13px]" data-i18n-html="manualSection6Body">
-                            ส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ หากไฟล์ที่นำเข้าอ่านไม่ได้ ระบบจะปฏิเสธไฟล์และคงการตั้งค่าเดิมไว้ ชื่อแพทย์จะถูกจัดให้เรียบร้อย คือตัดช่องว่างหน้าหลัง ลบชื่อซ้ำ และตัดอักขระ <code>: ; , /</code> ออก หากเดือนหรือปีไม่ถูกต้อง ระบบจะแจ้งข้อความแทนการสร้างตารางที่ผิด เมื่อโหลดหน้าเว็บครั้งแรกแล้ว แอปใช้งานแบบออฟไลน์ได้ และจะอัปเดตตัวเองอัตโนมัติเมื่อมีเวอร์ชันใหม่
+                            ส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ หากไฟล์ที่นำเข้าอ่านไม่ได้ ระบบจะปฏิเสธไฟล์และคงการตั้งค่าเดิมไว้ ชื่อแพทย์จะถูกจัดให้เรียบร้อย คือตัดช่องว่างหน้าหลัง ลบชื่อซ้ำ และแทนที่อักขระ <code>: ; , /</code> ด้วยช่องว่าง หากเดือนหรือปีไม่ถูกต้อง ระบบจะแจ้งข้อความแทนการสร้างตารางที่ผิด เมื่อโหลดหน้าเว็บครั้งแรกแล้ว แอปใช้งานแบบออฟไลน์ได้ และจะอัปเดตตัวเองอัตโนมัติเมื่อมีเวอร์ชันใหม่
                         </p>
                     </div>
                     <!-- Section 7 -->
@@ -1171,9 +1171,9 @@
             <!-- Footer -->
             <div
                 class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end">
-                <button onclick="closeManualModal()"
+                <button onclick="closeManualModal()" data-i18n="okBtn"
                     class="bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-sm">
-                    ตกลง / OK
+                    ตกลง
                 </button>
             </div>
         </div>
@@ -1181,7 +1181,7 @@
 
     <!-- Toast Notification -->
     <div id="toast"
-        class="fixed bottom-8 left-1/2 -translate-x-1/2 transition-all duration-400 z-50 opacity-0 translate-y-8 scale-95 pointer-events-none">
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 transition-all duration-300 z-50 opacity-0 translate-y-8 scale-95 pointer-events-none">
         <div id="toastContent"
             class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm border bg-slate-800 text-white border-slate-700 dark:bg-slate-950">
             <i id="toastIcon" data-lucide="check-circle-2" class="w-6 h-6 text-emerald-400"></i>

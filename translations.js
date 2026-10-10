@@ -70,6 +70,9 @@ const translations = {
         addBtn: 'เพิ่ม',
         addConflictBtn: 'เพิ่มคู่ขัดแย้ง',
         noDocsWarning: 'โปรดเพิ่มรายชื่อแพทย์ก่อน',
+        okBtn: 'ตกลง',
+        newRoleOption: '＋ บทบาทใหม่',
+        cellAria: 'วันที่ {day} ช่อง {slot} ปัจจุบัน {name} คลิกเพื่อเปลี่ยน',
         addDatePlaceholder: 'เพิ่มวัน...',
         customSlotsDesc: 'ระบุจำนวนคนที่ต้องการใช้เฉพาะบางวันได้',
         offRequests: 'วันขอพัก (Off)',
@@ -207,10 +210,10 @@ const translations = {
             'ระบบไม่จัดเวรในวันที่ขอหยุดหรือวันก่อนหน้า 1 วัน ไม่จัดเวรวันหยุดติดกัน และเว้นระยะพักเวรตามที่ตั้งไว้ กรอกวันขอหยุดได้เป็นวันเดียว เช่น <code>5</code> เป็นรายการ เช่น <code>3,7</code> หรือเป็นช่วง เช่น <code>2-5</code> ในโหมดช่วงวันที่กำหนดเองให้กรอก <code>25/02/2026-04/03/2026</code> ระบบจะเตือนเมื่อการแก้ตารางไปชนวันขอหยุด ทั้งแบบช่วง แบบรายการ และวันที่ในช่วงกำหนดเอง',
         manualSection5Title: '5. การแก้ไข ย้อนกลับ และตรวจสอบตาราง',
         manualSection5Body:
-            'ลากและวาง (Drag & Drop) ชื่อแพทย์ในตาราง ปฏิทิน และมุมมองบุคคลเพื่อสลับตัวด้วยตนเอง ระบบจะคำนวณสถิติใหม่และแสดงป้ายเตือนทันที กดปุ่มย้อนกลับ (Undo) หรือ <b>Ctrl+Z</b> เพื่อย้อนการแก้ไขทั้งหมด รวมถึงการสลับด้วยการลาก (ถ้าเคอร์เซอร์อยู่ในช่องพิมพ์ Ctrl+Z จะย้อนข้อความตามปกติ) เมื่อเปลี่ยนเดือน ปี หรือช่วงวันที่ การแก้ไขด้วยตนเองจะถูกล้างอัตโนมัติและมีข้อความแจ้งเตือน ส่วนการลบแพทย์ด้วย Backspace ก็ย้อนกลับได้เช่นกัน',
+            'ลากและวาง (Drag & Drop) ชื่อแพทย์ในตาราง ปฏิทิน และมุมมองบุคคลเพื่อสลับตัวด้วยตนเอง ระบบจะคำนวณสถิติใหม่และแสดงป้ายเตือนทันที กดปุ่มย้อนกลับ (Undo) หรือ <b>Ctrl+Z</b> เพื่อย้อนการแก้ไขทั้งหมด รวมถึงการสลับด้วยการลาก (ถ้าเคอร์เซอร์อยู่ในช่องพิมพ์ Ctrl+Z จะย้อนข้อความตามปกติ) เมื่อเปลี่ยนเดือน ปี หรือช่วงวันที่ การแก้ไขด้วยตนเองจะถูกล้างอัตโนมัติและมีข้อความแจ้งเตือน ส่วนการลบแพทย์ (เช่น ด้วย Backspace) ไม่สามารถย้อนกลับได้',
         manualSection6Title: '6. การบันทึก/โหลดและการใช้งานออฟไลน์',
         manualSection6Body:
-            'ส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ หากไฟล์ที่นำเข้าอ่านไม่ได้ ระบบจะปฏิเสธไฟล์และคงการตั้งค่าเดิมไว้ ชื่อแพทย์จะถูกจัดให้เรียบร้อย คือตัดช่องว่างหน้าหลัง ลบชื่อซ้ำ และตัดอักขระ <code>: ; , /</code> ออก หากเดือนหรือปีไม่ถูกต้อง ระบบจะแจ้งข้อความแทนการสร้างตารางที่ผิด เมื่อโหลดหน้าเว็บครั้งแรกแล้ว แอปใช้งานแบบออฟไลน์ได้ และจะอัปเดตตัวเองอัตโนมัติเมื่อมีเวอร์ชันใหม่',
+            'ส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ หากไฟล์ที่นำเข้าอ่านไม่ได้ ระบบจะปฏิเสธไฟล์และคงการตั้งค่าเดิมไว้ ชื่อแพทย์จะถูกจัดให้เรียบร้อย คือตัดช่องว่างหน้าหลัง ลบชื่อซ้ำ และแทนที่อักขระ <code>: ; , /</code> ด้วยช่องว่าง หากเดือนหรือปีไม่ถูกต้อง ระบบจะแจ้งข้อความแทนการสร้างตารางที่ผิด เมื่อโหลดหน้าเว็บครั้งแรกแล้ว แอปใช้งานแบบออฟไลน์ได้ และจะอัปเดตตัวเองอัตโนมัติเมื่อมีเวอร์ชันใหม่',
         manualSection7Title: '7. โหมดช่วงวันที่กำหนดเอง (Custom Date Range)',
         manualSection7Body:
             "เปิด 'ใช้ช่วงวันที่กำหนดเอง' เพื่อจัดเวรตามวันที่ต้องการ (สูงสุด 90 วัน) แทนการจัดตามเดือน โดยกรอกวันที่ในรูปแบบ DD/MM/YYYY วันขอหยุดในโหมดนี้กรอกเป็นวันที่เต็ม เช่น <code>25/02/2026</code> หรือเป็นช่วงได้",
@@ -255,6 +258,9 @@ const translations = {
         addBtn: 'Add',
         addConflictBtn: 'Add Conflict Pair',
         noDocsWarning: 'Please add doctors first',
+        okBtn: 'OK',
+        newRoleOption: '＋ New role',
+        cellAria: 'Day {day}, slot {slot}. Current: {name}. Click to change.',
         addDatePlaceholder: 'Add date...',
         customSlotsDesc: 'Specify slot count for specific dates',
         offRequests: 'Off Requests',
@@ -394,10 +400,10 @@ const translations = {
             'No duties on an off day or the day before, no consecutive holiday duties, and the configured rest period is kept. Enter off days as a single day (<code>5</code>), a list (<code>3,7</code>) or a range (<code>2-5</code>); in custom range mode use <code>25/02/2026-04/03/2026</code>. Warnings appear when a manual edit lands on an off request, for ranges, lists and custom-range dates alike.',
         manualSection5Title: '5. Editing, Undo & Warnings',
         manualSection5Body:
-            'Drag and drop doctors in the Table, Calendar and Person views to swap them by hand. Stats and warnings update immediately. Undo (button or <b>Ctrl+Z</b>) reverts edits, including drag-and-drop swaps; inside a text box Ctrl+Z undoes typing as usual. Switching month, year or custom range clears your manual edits and a message tells you. Removing a doctor with Backspace can also be undone.',
+            'Drag and drop doctors in the Table, Calendar and Person views to swap them by hand. Stats and warnings update immediately. Undo (button or <b>Ctrl+Z</b>) reverts edits, including drag-and-drop swaps; inside a text box Ctrl+Z undoes typing as usual. Switching month, year or custom range clears your manual edits and a message tells you. Removing a doctor (for example with Backspace) cannot be undone.',
         manualSection6Title: '6. Save/Load & Offline Use',
         manualSection6Body:
-            'Export your setup as a JSON file to load it back later. A file that cannot be read is rejected and your current setup stays unchanged. Doctor names are tidied: spaces trimmed, duplicates removed, and the characters <code>: ; , /</code> removed. An invalid month or year shows a message instead of a wrong schedule. Once loaded, the app works offline and updates itself when a new version is published.',
+            'Export your setup as a JSON file to load it back later. A file that cannot be read is rejected and your current setup stays unchanged. Doctor names are tidied: spaces trimmed, duplicates removed, and the characters <code>: ; , /</code> replaced with a space. An invalid month or year shows a message instead of a wrong schedule. Once loaded, the app works offline and updates itself when a new version is published.',
         manualSection7Title: '7. Custom Date Range Mode',
         manualSection7Body:
             "Turn on 'Use Custom Date Range' to schedule any dates you choose (up to 90 days) instead of a month. Enter dates as DD/MM/YYYY. Off requests in this mode use full dates such as <code>25/02/2026</code>, or ranges.",
