@@ -124,6 +124,83 @@ const { loadApp, reset, settle, snap, importJSON, runner } = require('./domHarne
         assert.ok(errors().some((m) => m.includes('Error reading JSON')));
     });
 
+    await test('names are renamed consistently in overrides and off requests', async () => {
+        reset(w, ['A', 'B']);
+        await importJSON(w, {
+            doctors: ['A:1', 'B'],
+            offData: [{ id: 1, date: '2', names: 'A:1, B, Ghost' }],
+            manualOverrides: { 1: { 0: 'A:1', 1: 'Ghost' } },
+        });
+        const s = snap(w, '({ doctors, offData, manualOverrides })');
+        assert.deepStrictEqual(s.doctors, ['A 1', 'B']);
+        assert.strictEqual(s.offData[0].names, 'A 1, B');
+        assert.deepStrictEqual(s.manualOverrides, { 1: { 0: 'A 1' } });
+        const q = w.sanitizeConfig({
+            doctors: ['A:1'],
+            quota: { 'A:1': 2, B: 'x', C: null, D: -1 },
+        });
+        assert.deepStrictEqual(JSON.parse(JSON.stringify(q.config.quota)), { 'A 1': 2, D: -1 });
+    });
+
+    await test('a doctors list that cleans to nothing is rejected', async () => {
+        reset(w, ['A', 'B']);
+        await importJSON(w, { doctors: [':', null, ' '] });
+        assert.deepStrictEqual(snap(w, 'doctors'), ['A', 'B']);
+        assert.ok(errors().includes(rejectedMsg()));
+    });
+
+    await test('a huge offData array does not overflow the stack', () => {
+        const offData = Array.from({ length: 300000 }, (_, i) => ({
+            id: i + 1,
+            date: '1',
+            names: '',
+        }));
+        assert.ok(w.sanitizeConfig({ offData }).ok);
+    });
+
+    await test('a late failure restores inputs, checkboxes, tags and data', async () => {
+        reset(w, ['A', 'B', 'C']);
+        w.syncDoctorsToInput();
+        w.renderDoctorTags();
+        d.getElementById('inputDefaultSlots').value = '3';
+        d.getElementById('chkAllowBlankDays').checked = true;
+        const before = {
+            state: state(),
+            slots: d.getElementById('inputDefaultSlots').value,
+            blank: d.getElementById('chkAllowBlankDays').checked,
+            tags: d.getElementById('doctorTagsContainer')?.textContent,
+            text: d.getElementById('inputDoctors')?.value,
+        };
+        const real = w.renderExtraSlots;
+        w.renderExtraSlots = () => {
+            w.renderExtraSlots = real;
+            throw new Error('boom');
+        };
+        const realErr = console.error;
+        console.error = () => {};
+        w.toasts.length = 0;
+        try {
+            await importJSON(w, {
+                doctors: ['X', 'Y', 'Z'],
+                inputs: { inputDefaultSlots: '1' },
+                checkboxes: { chkAllowBlankDays: false },
+            });
+        } finally {
+            console.error = realErr;
+            w.renderExtraSlots = real;
+        }
+        assert.deepStrictEqual(state(), before.state);
+        assert.strictEqual(d.getElementById('inputDefaultSlots').value, before.slots);
+        assert.strictEqual(d.getElementById('chkAllowBlankDays').checked, before.blank);
+        assert.strictEqual(d.getElementById('doctorTagsContainer')?.textContent, before.tags);
+        assert.strictEqual(d.getElementById('inputDoctors')?.value, before.text);
+        assert.ok(
+            !w.toasts.some((t) => t.msg === 'Config imported successfully!'),
+            'success toast shown'
+        );
+        assert.ok(errors().some((m) => m.includes('Error reading JSON')));
+    });
+
     await test('addDoctor strips separators, trims, and drops duplicates', async () => {
         reset(w, ['A', 'B']);
         w.addDoctor('  Dr:X; Y,\nZ  ');
@@ -149,6 +226,10 @@ const { loadApp, reset, settle, snap, importJSON, runner } = require('./domHarne
         input.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
         await settle(w);
         assert.deepStrictEqual(snap(w, 'doctors'), ['A', 'B', 'P Q']);
+        input.value = 'R,S';
+        input.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
+        await settle(w);
+        assert.deepStrictEqual(snap(w, 'doctors'), ['A', 'B', 'P Q', 'R S']);
     });
 
     await test('a new role name from the prompt is cleaned', () => {

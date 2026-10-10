@@ -17,7 +17,7 @@ global.document = {
     }),
     body: {
         appendChild: () => {},
-        classList: { add: () => {}, remove: () => {} },
+        classList: { add: () => {}, remove: () => {}, contains: () => false },
     },
 };
 global.window = {
@@ -65,7 +65,7 @@ global.document.getElementById = (id) => {
         mockDOM[id] = {
             value: '',
             checked: false,
-            classList: { add: () => {}, remove: () => {} },
+            classList: { add: () => {}, remove: () => {}, contains: () => false },
             style: {},
             dispatchEvent: () => {},
             setAttribute: () => {},
@@ -117,7 +117,7 @@ function resetMocks() {
     for (let key in defaultVals) {
         let val = defaultVals[key];
         let obj = {
-            classList: { add: () => {}, remove: () => {} },
+            classList: { add: () => {}, remove: () => {}, contains: () => false },
             style: {},
             dispatchEvent: () => {},
             setAttribute: () => {},

@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     docInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
-            const value = this.value.trim().replace(/,/g, '');
+            const value = this.value.trim();
             if (value) {
                 addDoctor(value);
                 this.value = '';
@@ -4393,8 +4393,9 @@ window.closeManualModal = function () {
 };
 
 // ====== CONFIG EXPORT & IMPORT ======
-window.exportConfigJSON = function () {
-    const config = {
+// The full saved-config object: data globals plus every input and checkbox.
+function getCurrentConfig() {
+    return {
         doctors: doctors,
         offData: offData,
         extraSlotsData: extraSlotsData,
@@ -4436,6 +4437,10 @@ window.exportConfigJSON = function () {
             chkShiftBased: document.getElementById('chkShiftBased')?.checked || false,
         },
     };
+}
+
+window.exportConfigJSON = function () {
+    const config = getCurrentConfig();
 
     const dataStr =
         'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(config, null, 2));
@@ -4467,7 +4472,7 @@ function sanitizeConfig(raw) {
     // Keep integer ids, renumber missing or repeated ones
     const withIds = (rows) => {
         const clean = rows.filter(isObj);
-        let next = 1 + Math.max(0, ...clean.map((r) => (Number.isInteger(r.id) ? r.id : 0)));
+        let next = 1 + clean.reduce((m, r) => (Number.isInteger(r.id) && r.id > m ? r.id : m), 0);
         const used = new Set();
         return clean.map((r) => {
             const id = Number.isInteger(r.id) && !used.has(r.id) ? r.id : next++;
@@ -4477,19 +4482,34 @@ function sanitizeConfig(raw) {
     };
 
     const config = { ...raw };
+    // Raw doctor name -> cleaned name, so every reference below can follow a rename
+    const rename = new Map();
     if (raw.doctors != null) {
         config.doctors = [];
         raw.doctors.forEach((d) => {
             if (typeof d !== 'string' && typeof d !== 'number') return;
             const name = sanitizeName(d);
-            if (name && !config.doctors.includes(name)) config.doctors.push(name);
+            if (!name) return;
+            rename.set(String(d), name);
+            if (!config.doctors.includes(name)) config.doctors.push(name);
         });
+        if (raw.doctors.length > 0 && config.doctors.length === 0)
+            return { ok: false, error: 'doctors list is empty' };
     }
+    const known = (n) => raw.doctors == null || config.doctors.includes(n);
     if (raw.offData != null) {
         config.offData = withIds(raw.offData).map((r) => ({
             id: r.id,
             date: scalar(r.date),
-            names: typeof r.names === 'string' ? r.names : '',
+            names:
+                typeof r.names === 'string'
+                    ? r.names
+                          .split(',')
+                          .map((n) => n.trim())
+                          .map((n) => rename.get(n) ?? n)
+                          .filter((n) => n && known(n))
+                          .join(', ')
+                    : '',
         }));
     }
     if (raw.extraSlotsData != null) {
@@ -4505,12 +4525,162 @@ function sanitizeConfig(raw) {
             if (!/^\d+$/.test(day) || !isObj(slots)) return;
             const kept = {};
             Object.entries(slots).forEach(([slot, name]) => {
-                if (/^\d+$/.test(slot) && typeof name === 'string') kept[slot] = name;
+                if (!/^\d+$/.test(slot) || typeof name !== 'string') return;
+                const cleaned = rename.get(name) ?? name;
+                if (known(cleaned) || cleaned === SHORTAGE_MARKER || cleaned === '-')
+                    kept[slot] = cleaned;
             });
             if (Object.keys(kept).length > 0) config.manualOverrides[day] = kept;
         });
     }
+    for (const key of ['quota', 'roleQuota']) {
+        if (raw[key] == null) continue;
+        // Keys are role or doctor names; keep only finite numbers
+        config[key] = {};
+        if (isObj(raw[key])) {
+            Object.entries(raw[key]).forEach(([k, v]) => {
+                if (typeof v === 'number' && Number.isFinite(v))
+                    config[key][rename.get(k) ?? k] = v;
+            });
+        }
+    }
+    // ponytail: the free-text inputs (inputDoctorRoles, inputConflicts, inputSpecialDocs) are not
+    // rewritten on a rename; a name containing ':' is unparseable in their "A:R1" format anyway.
     return { ok: true, config };
+}
+
+// Write a (sanitized) config into state and the DOM. May throw part-way; callers restore.
+function applyConfig(config) {
+    if (config.doctors) doctors = config.doctors;
+    if (config.offData) offData = config.offData;
+    if (config.extraSlotsData) extraSlotsData = config.extraSlotsData;
+    manualOverrides = config.manualOverrides || {};
+
+    if (config.quota) {
+        quota = config.quota;
+    } else if (config.roleQuota && !config.quota) {
+        quota = config.roleQuota;
+    } else {
+        quota = {};
+    }
+
+    if (config.inputs) {
+        Object.keys(config.inputs).forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.value = config.inputs[id];
+        });
+    }
+
+    if (config.checkboxes) {
+        Object.keys(config.checkboxes).forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.checked = config.checkboxes[id];
+        });
+    }
+
+    // Set defaults for Lock Special Duty if missing
+    const lockConditionEl = document.getElementById('lockConditionType');
+    if (lockConditionEl && (!config.inputs || !Object.hasOwn(config.inputs, 'lockConditionType'))) {
+        lockConditionEl.value = 'firstNDays';
+    }
+    const selectLockWeekdayEl = document.getElementById('selectLockWeekday');
+    if (
+        selectLockWeekdayEl &&
+        (!config.inputs || !Object.hasOwn(config.inputs, 'selectLockWeekday'))
+    ) {
+        selectLockWeekdayEl.value = '0';
+    }
+    const specialStartDayEl = document.getElementById('inputSpecialStartDay');
+    if (
+        specialStartDayEl &&
+        (!config.inputs || !Object.hasOwn(config.inputs, 'inputSpecialStartDay'))
+    ) {
+        specialStartDayEl.value = '1';
+    }
+
+    // Migration: old JSON with chkPreventConsecutive → inputOffDutyPeriod
+    const offDutyPeriodEl = document.getElementById('inputOffDutyPeriod');
+    if (
+        offDutyPeriodEl &&
+        (!config.inputs || !Object.hasOwn(config.inputs, 'inputOffDutyPeriod'))
+    ) {
+        if (config.checkboxes && Object.hasOwn(config.checkboxes, 'chkPreventConsecutive')) {
+            offDutyPeriodEl.value = config.checkboxes.chkPreventConsecutive ? '2' : '1';
+        } else {
+            offDutyPeriodEl.value = '2';
+        }
+    }
+
+    // Set defaults for Soft Alternate if missing
+    const chkSoftAlternateEl = document.getElementById('chkSoftAlternate');
+    if (
+        chkSoftAlternateEl &&
+        (!config.checkboxes || !Object.hasOwn(config.checkboxes, 'chkSoftAlternate'))
+    ) {
+        chkSoftAlternateEl.checked = true;
+    }
+    const selectAlternateStrengthEl = document.getElementById('selectAlternateStrength');
+    if (
+        selectAlternateStrengthEl &&
+        (!config.inputs || !Object.hasOwn(config.inputs, 'selectAlternateStrength'))
+    ) {
+        selectAlternateStrengthEl.value = 'medium';
+    }
+    // Sync visibility of Soft Alternate strength container
+    const altStrengthContainer = document.getElementById('alternateStrengthContainer');
+    if (altStrengthContainer && chkSoftAlternateEl) {
+        if (chkSoftAlternateEl.checked) {
+            altStrengthContainer.classList.remove('hidden');
+        } else {
+            altStrengthContainer.classList.add('hidden');
+        }
+    }
+
+    // Set defaults for Shift-Based Mode if missing
+    const chkShiftBasedEl = document.getElementById('chkShiftBased');
+    if (
+        chkShiftBasedEl &&
+        (!config.checkboxes || !Object.hasOwn(config.checkboxes, 'chkShiftBased'))
+    ) {
+        chkShiftBasedEl.checked = false;
+    }
+    const inputMorningSlotsEl = document.getElementById('inputMorningSlots');
+    if (
+        inputMorningSlotsEl &&
+        (!config.inputs || !Object.hasOwn(config.inputs, 'inputMorningSlots'))
+    ) {
+        inputMorningSlotsEl.value = '1';
+    }
+    const inputAfternoonSlotsEl = document.getElementById('inputAfternoonSlots');
+    if (
+        inputAfternoonSlotsEl &&
+        (!config.inputs || !Object.hasOwn(config.inputs, 'inputAfternoonSlots'))
+    ) {
+        inputAfternoonSlotsEl.value = '1';
+    }
+    const inputNightSlotsEl = document.getElementById('inputNightSlots');
+    if (inputNightSlotsEl && (!config.inputs || !Object.hasOwn(config.inputs, 'inputNightSlots'))) {
+        inputNightSlotsEl.value = '1';
+    }
+
+    // Explicitly trigger the custom date range toggle logic
+    const chkCustom = document.getElementById('chkCustomDateRange');
+    if (chkCustom) {
+        chkCustom.dispatchEvent(new Event('change'));
+    }
+
+    // Sync UI components
+    syncDoctorsToInput();
+    if (typeof syncDoctorRolesInput === 'function') syncDoctorRolesInput();
+    renderDoctorTags();
+    if (typeof initStructuredInputs === 'function') initStructuredInputs();
+    renderOffRequests();
+    renderExtraSlots();
+    renderSpecialDocsCheckboxList();
+
+    toggleRoleBasedUI();
+    toggleShiftBasedUI();
+    toggleSpecialRuleUI();
 }
 
 window.importConfigJSON = function (event) {
@@ -4519,7 +4689,8 @@ window.importConfigJSON = function (event) {
 
     const reader = new FileReader();
     reader.onload = function (e) {
-        const previous = { doctors, offData, extraSlotsData, manualOverrides, quota };
+        const snapshot = JSON.parse(JSON.stringify(getCurrentConfig()));
+        let applied = false;
         try {
             const checked = sanitizeConfig(JSON.parse(e.target.result));
             if (!checked.ok) {
@@ -4529,158 +4700,23 @@ window.importConfigJSON = function (event) {
             }
             const config = checked.config;
 
-            if (config.doctors) doctors = config.doctors;
-            if (config.offData) offData = config.offData;
-            if (config.extraSlotsData) extraSlotsData = config.extraSlotsData;
-            manualOverrides = config.manualOverrides || {};
-
-            if (config.quota) {
-                quota = config.quota;
-            } else if (config.roleQuota && !config.quota) {
-                quota = config.roleQuota;
-            } else {
-                quota = {};
-            }
-
-            if (config.inputs) {
-                Object.keys(config.inputs).forEach((id) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = config.inputs[id];
-                });
-            }
-
-            if (config.checkboxes) {
-                Object.keys(config.checkboxes).forEach((id) => {
-                    const el = document.getElementById(id);
-                    if (el) el.checked = config.checkboxes[id];
-                });
-            }
-
-            // Set defaults for Lock Special Duty if missing
-            const lockConditionEl = document.getElementById('lockConditionType');
-            if (
-                lockConditionEl &&
-                (!config.inputs || !Object.hasOwn(config.inputs, 'lockConditionType'))
-            ) {
-                lockConditionEl.value = 'firstNDays';
-            }
-            const selectLockWeekdayEl = document.getElementById('selectLockWeekday');
-            if (
-                selectLockWeekdayEl &&
-                (!config.inputs || !Object.hasOwn(config.inputs, 'selectLockWeekday'))
-            ) {
-                selectLockWeekdayEl.value = '0';
-            }
-            const specialStartDayEl = document.getElementById('inputSpecialStartDay');
-            if (
-                specialStartDayEl &&
-                (!config.inputs || !Object.hasOwn(config.inputs, 'inputSpecialStartDay'))
-            ) {
-                specialStartDayEl.value = '1';
-            }
-
-            // Migration: old JSON with chkPreventConsecutive → inputOffDutyPeriod
-            const offDutyPeriodEl = document.getElementById('inputOffDutyPeriod');
-            if (
-                offDutyPeriodEl &&
-                (!config.inputs || !Object.hasOwn(config.inputs, 'inputOffDutyPeriod'))
-            ) {
-                if (
-                    config.checkboxes &&
-                    Object.hasOwn(config.checkboxes, 'chkPreventConsecutive')
-                ) {
-                    offDutyPeriodEl.value = config.checkboxes.chkPreventConsecutive ? '2' : '1';
-                } else {
-                    offDutyPeriodEl.value = '2';
+            try {
+                applyConfig(config);
+                applied = true;
+            } catch (error) {
+                // A half-imported app is worse than the old one: put everything back
+                try {
+                    applyConfig(snapshot);
+                } catch (restoreError) {
+                    console.error('Rollback failed:', restoreError);
                 }
+                throw error;
             }
-
-            // Set defaults for Soft Alternate if missing
-            const chkSoftAlternateEl = document.getElementById('chkSoftAlternate');
-            if (
-                chkSoftAlternateEl &&
-                (!config.checkboxes || !Object.hasOwn(config.checkboxes, 'chkSoftAlternate'))
-            ) {
-                chkSoftAlternateEl.checked = true;
-            }
-            const selectAlternateStrengthEl = document.getElementById('selectAlternateStrength');
-            if (
-                selectAlternateStrengthEl &&
-                (!config.inputs || !Object.hasOwn(config.inputs, 'selectAlternateStrength'))
-            ) {
-                selectAlternateStrengthEl.value = 'medium';
-            }
-            // Sync visibility of Soft Alternate strength container
-            const altStrengthContainer = document.getElementById('alternateStrengthContainer');
-            if (altStrengthContainer && chkSoftAlternateEl) {
-                if (chkSoftAlternateEl.checked) {
-                    altStrengthContainer.classList.remove('hidden');
-                } else {
-                    altStrengthContainer.classList.add('hidden');
-                }
-            }
-
-            // Set defaults for Shift-Based Mode if missing
-            const chkShiftBasedEl = document.getElementById('chkShiftBased');
-            if (
-                chkShiftBasedEl &&
-                (!config.checkboxes || !Object.hasOwn(config.checkboxes, 'chkShiftBased'))
-            ) {
-                chkShiftBasedEl.checked = false;
-            }
-            const inputMorningSlotsEl = document.getElementById('inputMorningSlots');
-            if (
-                inputMorningSlotsEl &&
-                (!config.inputs || !Object.hasOwn(config.inputs, 'inputMorningSlots'))
-            ) {
-                inputMorningSlotsEl.value = '1';
-            }
-            const inputAfternoonSlotsEl = document.getElementById('inputAfternoonSlots');
-            if (
-                inputAfternoonSlotsEl &&
-                (!config.inputs || !Object.hasOwn(config.inputs, 'inputAfternoonSlots'))
-            ) {
-                inputAfternoonSlotsEl.value = '1';
-            }
-            const inputNightSlotsEl = document.getElementById('inputNightSlots');
-            if (
-                inputNightSlotsEl &&
-                (!config.inputs || !Object.hasOwn(config.inputs, 'inputNightSlots'))
-            ) {
-                inputNightSlotsEl.value = '1';
-            }
-
-            // Explicitly trigger the custom date range toggle logic
-            const chkCustom = document.getElementById('chkCustomDateRange');
-            if (chkCustom) {
-                chkCustom.dispatchEvent(new Event('change'));
-            }
-
-            // Sync UI components
-            syncDoctorsToInput();
-            if (typeof syncDoctorRolesInput === 'function') syncDoctorRolesInput();
-            renderDoctorTags();
-            if (typeof initStructuredInputs === 'function') initStructuredInputs();
-            renderOffRequests();
-            renderExtraSlots();
-            renderSpecialDocsCheckboxList();
-
-            toggleRoleBasedUI();
-            toggleShiftBasedUI();
-            toggleSpecialRuleUI();
 
             showToast(
                 currentLang === 'th' ? 'นำเข้าการตั้งค่าสำเร็จ!' : 'Config imported successfully!'
             );
-
-            // Re-calculate
-            if (window.initialized) {
-                generateSchedule();
-            }
         } catch (error) {
-            // Anything that throws after state was assigned must not leave a half-imported app.
-            // ponytail: only the five data globals roll back; input values already written stay.
-            ({ doctors, offData, extraSlotsData, manualOverrides, quota } = previous);
             console.error('Error parsing JSON:', error);
             showToast(
                 currentLang === 'th'
@@ -4692,6 +4728,7 @@ window.importConfigJSON = function (event) {
             const importInput = document.getElementById('importConfigFile');
             if (importInput) importInput.value = ''; // Reset file input
         }
+        if (applied && window.initialized) generateSchedule(); // Re-calculate
     };
     reader.readAsText(file);
 };
