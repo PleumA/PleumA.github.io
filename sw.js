@@ -28,7 +28,11 @@ self.addEventListener('activate', (event) => {
         caches
             .keys()
             .then((names) =>
-                Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+                Promise.all(
+                    names
+                        .filter((n) => n.startsWith('doctor-scheduler-') && n !== CACHE_NAME)
+                        .map((n) => caches.delete(n))
+                )
             )
             .then(() => self.clients.claim())
     );
@@ -37,13 +41,22 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const req = event.request;
     if (req.method !== 'GET') return;
-    const sameOrigin = new URL(req.url).origin === self.location.origin;
+    const url = new URL(req.url);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return; // e.g. chrome-extension:
+    const sameOrigin = url.origin === self.location.origin;
     const cached = (r) => caches.match(r).then((hit) => hit || Promise.reject(new Error('miss')));
     const network = () =>
-        fetch(req).then((res) => {
+        // no-cache: skip the browser's HTTP cache so a new deploy is seen at once
+        fetch(req, sameOrigin ? { cache: 'no-cache' } : undefined).then((res) => {
             if (res.ok) {
                 const copy = res.clone();
-                caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+                // A 206 or a full cache must not become an unhandled rejection
+                event.waitUntil(
+                    caches
+                        .open(CACHE_NAME)
+                        .then((c) => c.put(req, copy))
+                        .catch(() => {})
+                );
             }
             return res;
         });

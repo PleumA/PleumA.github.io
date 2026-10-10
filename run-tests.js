@@ -24,9 +24,10 @@ for (const file of testFiles) {
         result.status !== 0 ||
         /❌.*FAILED/.test(output) ||
         /FAILED:\s*[1-9]/.test(output) ||
-        // a rejected promise or a swallowed TypeError/ReferenceError is a hidden failure
+        // a rejected promise or a printed TypeError/ReferenceError (line-start only, so a test merely
+        // named "throws TypeError" passes) is a hidden failure
         /UNHANDLED/.test(output) ||
-        /\b(TypeError|ReferenceError)\b/.test(output);
+        /^\s*(Uncaught\s+)?(TypeError|ReferenceError)\b/m.test(output);
     if (hasFailed) {
         allPassed = false;
         if (result.status !== 0)

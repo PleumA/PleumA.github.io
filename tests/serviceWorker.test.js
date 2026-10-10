@@ -19,7 +19,7 @@ async function runTest(name, fn) {
 const ORIGIN = 'https://app.test';
 const abs = (u) => new URL(u, `${ORIGIN}/`).href;
 
-function loadSW({ online = true, oldCaches = [], failAdd = [], seed = {} } = {}) {
+function loadSW({ online = true, oldCaches = [], failAdd = [], seed = {}, failPut = false } = {}) {
     const listeners = {};
     const store = new Map(Object.entries(seed).map(([u, r]) => [abs(u), r]));
     const cache = {
@@ -27,13 +27,17 @@ function loadSW({ online = true, oldCaches = [], failAdd = [], seed = {} } = {})
             if (failAdd.some((f) => u.includes(f))) throw new Error('net');
             store.set(abs(u), { from: 'precache' });
         },
-        put: async (req, res) => store.set(req.url, res),
+        put: async (req, res) => {
+            if (failPut) throw new Error('206');
+            store.set(req.url, res);
+        },
     };
     const ctx = {
         skipped: false,
         claimed: false,
         deleted: [],
         fetched: [],
+        fetchOpts: [],
         self: {
             addEventListener: (type, fn) => (listeners[type] = fn),
             skipWaiting: () => (ctx.skipped = true),
@@ -46,8 +50,9 @@ function loadSW({ online = true, oldCaches = [], failAdd = [], seed = {} } = {})
             delete: async (k) => ctx.deleted.push(k),
             match: async (r) => store.get(typeof r === 'string' ? abs(r) : r.url),
         },
-        fetch: async (req) => {
+        fetch: async (req, opts) => {
             ctx.fetched.push(req.url);
+            ctx.fetchOpts.push(opts);
             if (!online) throw new Error('offline');
             return {
                 ok: true,
@@ -67,11 +72,17 @@ function loadSW({ online = true, oldCaches = [], failAdd = [], seed = {} } = {})
         let pending;
         const event = {
             ...extra,
-            waitUntil: (p) => (pending = p),
+            waits: [],
+            waitUntil: (p) => {
+                event.waits.push(p);
+                if (type !== 'fetch') pending = p;
+            },
             respondWith: (p) => (pending = p),
         };
         listeners[type](event);
-        return pending && (await pending);
+        const out = pending && (await pending);
+        await Promise.all(event.waits); // background work from waitUntil
+        return out;
     };
     return { ctx, store, fire };
 }
@@ -92,6 +103,31 @@ const get = (url, mode = 'no-cors') => ({ request: { url, method: 'GET', mode } 
         await fire('activate');
         assert.deepStrictEqual(ctx.deleted, ['doctor-scheduler-v3']);
         assert.strictEqual(ctx.claimed, true, 'clients.claim not called');
+    });
+
+    await runTest('activate keeps caches that belong to other apps', async () => {
+        const { ctx, fire } = loadSW({ oldCaches: ['doctor-scheduler-v3', 'other-app-v1'] });
+        await fire('activate');
+        assert.deepStrictEqual(ctx.deleted, ['doctor-scheduler-v3']);
+    });
+
+    await runTest('non-http(s) schemes are not intercepted', async () => {
+        const { ctx, fire } = loadSW();
+        const res = await fire('fetch', get('chrome-extension://abc/x.js'));
+        assert.strictEqual(res, undefined);
+        assert.strictEqual(ctx.fetched.length, 0);
+    });
+
+    await runTest('own files bypass the HTTP cache', async () => {
+        const { ctx, fire } = loadSW();
+        await fire('fetch', get(`${ORIGIN}/app.js`));
+        assert.strictEqual(ctx.fetchOpts[0].cache, 'no-cache'); // plain compare: the object comes from the vm realm
+    });
+
+    await runTest('a failing background cache.put is waited on and swallowed', async () => {
+        const { fire } = loadSW({ failPut: true });
+        const res = await fire('fetch', get(`${ORIGIN}/app.js`));
+        assert.strictEqual(res.from, 'network'); // fire() awaits waitUntil; a rejection would throw
     });
 
     await runTest('own files are network-first and refresh the cache', async () => {
