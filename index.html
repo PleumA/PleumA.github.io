@@ -432,13 +432,13 @@
                     <div id="singlePoolQuotaContainer">
                         <label
                             class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                            data-i18n="singlePoolQuotasLabel">โควต้าต่อแพทย์ / Exact Quota Per Doctor</label>
+                            data-i18n="singlePoolQuotasLabel">โควต้าต่อแพทย์ (เช่น A:12, B:10)</label>
                         <input type="text" id="inputSinglePoolQuota" value="" class="hidden">
                         <div id="structuredSinglePoolQuotasContainer" class="space-y-2">
                             <!-- Stepper rows will be injected here by app.js -->
                         </div>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2" data-i18n="singlePoolQuotasDesc">
-                            ถ้าไม่ระบุ จะไม่มีการจำกัดโควต้า / Leave blank to disable</p>
+                            ถ้าไม่ระบุ จะไม่มีการจำกัดโควต้า</p>
                     </div>
                     <div id="customSlotsContainer" class="border-t border-slate-200 dark:border-slate-800 pt-4">
                         <div class="flex justify-between items-center mb-2">
@@ -531,10 +531,10 @@
                     <div class="flex items-center justify-between p-2">
                         <div>
                             <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleSoftAlternate">
-                                สลับเวรอัตโนมัติ / Auto-Alternate Doctors</h4>
+                                สลับเวรอัตโนมัติ</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
                                 data-i18n="ruleSoftAlternateDesc">
-                                ลดการทำงานร่วมกันซ้ำๆ ของกลุ่มเดิม / Reduces repeated same-group scheduling</p>
+                                ลดการทำงานร่วมกันซ้ำๆ ของกลุ่มเดิม</p>
                         </div>
                         <div
                             class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
@@ -547,18 +547,18 @@
                     <div id="alternateStrengthContainer" class="p-2">
                         <label for="selectAlternateStrength"
                             class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                            data-i18n="alternateStrengthLabel">ความเข้มของการสลับ / Alternation Strength</label>
+                            data-i18n="alternateStrengthLabel">ความเข้มของการสลับ</label>
                         <select id="selectAlternateStrength"
                             class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-teal-500 font-semibold text-slate-800 dark:text-slate-100">
-                            <option value="low" data-i18n="strengthLow">Low (ต่ำ)</option>
-                            <option value="medium" selected data-i18n="strengthMedium">Medium (กลาง)</option>
-                            <option value="high" data-i18n="strengthHigh">High (สูง)</option>
+                            <option value="low" data-i18n="strengthLow">ต่ำ</option>
+                            <option value="medium" selected data-i18n="strengthMedium">กลาง</option>
+                            <option value="high" data-i18n="strengthHigh">สูง</option>
                         </select>
                     </div>
                     <div class="flex items-center justify-between p-2">
                         <div>
                             <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleShiftBased">
-                                โหมดจัดเวร 3 ผลัด / Shift-Based Mode</h4>
+                                โหมดจัดเวร 3 ผลัด</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
                                 data-i18n="ruleShiftBasedDesc">
                                 จัดตารางเวร 3 ผลัดต่อวัน (เช้า: 08:00-16:00, บ่าย: 16:00-24:00, ดึก: 24:00-08:00)</p>
@@ -703,7 +703,7 @@
             <div class="sticky bottom-4 z-40 mobile-view-btn justify-center lg:hidden">
                 <a href="#resultsContainer"
                     class="bg-teal-600 text-white px-6 py-3 rounded-full shadow-xl font-bold flex items-center gap-2 active:scale-95 transition-transform">
-                    📋 ดูตาราง / View Schedule
+                    📋 <span data-i18n="viewScheduleBtn">ดูตาราง</span>
                 </a>
             </div>
 
@@ -803,7 +803,7 @@
                                 class="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
                                 <span data-i18n="totalShiftsLabel">รวมทั้งหมด</span> <strong id="sumTotalCount"
                                     class="text-teal-600 dark:text-teal-400 text-sm">0</strong> <span
-                                    data-i18n="shiftsUnit">กะ</span>
+                                    data-i18n="shiftsUnit">เวร</span>
                             </div>
                         </div>
                     </div>
