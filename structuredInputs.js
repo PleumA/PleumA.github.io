@@ -580,7 +580,7 @@ function setupChipInputListener(hiddenInputId, containerId, uiInputId) {
                 if (v) {
                     // Convert YYYY-MM-DD to DD/MM/YYYY for compatibility if needed, but simple v is fine if user types it.
                     // Actually existing parser uses standard string.
-                    const dateObj = new Date(v);
+                    const dateObj = parseISODate(v);
                     const formatted =
                         ('0' + dateObj.getDate()).slice(-2) +
                         '/' +

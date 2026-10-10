@@ -34,6 +34,7 @@ module.exports = {
     SHORTAGE_MARKER: 'readonly',
     esc: 'readonly',
     sanitizeName: 'readonly',
+    parseISODate: 'readonly',
     doctors: 'writable',
     isCustomDateRange: 'writable',
     initStructuredInputs: 'readonly',

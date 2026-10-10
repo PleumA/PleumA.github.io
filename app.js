@@ -1073,18 +1073,13 @@ function parseUIConfig() {
     const roleBased = document.getElementById('chkRoleBased')?.checked;
 
     const isShiftBased = document.getElementById('chkShiftBased')?.checked || false;
-    let morningSlots = Math.max(
-        0,
-        Math.min(10, parseInt(document.getElementById('inputMorningSlots')?.value) ?? 1)
-    );
-    let afternoonSlots = Math.max(
-        0,
-        Math.min(10, parseInt(document.getElementById('inputAfternoonSlots')?.value) ?? 1)
-    );
-    let nightSlots = Math.max(
-        0,
-        Math.min(10, parseInt(document.getElementById('inputNightSlots')?.value) ?? 1)
-    );
+    const shiftSlots = (id) => {
+        const n = parseInt(document.getElementById(id)?.value);
+        return Math.max(0, Math.min(10, Number.isNaN(n) ? 1 : n));
+    };
+    let morningSlots = shiftSlots('inputMorningSlots');
+    let afternoonSlots = shiftSlots('inputAfternoonSlots');
+    let nightSlots = shiftSlots('inputNightSlots');
     if (isShiftBased && morningSlots === 0 && afternoonSlots === 0 && nightSlots === 0) {
         morningSlots = 1;
         afternoonSlots = 1;
@@ -1231,8 +1226,14 @@ function parseUIConfig() {
                                 'warning'
                             );
                         }
+                        if (spanDays > 366) return; // the ">90 days" warning above already told the user
                         for (let i = 0; i < spanDays; i++) {
-                            const curDate = new Date(startDate.getTime() + i * 86400000);
+                            // Step by calendar day: adding 24 h skips a date across a DST change
+                            const curDate = new Date(
+                                startDate.getFullYear(),
+                                startDate.getMonth(),
+                                startDate.getDate() + i
+                            );
                             const curStr = formatDateDDMMYYYY(curDate);
                             if (!offMap[curStr]) offMap[curStr] = new Set();
                             namesArr.forEach((n) => offMap[curStr].add(n));
@@ -1283,7 +1284,7 @@ function parseUIConfig() {
                                 'warning'
                             );
                         }
-                        for (let i = start; i <= end; i++) {
+                        for (let i = start; i <= Math.min(end, numDays); i++) {
                             if (!offMap[i]) offMap[i] = new Set();
                             namesArr.forEach((n) => offMap[i].add(n));
                         }
@@ -1542,6 +1543,7 @@ function parseUIConfig() {
         year,
         month,
         numDays,
+        isCustomDateRange,
         holidaySet,
         noDutySet,
         offMap,
@@ -1671,8 +1673,6 @@ function checkQuotaFeasibility(config) {
                     : [];
             if (doctorsInRole.length === 0) return;
 
-            const perDoctorShare = Math.ceil(required / doctorsInRole.length);
-
             doctorsInRole.forEach((docName) => {
                 let docOffCount = 0;
                 for (let d = 1; d <= numDays; d++) {
@@ -1701,10 +1701,10 @@ function checkQuotaFeasibility(config) {
                     (docAvailDays > 0 ? Math.floor((docAvailDays + restGap - 1) / restGap) : 0) *
                     multiplier;
 
-                if (perDoctorShare > maxShifts) {
+                if (required > maxShifts) {
                     violations.push({
                         name: docName,
-                        required: perDoctorShare,
+                        required,
                         maxShifts: maxShifts,
                         availableDays: docAvailDays,
                         offCount: docOffCount,
@@ -2424,8 +2424,8 @@ window.generateSchedule = async function () {
                 );
                 return;
             }
-            const sd = new Date(startStr);
-            const ed = new Date(endStr);
+            const sd = parseISODate(startStr);
+            const ed = parseISODate(endStr);
             if (sd >= ed) {
                 if (btn) btn.innerHTML = originalHtml;
                 isCalculating = false;
@@ -2460,6 +2460,12 @@ window.generateSchedule = async function () {
             const year = parseInt(document.getElementById('inputYear').value);
             const month = parseInt(document.getElementById('inputMonth').value);
             const calcYear = year > 2500 ? year - 543 : year;
+            if (!(calcYear >= 1000)) {
+                if (btn) btn.innerHTML = originalHtml;
+                isCalculating = false;
+                showToast(translations[currentLang].yearInvalid, true);
+                return;
+            }
             const daysInMonth = new Date(calcYear, month, 0).getDate();
             scheduleDates = [];
             for (let i = 1; i <= daysInMonth; i++) {
@@ -2740,8 +2746,16 @@ function updateDayNote(dayRow, offTodayList, config) {
     const lang = currentLang;
     let noteStr = '';
 
-    const { roleBased, year, month, specialHols, doctorRoles, areConflicting, getRoleSlotsForDay } =
-        config;
+    const {
+        roleBased,
+        year,
+        month,
+        specialHols,
+        doctorRoles,
+        areConflicting,
+        getRoleSlotsForDay,
+        offMap,
+    } = config;
 
     // Build base note labels
     let baseNotes = [];
@@ -2777,17 +2791,12 @@ function updateDayNote(dayRow, offTodayList, config) {
     // Gather off requests for this day
     let offToday = offTodayList;
     if (!offToday) {
-        offToday = [];
-        offData.forEach((req) => {
-            const d = parseInt(req.date);
-            if (d === dayRow.day && req.names) {
-                const namesArr = req.names
-                    .split(',')
-                    .map((n) => n.trim())
-                    .filter((n) => n);
-                offToday.push(...namesArr);
-            }
-        });
+        let key = dayRow.day;
+        if (isCustomDateRange && scheduleDates[dayRow.day - 1]) {
+            const dt = scheduleDates[dayRow.day - 1];
+            key = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
+        }
+        offToday = offMap[key] || [];
     }
 
     let offWarnings = [];
@@ -4268,8 +4277,8 @@ window.handleCustomDateRangeChange = async function () {
     const startStr = document.getElementById('inputStartDate').value;
     const endStr = document.getElementById('inputEndDate').value;
     if (startStr && endStr) {
-        const sd = new Date(startStr);
-        const ed = new Date(endStr);
+        const sd = parseISODate(startStr);
+        const ed = parseISODate(endStr);
         if (sd >= ed) {
             showToast(
                 currentLang === 'th'
