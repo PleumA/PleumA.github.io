@@ -113,5 +113,122 @@ const { loadApp, reset, settle, setInput, snap, importJSON, runner } = require('
         assert.strictEqual(w.eval('globalResult.schedule.length'), 31);
     });
 
+    const names = () =>
+        w.eval(
+            'globalResult.schedule.map((r) => r.selectedDocs.map((x) => x.name).join()).join("|")'
+        );
+    const orig = () =>
+        w.eval(
+            'globalResult.originalSchedule.map((r) => r.selectedDocs.map((x) => x.name).join()).join("|")'
+        );
+    const other = (day, slot) => {
+        const cur = w.eval(`globalResult.schedule[${day - 1}].selectedDocs[${slot}].name`);
+        return ['A', 'B', 'C', 'D'].findIndex((n) => n !== cur);
+    };
+
+    await test('I2: a custom range change during a running calculation is queued, not dropped', async () => {
+        reset(w);
+        setInput(w, 'chkCustomDateRange', true);
+        w.eval('isCustomDateRange = true');
+        setInput(w, 'inputStartDate', '2026-03-01');
+        setInput(w, 'inputEndDate', '2026-03-10');
+        const first = w.generateSchedule();
+        setInput(w, 'inputEndDate', '2026-03-05');
+        const second = w.handleCustomDateRangeChange();
+        await Promise.all([first, second]);
+        assert.strictEqual(w.eval('scheduleDates.length'), 5);
+        assert.strictEqual(w.eval('globalResult.schedule.length'), 5);
+        assert.strictEqual(w.eval('isCalculating'), false);
+    });
+
+    await test('M: a throw inside the error path does not wedge isCalculating', async () => {
+        reset(w);
+        const realIcons = w.lucide;
+        w.eval('window.__cand = generateSingleScheduleCandidate');
+        try {
+            // the solver fails, then the error handler's own lucide.createIcons call throws too
+            w.eval(`generateSingleScheduleCandidate = () => {
+                window.lucide = { createIcons() { throw new Error('icons'); } };
+                throw new Error('boom');
+            }`);
+            await w.generateSchedule().catch(() => {});
+        } finally {
+            w.lucide = realIcons;
+            w.eval('generateSingleScheduleCandidate = window.__cand');
+        }
+        assert.strictEqual(w.eval('isCalculating'), false);
+        await w.generateSchedule();
+        assert.strictEqual(w.eval('globalResult.schedule.length'), 31);
+    });
+
+    await test('I1: a half-entered custom range does not wipe manual edits', async () => {
+        reset(w);
+        setInput(w, 'chkCustomDateRange', true);
+        w.eval('isCustomDateRange = true');
+        setInput(w, 'inputStartDate', '2026-03-01');
+        setInput(w, 'inputEndDate', '2026-03-10');
+        await w.generateSchedule();
+        w.updateDoctorAssignment(2, 0, other(2, 0));
+        setInput(w, 'inputEndDate', '');
+        await w.generateSchedule();
+        assert.ok(Object.keys(snap(w, 'manualOverrides')).length > 0, 'overrides wiped');
+        assert.ok(w.eval('undoStack.length') > 0, 'undo stack wiped');
+    });
+
+    await test('undo: two edits, two undos return to the auto schedule', async () => {
+        reset(w);
+        await w.generateSchedule();
+        w.updateDoctorAssignment(5, 0, other(5, 0));
+        w.updateDoctorAssignment(8, 1, other(8, 1));
+        assert.notStrictEqual(names(), orig());
+        w.undoLastAction();
+        assert.notStrictEqual(names(), orig());
+        w.undoLastAction();
+        assert.strictEqual(names(), orig());
+        assert.deepStrictEqual(snap(w, 'manualOverrides'), {});
+    });
+
+    await test('undo: one undo reverts both cells of a drag-and-drop swap', async () => {
+        reset(w);
+        await w.generateSchedule();
+        const cellName = (d_, s) =>
+            w.eval(`globalResult.schedule[${d_ - 1}].selectedDocs[${s}].name`);
+        let day2 = 6;
+        while (cellName(5, 0) === cellName(day2, 0)) day2++;
+        const before = names();
+        const src = cellName(5, 0);
+        const tgtIdx = w.eval('doctors').indexOf(cellName(day2, 0));
+        const ev = {
+            preventDefault() {},
+            dataTransfer: { getData: () => JSON.stringify({ day: 5, slotIndex: 0, docName: src }) },
+        };
+        w.handleDrop(ev, day2, 0, tgtIdx);
+        assert.notStrictEqual(names(), before, 'swap did not apply');
+        w.undoLastAction();
+        assert.strictEqual(names(), before);
+    });
+
+    await test('undo: an empty stack toasts and changes nothing', async () => {
+        reset(w);
+        await w.generateSchedule();
+        const before = names();
+        w.toasts.length = 0;
+        w.undoLastAction();
+        assert.ok(w.toasts.some((t) => t.msg === 'Nothing to undo' && t.isError));
+        assert.strictEqual(names(), before);
+    });
+
+    await test('I1: a language toggle and a same-period regenerate keep manual edits', async () => {
+        reset(w);
+        await w.generateSchedule();
+        w.updateDoctorAssignment(5, 0, other(5, 0));
+        const ov = snap(w, 'manualOverrides');
+        w.toggleLanguage();
+        await w.generateSchedule();
+        w.toggleLanguage();
+        await w.generateSchedule();
+        assert.deepStrictEqual(snap(w, 'manualOverrides'), ov);
+    });
+
     done();
 })();

@@ -2437,16 +2437,6 @@ async function runScheduleOnce() {
             showToast(translations[currentLang].yearInvalid, true);
             return;
         }
-        const key = periodKey();
-        if (overridesPeriod !== null && overridesPeriod !== key) {
-            if (Object.keys(manualOverrides).length > 0) {
-                showToast(translations[currentLang].overridesCleared);
-            }
-            manualOverrides = {};
-            undoStack.length = 0;
-        }
-        overridesPeriod = key;
-
         if (doctors.length < 2) {
             document.getElementById('resultsContainer').classList.add('hidden');
             document.getElementById('emptyState').classList.remove('hidden');
@@ -2461,7 +2451,6 @@ async function runScheduleOnce() {
             const endStr = document.getElementById('inputEndDate').value;
             if (!startStr || !endStr) {
                 if (btn) btn.innerHTML = originalHtml;
-                isCalculating = false;
                 showToast(
                     currentLang === 'th'
                         ? 'กรุณาระบุวันที่เริ่มต้นและสิ้นสุด'
@@ -2474,7 +2463,6 @@ async function runScheduleOnce() {
             const ed = parseISODate(endStr);
             if (sd >= ed) {
                 if (btn) btn.innerHTML = originalHtml;
-                isCalculating = false;
                 showToast(
                     currentLang === 'th'
                         ? 'วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด'
@@ -2486,7 +2474,6 @@ async function runScheduleOnce() {
             const diffDays = Math.round((ed - sd) / (1000 * 60 * 60 * 24)) + 1;
             if (diffDays > 90) {
                 if (btn) btn.innerHTML = originalHtml;
-                isCalculating = false;
                 showToast(
                     currentLang === 'th'
                         ? 'ช่วงวันที่เกิน 90 วัน กรุณาตรวจสอบ'
@@ -2509,6 +2496,17 @@ async function runScheduleOnce() {
                 scheduleDates.push(new Date(calcYear, month - 1, i));
             }
         }
+
+        // Validation passed: only now may a changed period discard manual edits
+        const key = periodKey();
+        if (overridesPeriod !== null && overridesPeriod !== key) {
+            if (Object.keys(manualOverrides).length > 0) {
+                showToast(translations[currentLang].overridesCleared);
+            }
+            manualOverrides = {};
+            undoStack.length = 0;
+        }
+        overridesPeriod = key;
 
         isInitialLoad = false;
         isCalculating = true;
@@ -2570,7 +2568,6 @@ async function runScheduleOnce() {
                 btn.innerHTML = originalHtml;
                 lucide.createIcons();
             }
-            isCalculating = false;
             const errorMsg =
                 currentLang === 'th'
                     ? 'ระบบจัดตารางล้มเหลว: เงื่อนไขการจัดเวรขัดแย้งกันเกินไปจนเป็นไปไม่ได้ กรุณาลดข้อจำกัดลง'
@@ -2615,7 +2612,6 @@ async function runScheduleOnce() {
             btn.innerHTML = originalHtml;
             lucide.createIcons();
         }
-        isCalculating = false;
 
         if (shortages > 0) {
             showToast(
@@ -2639,7 +2635,6 @@ async function runScheduleOnce() {
             btn.innerHTML = originalHtml;
             lucide.createIcons();
         }
-        isCalculating = false;
 
         if (error.message && error.message.includes('Critical Coverage Error')) {
             showToast(error.message, true);
@@ -2669,6 +2664,8 @@ async function runScheduleOnce() {
                 true
             );
         }
+    } finally {
+        isCalculating = false;
     }
 }
 
@@ -4306,8 +4303,7 @@ window.exportCalendar = function (target) {
     }
 };
 
-window.isPendingCalc = false;
-window.handleCustomDateRangeChange = async function () {
+window.handleCustomDateRangeChange = function () {
     if (!isCustomDateRange) return;
     const startStr = document.getElementById('inputStartDate').value;
     const endStr = document.getElementById('inputEndDate').value;
@@ -4334,15 +4330,7 @@ window.handleCustomDateRangeChange = async function () {
             return;
         }
 
-        if (isCalculating) {
-            window.isPendingCalc = true;
-            return;
-        }
-
-        do {
-            window.isPendingCalc = false;
-            await window.generateSchedule();
-        } while (window.isPendingCalc);
+        return window.generateSchedule();
     }
 };
 

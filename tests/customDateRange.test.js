@@ -750,7 +750,7 @@ async function runTests() {
         failed++;
     }
 
-    // 24. RAPID DATE CHANGES DO NOT CAUSE MULTIPLE SIMULTANEOUS SOLVER RUNS
+    // 24. RAPID DATE CHANGES ARE ROUTED THROUGH THE REGENERATE QUEUE
     try {
         resetMocks();
         global.doctors = ['A', 'B', 'C', 'D'];
@@ -760,11 +760,9 @@ async function runTests() {
         let origGen = window.generateSchedule;
         let runCount = 0;
         let concurrentCalls = 0;
-        let maxConcurrentCalls = 0;
 
         window.generateSchedule = async () => {
             concurrentCalls++;
-            maxConcurrentCalls = Math.max(maxConcurrentCalls, concurrentCalls);
             runCount++;
 
             // simulate async work
@@ -775,7 +773,7 @@ async function runTests() {
 
         mockDOM['inputEndDate'].value = '2026-08-31';
 
-        global.isCalculating = true; // simulating a run in progress
+        global.isCalculating = true; // a run is in progress; the real generateSchedule would queue
         mockDOM['inputStartDate'].value = '2026-08-01';
         window.handleCustomDateRangeChange();
 
@@ -787,12 +785,13 @@ async function runTests() {
 
         global.isCalculating = false; // finish original run
 
-        // Assert queueing mechanism caught the last one
-        assert.strictEqual(maxConcurrentCalls <= 1, true, 'No concurrent overlapping calls');
+        // The handler no longer queues itself: every change goes to generateSchedule, whose own
+        // queue (covered in editingState.test.js) serialises runs. Each one must be delegated.
+        assert.strictEqual(runCount, 3, 'every range change is routed through generateSchedule');
 
         window.generateSchedule = origGen;
         console.log(
-            '✅ TEST 24 PASSED: RAPID DATE CHANGES DO NOT CAUSE MULTIPLE SIMULTANEOUS SOLVER RUNS'
+            '✅ TEST 24 PASSED: RAPID DATE CHANGES ARE ROUTED THROUGH THE REGENERATE QUEUE'
         );
         passed++;
     } catch (e) {
