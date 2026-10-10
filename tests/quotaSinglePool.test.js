@@ -54,6 +54,7 @@ global.showToast = (msg, isError = false) => {
 
 function resetMocks() {
     Object.keys(mockDOM).forEach((key) => delete mockDOM[key]);
+    mockDOM['selectCalendarScope'] = { value: '', innerHTML: '', options: [] };
     toastMessages = [];
 
     mockDOM['inputMonth'] = { value: '1', classList: { add: () => {}, remove: () => {} } };
@@ -186,4 +187,7 @@ async function runTests() {
     console.log(`\nquotaSinglePool: PASSED: ${passed}, FAILED: ${failed}`);
 }
 
-runTests().catch((e) => console.log('UNHANDLED REJECTION IN runTests():', e.message, e.stack));
+runTests().catch((e) => {
+    console.log('UNHANDLED REJECTION IN runTests():', e.message, e.stack);
+    process.exitCode = 1;
+});

@@ -47,6 +47,7 @@ let toastMessages = [];
 
 function resetMocks() {
     Object.keys(mockDOM).forEach((key) => delete mockDOM[key]);
+    mockDOM['selectCalendarScope'] = { value: '', innerHTML: '', options: [] };
     toastMessages = [];
 
     mockDOM['inputMonth'] = { value: '1', classList: { add: () => {}, remove: () => {} } };

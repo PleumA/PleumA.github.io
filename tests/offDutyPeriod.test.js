@@ -56,7 +56,7 @@ global.document.getElementById = (id) => {
         mockDOM[id] = {
             value: '',
             checked: false,
-            classList: { add: () => {}, remove: () => {} },
+            classList: { add: () => {}, remove: () => {}, contains: () => false },
             style: {},
             dispatchEvent: () => {},
             setAttribute: () => {},
@@ -72,6 +72,7 @@ global.document.getElementById = (id) => {
 
 function resetMocks() {
     mockDOM = {};
+    mockDOM['selectCalendarScope'] = { value: '', innerHTML: '', options: [] };
     const defaultVals = {
         inputMonth: '1',
         inputYear: '2026',
@@ -101,7 +102,7 @@ function resetMocks() {
     for (let key in defaultVals) {
         let val = defaultVals[key];
         let obj = {
-            classList: { add: () => {}, remove: () => {} },
+            classList: { add: () => {}, remove: () => {}, contains: () => false },
             style: {},
             dispatchEvent: () => {},
             setAttribute: () => {},

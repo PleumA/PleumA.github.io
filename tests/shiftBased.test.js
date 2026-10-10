@@ -81,6 +81,7 @@ global.document.getElementById = (id) => {
 
 function resetMocks() {
     mockDOM = {};
+    mockDOM['selectCalendarScope'] = { value: '', innerHTML: '', options: [] };
     lastToastMessage = null;
     const defaultVals = {
         inputMonth: '1',

@@ -56,6 +56,7 @@ viewMode = 'table';
 
 function resetMocks() {
     Object.keys(mockDOM).forEach((key) => delete mockDOM[key]);
+    mockDOM['selectCalendarScope'] = { value: '', innerHTML: '', options: [] };
     toastMessages = [];
     doctors = [];
     offData = [];

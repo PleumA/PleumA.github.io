@@ -54,6 +54,7 @@ let toastMessages = [];
 
 function resetMocks() {
     Object.keys(mockDOM).forEach((key) => delete mockDOM[key]);
+    mockDOM['selectCalendarScope'] = { value: '', innerHTML: '', options: [] };
     toastMessages = [];
 
     mockDOM['inputMonth'] = { value: '1' };
@@ -115,11 +116,7 @@ async function runTests() {
         let initialDoc = globalResult.schedule[4].selectedDocs[1].name; // Day 5, slot 1
 
         // Apply override (C is index 2 in ["A", "B", "C"])
-        try {
-            global.updateDoctorAssignment(5, 1, 2); // Day 5, slot 1 -> C
-        } catch (e) {
-            // Ignore known bug offMap.has is not a function
-        }
+        global.updateDoctorAssignment(5, 1, 2); // Day 5, slot 1 -> C
 
         // Assert manualOverrides is updated correctly
         assert.strictEqual(manualOverrides['5']['1'], 'C');
@@ -177,11 +174,7 @@ async function runTests() {
 
         await global.generateSchedule();
 
-        try {
-            global.updateDoctorAssignment(10, 0, 1); // B is index 1
-        } catch (_e) {
-            // assignment may throw in the mock DOM; only the undo stack matters here
-        }
+        global.updateDoctorAssignment(10, 0, 1); // B is index 1
         assert.strictEqual(undoStack.length, initialLen + 1, 'Undo stack should increase');
         assert.strictEqual(typeof undoStack[undoStack.length - 1], 'object');
 
@@ -303,11 +296,7 @@ async function runTests() {
         });
 
         // Override shortage slot with doctor A
-        try {
-            global.updateDoctorAssignment(shortageDay, shortageSlot, 0); // A = index 0
-        } catch (e) {
-            // Ignore known bug in updateDayNote with offMap
-        }
+        global.updateDoctorAssignment(shortageDay, shortageSlot, 0); // A = index 0
 
         // Verify the slot now contains doctor A
         let overriddenDoc = globalResult.schedule[shortageDay - 1].selectedDocs[shortageSlot].name;

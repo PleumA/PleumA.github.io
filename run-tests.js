@@ -21,7 +21,12 @@ for (const file of testFiles) {
 
     // Detect any FAILED lines in output regardless of exit code
     const hasFailed =
-        result.status !== 0 || /❌.*FAILED/.test(output) || /FAILED:\s*[1-9]/.test(output);
+        result.status !== 0 ||
+        /❌.*FAILED/.test(output) ||
+        /FAILED:\s*[1-9]/.test(output) ||
+        // a rejected promise or a swallowed TypeError/ReferenceError is a hidden failure
+        /UNHANDLED/.test(output) ||
+        /\b(TypeError|ReferenceError)\b/.test(output);
     if (hasFailed) {
         allPassed = false;
         if (result.status !== 0)
