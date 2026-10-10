@@ -39,7 +39,8 @@ const esc = (str) => {
 // Doctor and role names live in "name:role, A:B" text formats, so strip the separators.
 const sanitizeName = (raw) =>
     String(raw ?? '')
-        .replace(/[:;,\r\n]+/g, ' ')
+        .replace(/[\u200b-\u200d\ufeff]/g, '')
+        .replace(/[:;,/\r\n]+/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
 // An <input type="date"> value ("YYYY-MM-DD") as local midnight. new Date("YYYY-MM-DD") is UTC
@@ -159,6 +160,7 @@ const translations = {
             'ดาวน์โหลดไฟล์ .ics แล้ว — นำเข้าไฟล์ในหน้า Google Calendar ที่เปิดขึ้น',
         importInvalid: 'ไฟล์ตั้งค่าไม่ถูกต้อง ไม่มีการเปลี่ยนแปลงข้อมูล',
         yearInvalid: 'กรุณาระบุปีให้ถูกต้อง (4 หลัก เช่น 2026 หรือ 2569)',
+        monthInvalid: 'กรุณาระบุเดือนให้ถูกต้อง (1-12)',
         overridesCleared: 'ล้างการแก้ไขเวรด้วยมือแล้ว เพราะเปลี่ยนช่วงเวลา',
         clipboardUnavailable: 'เบราว์เซอร์นี้ไม่รองรับการคัดลอกไปยังคลิปบอร์ด',
         calendarPopupBlocked:
@@ -342,6 +344,7 @@ const translations = {
             '.ics downloaded — import it on the Google Calendar page that just opened',
         importInvalid: 'Invalid config file. Nothing was changed.',
         yearInvalid: 'Enter a valid year (4 digits, e.g. 2026 or 2569).',
+        monthInvalid: 'Enter a valid month (1-12).',
         overridesCleared: 'Manual edits were cleared because the period changed.',
         clipboardUnavailable: 'Clipboard is not available in this browser.',
         calendarPopupBlocked:

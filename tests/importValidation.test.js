@@ -108,6 +108,7 @@ const { loadApp, reset, settle, snap, importJSON, runner } = require('./domHarne
 
     await test('an import that throws after assigning state rolls back', async () => {
         reset(w, ['A', 'B', 'C']);
+        w.eval(`overridesPeriod = '1-2026'; undoStack.push({ 1: { 0: 'A' } })`);
         const real = w.renderOffRequests;
         w.renderOffRequests = () => {
             throw new Error('boom');
@@ -122,6 +123,8 @@ const { loadApp, reset, settle, snap, importJSON, runner } = require('./domHarne
         }
         assert.deepStrictEqual(snap(w, 'doctors'), ['A', 'B', 'C']);
         assert.ok(errors().some((m) => m.includes('Error reading JSON')));
+        assert.strictEqual(w.eval('overridesPeriod'), '1-2026', 'overridesPeriod lost');
+        assert.deepStrictEqual(snap(w, 'undoStack'), [{ 1: { 0: 'A' } }], 'undo history lost');
     });
 
     await test('names are renamed consistently in overrides and off requests', async () => {
@@ -243,6 +246,21 @@ const { loadApp, reset, settle, snap, importJSON, runner } = require('./domHarne
             [...sel.options].some((o) => o.value === 'R 3 x'),
             'cleaned role missing'
         );
+    });
+
+    await test('F6: only keys getCurrentConfig emits survive; values are coerced', () => {
+        const raw = JSON.parse(
+            '{"inputs":{"btnCalculate":"x","__proto__":{"a":1},"inputYear":{"o":1},"inputMonth":5,"inputConflicts":"A:B"},"checkboxes":{"chkRoleBased":"yes","evil":true,"chkShiftBased":0}}'
+        );
+        const c = JSON.parse(JSON.stringify(w.sanitizeConfig(raw).config));
+        assert.ok(!('btnCalculate' in c.inputs) && !('evil' in c.checkboxes));
+        assert.ok(!Object.hasOwn(c.inputs, '__proto__'));
+        assert.ok(!('a' in Object.getPrototypeOf(w.eval('({})'))));
+        assert.ok(!('inputYear' in c.inputs) || typeof c.inputs.inputYear === 'string');
+        assert.strictEqual(c.inputs.inputMonth, '5');
+        assert.strictEqual(c.inputs.inputConflicts, 'A:B');
+        assert.strictEqual(c.checkboxes.chkRoleBased, true);
+        assert.strictEqual(c.checkboxes.chkShiftBased, false);
     });
 
     done();

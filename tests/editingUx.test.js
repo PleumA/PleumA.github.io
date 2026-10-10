@@ -183,5 +183,44 @@ const { loadApp, reset, settle, setInput, snap, runner } = require('./domHarness
         );
     });
 
+    await test('F1: a held (repeating) Backspace removes nothing; a single one removes one, undo restores overrides', async () => {
+        reset(w, ['A', 'B', 'C']);
+        await w.generateSchedule();
+        const input = d.getElementById('doctorInput');
+        input.value = '';
+        input.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Backspace', repeat: true }));
+        assert.deepStrictEqual(snap(w, 'doctors'), ['A', 'B', 'C']);
+        w.eval(`manualOverrides = { 1: { 0: 'C' } }`);
+        input.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Backspace' }));
+        await settle(w);
+        assert.deepStrictEqual(snap(w, 'doctors'), ['A', 'B']);
+        assert.deepStrictEqual(snap(w, 'manualOverrides'), {});
+        w.undoLastAction();
+        assert.deepStrictEqual(snap(w, 'manualOverrides'), { 1: { 0: 'C' } });
+    });
+
+    await test('F5: showToast honours a custom duration and error toasts last longer', async () => {
+        const delays = [];
+        const real = w.setTimeout;
+        w.setTimeout = (fn, ms) => (delays.push(ms), real(fn, ms));
+        try {
+            w.realShowToast('x');
+            w.realShowToast('y', false, 10000);
+            w.realShowToast('z', true);
+        } finally {
+            w.setTimeout = real;
+        }
+        assert.deepStrictEqual(delays, [3000, 10000, 10000]);
+        const src = require('fs').readFileSync(
+            require('path').join(__dirname, '..', 'app.js'),
+            'utf8'
+        );
+        assert.ok(
+            /showToast\(t\.calendarPopupBlocked, true, 10000\)|calendarPopupBlocked[^;]*10000/.test(
+                src
+            )
+        );
+    });
+
     done();
 })();

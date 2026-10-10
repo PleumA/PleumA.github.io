@@ -1,6 +1,6 @@
 process.env.TZ = 'America/New_York'; // before anything touches Date
 const assert = require('assert');
-const { loadApp, reset, setInput, runner } = require('./domHarness');
+const { loadApp, reset, settle, setInput, runner } = require('./domHarness');
 
 (async () => {
     const w = await loadApp();
@@ -153,6 +153,45 @@ const { loadApp, reset, setInput, runner } = require('./domHarness');
             process.env.TZ = 'America/New_York';
         });
     }
+
+    await test('F4: month outside 1..12 or empty is rejected with a toast', async () => {
+        reset(w);
+        await w.generateSchedule();
+        const before = w.eval('globalResult');
+        for (const m of ['13', '0', '']) {
+            setInput(w, 'inputMonth', m);
+            w.toasts.length = 0;
+            await w.generateSchedule();
+            assert.ok(
+                w.toasts.some((t) => t.isError && t.msg === w.eval('translations.en.monthInvalid')),
+                `no month toast for "${m}"`
+            );
+            assert.strictEqual(w.eval('globalResult'), before, `result replaced for "${m}"`);
+        }
+        assert.ok(w.eval('translations.th.monthInvalid'));
+        setInput(w, 'inputMonth', '1');
+    });
+
+    await test('F7: sanitizeName strips slash and zero-width chars, so they dedupe', () => {
+        assert.strictEqual(w.eval('sanitizeName(' + JSON.stringify('A/B') + ')'), 'A B');
+        assert.strictEqual(w.eval('sanitizeName(' + JSON.stringify('A​') + ')'), 'A');
+        assert.strictEqual(w.eval('sanitizeName(' + JSON.stringify('﻿A‌‍') + ')'), 'A');
+        const c = w.sanitizeConfig({ doctors: ['A', 'A​'] }).config;
+        assert.deepStrictEqual(Array.from(c.doctors), ['A']);
+    });
+
+    await test('F8: periodLabel year follows the language after a toggle', async () => {
+        reset(w);
+        w.eval(`currentLang = 'th'`);
+        setInput(w, 'inputYear', '2569');
+        await w.generateSchedule();
+        assert.ok(w.periodLabel('th').endsWith('1/2569'), w.periodLabel('th'));
+        w.toggleLanguage();
+        await settle(w);
+        assert.strictEqual(w.eval('currentLang'), 'en');
+        assert.ok(w.periodLabel('en').endsWith('1/2026'), w.periodLabel('en'));
+        assert.ok(w.periodLabel('th').endsWith('1/2569'), w.periodLabel('th'));
+    });
 
     done();
 })();

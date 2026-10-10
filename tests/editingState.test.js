@@ -230,5 +230,26 @@ const { loadApp, reset, settle, setInput, snap, importJSON, runner } = require('
         assert.deepStrictEqual(snap(w, 'manualOverrides'), ov);
     });
 
+    await test('F2: a change mid-solve abandons the stale run; only the rerun renders', async () => {
+        reset(w, ['A', 'B', 'C', 'D']);
+        let renders = 0;
+        const real = w.renderResults;
+        w.renderResults = (...a) => (renders++, real(...a));
+        w.toasts.length = 0;
+        try {
+            const first = w.generateSchedule();
+            await new Promise((r) => setTimeout(r, 80)); // inside the chunk loop
+            w.eval(`doctors.length = 0; doctors.push('X', 'Y', 'Z')`);
+            const second = w.generateSchedule();
+            await Promise.all([first, second]);
+        } finally {
+            w.renderResults = real;
+        }
+        assert.strictEqual(renders, 1, 'stale run rendered');
+        assert.ok(!w.toasts.some((t) => t.isError), JSON.stringify(w.toasts));
+        assert.deepStrictEqual(snap(w, 'globalResult.summary.map((s) => s.name)'), ['X', 'Y', 'Z']);
+        assert.strictEqual(w.document.getElementById('btnCalculate').disabled, false);
+    });
+
     done();
 })();
