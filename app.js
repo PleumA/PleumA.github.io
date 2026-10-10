@@ -899,11 +899,11 @@ function renderOffRequests() {
 
         div.innerHTML = `
             <div class="${isCustomDateRange ? 'w-56' : 'w-48'} shrink-0 font-sans">
-                <input type="text" placeholder="${isCustomDateRange ? (currentLang === 'th' ? 'เช่น 20/05/2026 หรือ 25/02/2026-04/03/2026' : 'e.g. 20/05/2026, or 25/02/2026-04/03/2026') : currentLang === 'th' ? 'เช่น 5, 12 หรือ 2-10' : 'e.g. 5, 12, or 2-10'}" value="${req.date}" onchange="updateOffRow(${req.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
+                <input type="text" placeholder="${isCustomDateRange ? (currentLang === 'th' ? 'เช่น 20/05/2026 หรือ 25/02/2026-04/03/2026' : 'e.g. 20/05/2026, or 25/02/2026-04/03/2026') : currentLang === 'th' ? 'เช่น 5, 12 หรือ 2-10' : 'e.g. 5, 12, or 2-10'}" value="${esc(req.date)}" onchange="updateOffRow(${req.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
             </div>
             <div class="relative flex-1">
                 <button type="button" onclick="toggleDropdown(event, 'dropdown-${req.id}')" class="w-full text-left border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-slate-900 flex justify-between items-center hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-                    <span id="offReqBtnText-${req.id}" class="truncate text-slate-700 dark:text-slate-200 font-semibold">${selectedNames.length > 0 ? selectedNames.join(', ') : currentLang === 'th' ? 'เลือกแพทย์...' : 'Select...'}</span>
+                    <span id="offReqBtnText-${req.id}" class="truncate text-slate-700 dark:text-slate-200 font-semibold">${selectedNames.length > 0 ? esc(selectedNames.join(', ')) : currentLang === 'th' ? 'เลือกแพทย์...' : 'Select...'}</span>
                     <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 </button>
                 <div id="dropdown-${req.id}" onclick="event.stopPropagation()" class="absolute left-0 mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 py-1 hidden max-h-48 overflow-y-auto custom-scrollbar">
@@ -949,11 +949,11 @@ function renderExtraSlots() {
         div.innerHTML = `
             <div class="w-20 shrink-0">
                 <label class="text-[10px] text-slate-500 block">${translations[currentLang].tableDateCol}</label>
-                <input type="number" min="1" max="31" value="${item.date}" onchange="updateExtraSlot(${item.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-sm outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
+                <input type="number" min="1" max="31" value="${esc(item.date)}" onchange="updateExtraSlot(${item.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-sm outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
             </div>
             <div class="w-28 shrink-0">
                 <label class="text-[10px] text-slate-500 block">${translations[currentLang].defaultSlots}</label>
-                <input type="text" value="${item.slots}" onchange="updateExtraSlot(${item.id}, 'slots', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-xs outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100" placeholder="เช่น 2 หรือ R1:1, R2:1">
+                <input type="text" value="${esc(item.slots)}" onchange="updateExtraSlot(${item.id}, 'slots', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-xs outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100" placeholder="เช่น 2 หรือ R1:1, R2:1">
             </div>
             <button onclick="deleteExtraSlot(${item.id})" class="text-slate-400 hover:text-red-500 p-1 rounded transition-colors mt-4"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         `;
@@ -2867,7 +2867,7 @@ function updateTargetedCellDOM(day, slotIndex) {
         calBadgeClass = badgeClass;
     }
 
-    let displayDoc = docName;
+    let displayDoc = esc(docName);
     if (docName === SHORTAGE_MARKER) {
         displayDoc = translations[currentLang].shortageSlot;
     } else if (docName === '-' || docName === '') {
@@ -2928,7 +2928,7 @@ function updateTargetedCellDOM(day, slotIndex) {
             else if (text.includes('ขอพัก') || text.includes('Off'))
                 badgeClassTable =
                     'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900';
-            noteHtmlTable += `<span class="text-[11px] px-2.5 py-1 rounded-md font-semibold tracking-wide ${badgeClassTable}">${text}</span>`;
+            noteHtmlTable += `<span class="text-[11px] px-2.5 py-1 rounded-md font-semibold tracking-wide ${badgeClassTable}">${esc(text)}</span>`;
 
             // Calendar
             if (
@@ -2944,7 +2944,7 @@ function updateTargetedCellDOM(day, slotIndex) {
                     badgeStyleCal =
                         'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 text-[8px] px-1 py-0.5 rounded font-bold';
                 }
-                noteHtmlCal += `<span class="${badgeStyleCal} truncate block max-w-full" title="${text}">${text}</span>`;
+                noteHtmlCal += `<span class="${badgeStyleCal} truncate block max-w-full" title="${esc(text)}">${esc(text)}</span>`;
             }
         });
         noteHtmlTable += '</div>';
@@ -3547,7 +3547,7 @@ function renderTableView(config) {
                 else if (text.includes('ขอพัก') || text.includes('Off'))
                     badgeClass =
                         'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900';
-                noteHtml += `<span class="text-[11px] px-2.5 py-1 rounded-md font-semibold tracking-wide ${badgeClass}">${text}</span>`;
+                noteHtml += `<span class="text-[11px] px-2.5 py-1 rounded-md font-semibold tracking-wide ${badgeClass}">${esc(text)}</span>`;
             });
             noteHtml += '</div>';
         }
@@ -3571,7 +3571,7 @@ function renderTableView(config) {
                 badgeClass = DOC_COLOR(d);
             }
 
-            let displayDoc = d;
+            let displayDoc = esc(d);
             if (d === SHORTAGE_MARKER) {
                 displayDoc = translations[currentLang].shortageSlot;
             } else if (d === '-' || d === '') {
@@ -3688,7 +3688,7 @@ function renderCalendarView(config) {
                     badgeClass = DOC_COLOR(doc);
                 }
 
-                let displayDoc = doc;
+                let displayDoc = esc(doc);
                 let docIndexToPass = -2;
                 if (doc === SHORTAGE_MARKER) {
                     displayDoc = translations[currentLang].shortageSlot;
@@ -3751,7 +3751,7 @@ function renderCalendarView(config) {
                     badgeStyle =
                         'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 text-[8px] px-1 py-0.5 rounded font-bold';
                 }
-                noteHtml += `<span class="${badgeStyle} truncate block max-w-full" title="${text}">${text}</span>`;
+                noteHtml += `<span class="${badgeStyle} truncate block max-w-full" title="${esc(text)}">${esc(text)}</span>`;
             });
         }
 

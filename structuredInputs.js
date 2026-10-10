@@ -1,5 +1,8 @@
 // --- STRUCTURED INPUTS FOR F8 ---
 
+// Name passed to an inline handler: a JSON string literal, HTML-escaped for the attribute.
+const jsArg = (v) => esc(JSON.stringify(v));
+
 function initStructuredInputs() {
     renderStructuredDoctorRoles();
     renderStructuredRoleSlots();
@@ -75,13 +78,16 @@ function renderStructuredDoctorRoles() {
 
         const newRoleText = currentLang === 'th' ? '＋ บทบาทใหม่' : '＋ New role';
         let roleOptions = availableRoles
-            .map((r) => `<option value="${r}" ${r === role ? 'selected' : ''}>${r}</option>`)
+            .map(
+                (r) =>
+                    `<option value="${esc(r)}" ${r === role ? 'selected' : ''}>${esc(r)}</option>`
+            )
             .join('');
         roleOptions += `<option value="__NEW__">${newRoleText}</option>`;
 
         html += `
         <div class="flex items-center gap-2 mb-2">
-            <input type="text" class="doc-role-name flex-1 min-w-0 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300" value="${doc}" readonly>
+            <input type="text" class="doc-role-name flex-1 min-w-0 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300" value="${esc(doc)}" readonly>
             <select class="doc-role-select w-[100px] flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100" onchange="handleDocRoleSelectChange(this)">
                 ${roleOptions}
             </select>
@@ -158,13 +164,13 @@ function renderStructuredRoleSlots() {
         const count = slotsMap[role] !== undefined ? slotsMap[role] : 1;
         html += `
         <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${role}</span>
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${esc(role)}</span>
             <div class="flex items-center gap-3">
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleSlot('${role}', -1)">
+                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleSlot(${jsArg(role)}, -1)">
                     <i data-lucide="minus" class="w-4 h-4"></i>
                 </button>
                 <span class="w-6 text-center text-sm font-bold">${count}</span>
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleSlot('${role}', 1)">
+                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleSlot(${jsArg(role)}, 1)">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -232,13 +238,13 @@ function renderStructuredRoleQuotas() {
         const displayCount = count === '' ? '-' : count;
         html += `
         <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${role}</span>
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${esc(role)}</span>
             <div class="flex items-center gap-3">
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleQuota('${role}', -1)">
+                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleQuota(${jsArg(role)}, -1)">
                     <i data-lucide="minus" class="w-4 h-4"></i>
                 </button>
                 <span class="w-6 text-center text-sm font-bold">${displayCount}</span>
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleQuota('${role}', 1)">
+                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateRoleQuota(${jsArg(role)}, 1)">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -308,13 +314,13 @@ function renderStructuredSinglePoolQuotas() {
         const displayCount = count === '' ? '-' : count;
         html += `
         <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${doc}</span>
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${esc(doc)}</span>
             <div class="flex items-center gap-3">
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateSinglePoolQuota('${doc}', -1)">
+                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateSinglePoolQuota(${jsArg(doc)}, -1)">
                     <i data-lucide="minus" class="w-4 h-4"></i>
                 </button>
                 <span class="w-6 text-center text-sm font-bold">${displayCount}</span>
-                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateSinglePoolQuota('${doc}', 1)">
+                <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700" onclick="updateSinglePoolQuota(${jsArg(doc)}, 1)">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -370,7 +376,6 @@ function renderStructuredConflicts() {
         .filter((s) => s);
 
     const activeDocs = typeof doctors !== 'undefined' ? doctors : [];
-    const docOptions = activeDocs.map((d) => `<option value="${d}">${d}</option>`).join('');
 
     let html = '';
     pairs.forEach((p, idx) => {
@@ -384,16 +389,22 @@ function renderStructuredConflicts() {
         const doc2 = parts[1].trim();
 
         let doc1Options = activeDocs
-            .map((d) => `<option value="${d}" ${d === doc1 ? 'selected' : ''}>${d}</option>`)
+            .map(
+                (d) =>
+                    `<option value="${esc(d)}" ${d === doc1 ? 'selected' : ''}>${esc(d)}</option>`
+            )
             .join('');
         if (!activeDocs.includes(doc1) && doc1)
-            doc1Options += `<option value="${doc1}" selected>${doc1}</option>`;
+            doc1Options += `<option value="${esc(doc1)}" selected>${esc(doc1)}</option>`;
 
         let doc2Options = activeDocs
-            .map((d) => `<option value="${d}" ${d === doc2 ? 'selected' : ''}>${d}</option>`)
+            .map(
+                (d) =>
+                    `<option value="${esc(d)}" ${d === doc2 ? 'selected' : ''}>${esc(d)}</option>`
+            )
             .join('');
         if (!activeDocs.includes(doc2) && doc2)
-            doc2Options += `<option value="${doc2}" selected>${doc2}</option>`;
+            doc2Options += `<option value="${esc(doc2)}" selected>${esc(doc2)}</option>`;
 
         html += `
         <div class="flex items-center gap-2 mb-2 bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
@@ -482,7 +493,7 @@ function renderStructuredChips(hiddenInputId, containerId, uiInputId) {
         tag.className =
             'chip-tag bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-200/80 dark:border-teal-900/50 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none animate-in fade-in scale-95 duration-200';
         tag.innerHTML = `
-            <span>${item}</span>
+            <span>${esc(item)}</span>
             <button type="button" onclick="event.stopPropagation(); removeStructuredChip('${hiddenInputId}', ${idx})" class="text-teal-400 hover:text-teal-600 transition-colors">
                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
             </button>
