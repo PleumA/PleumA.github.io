@@ -2872,7 +2872,7 @@ function updateTargetedCellDOM(day, slotIndex) {
     // 1. Update Table View Button
     const btnTable = document.getElementById(`btn-day-${day}-slot-${slotIndex}`);
     if (btnTable) {
-        btnTable.className = `w-full text-left text-sm px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm`;
+        btnTable.className = `w-full text-left text-sm px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing`;
         const span = btnTable.querySelector('span.truncate');
         if (span) span.innerText = displayDoc;
     }
@@ -2880,7 +2880,7 @@ function updateTargetedCellDOM(day, slotIndex) {
     // 2. Update Calendar View Button
     const btnCal = document.getElementById(`btn-cal-day-${day}-slot-${slotIndex}`);
     if (btnCal) {
-        btnCal.className = `w-full text-left text-[11px] px-2 py-1 rounded-lg ${calBadgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm`;
+        btnCal.className = `w-full text-left text-[11px] px-2 py-1 rounded-lg ${calBadgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing`;
         const span = btnCal.querySelector('span.truncate');
         if (span) span.innerText = displayDoc;
     }

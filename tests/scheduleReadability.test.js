@@ -52,5 +52,16 @@ runTest('table chips use text-sm', () => {
     );
 });
 
+runTest('hand-edited cells keep the drag cursor and sizing of fresh renders', () => {
+    const fn = src.slice(
+        src.indexOf('function updateTargetedCellDOM'),
+        src.indexOf('// 3. Rebuild Notes')
+    );
+    const classes = fn.match(/className = `[^`]*`/g) || [];
+    assert.strictEqual(classes.length, 2);
+    classes.forEach((c) => assert.ok(c.includes('cursor-grab active:cursor-grabbing'), c));
+    assert.ok(classes[0].includes('text-sm'), classes[0]);
+});
+
 console.log(`\nPASSED: ${passed}/${total}, FAILED: ${total - passed}`);
 if (passed !== total) process.exit(1);
