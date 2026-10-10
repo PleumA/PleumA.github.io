@@ -192,28 +192,31 @@ const translations = {
             'ระบบจัดตารางเวรนี้ คำนวณด้วยอัลกอริทึม Smart Solver (Monte Carlo Simulation) 300 รอบ เพื่อหาการกระจายเวรที่ดีที่สุด พร้อมทั้งรองรับเงื่อนไขหลากหลายรูปแบบดังนี้:',
         manualSection1Title: '1. การจัดการแพทย์และบทบาท (Roles)',
         manualSection1Body:
-            'เพิ่มชื่อแพทย์และกำหนดบทบาทผ่านระบบ Tag และ Dropdown (Interactive UI) ระบบจะจัดเวรแยกอิสระตามกลุ่มบทบาทแต่ละวัน (หากต้องการกำหนดโควตาที่จำนวนไม่พอดีกับช่องเวร โปรดเปิดใช้งาน Allow Blank Days)',
+            'เพิ่มชื่อแพทย์และกำหนดบทบาทผ่านแท็กและเมนูเลือก ระบบจะจัดเวรแยกตามกลุ่มบทบาทของแต่ละวัน หากต้องการกำหนดโควตาที่จำนวนไม่พอดีกับช่องเวร ให้เปิดใช้งาน Allow Blank Days เมื่อลบแพทย์ออก ชื่อนั้นจะถูกลบออกจากการล็อกเวรพิเศษ วันขอหยุด และการแก้ไขตารางด้วย',
         manualSection2Title: '2. จำนวนเวรตามบทบาท (Slots)',
         manualSection2Body:
-            "กำหนดจำนวนผู้ปฏิบัติงานต่อวันผ่านปุ่มเพิ่ม/ลด (Stepper) และปรับเปลี่ยนเฉพาะบางวันได้ในระบบ 'กำหนดพิเศษ'",
+            "กำหนดจำนวนผู้ปฏิบัติงานต่อวันด้วยปุ่มเพิ่ม/ลด (Stepper) และปรับเฉพาะบางวันได้ใน 'กำหนดพิเศษ' ในส่วน 'กำหนดพิเศษ' คุณยังล็อกแพทย์ให้อยู่เวรวันใดวันหนึ่งได้ แพทย์ที่ถูกล็อกต้องผ่านกฎเดียวกับคนอื่น ทั้งความขัดแย้ง ระยะพักเวร วันหยุดติดกัน และวันก่อนวันหยุดขอ หากวันนั้นอยู่เวรไม่ได้ ระบบจะจัดคนอื่นแทนตามปกติ",
         manualSection3Title: '3. แพทย์ที่ขัดแย้งกัน (Conflict List)',
         manualSection3Body:
-            'เลือกคู่แพทย์ที่ไม่สามารถอยู่เวรร่วมกันได้ผ่าน Dropdown อัลกอริทึมจะคัดชื่อออกจากกลุ่มเลือกโดยอัตโนมัติ',
+            'เลือกคู่แพทย์ที่ไม่ควรอยู่เวรด้วยกันผ่านเมนูเลือก ระบบจะไม่จัดสองคนนี้ในวันเดียวกัน หากแก้ตารางด้วยตนเองจนเกิดการชนกัน จะมีป้ายเตือนแสดงขึ้น',
         manualSection4Title: '4. วันหยุดและวันพัก (Off Requests)',
         manualSection4Body:
-            'ระบบห้ามจัดเวรซ้อนทับวัน Off หรือก่อนหน้าวัน Off 1 วัน, ห้ามอยู่เวรวันหยุดติดกัน, และจะรักษาระยะเวลาพักเวร (Off-Duty Period) ตามที่ตั้งค่าไว้ (สามารถระบุวัน Off เป็นวันเดี่ยว คั่นด้วยคอมมา หรือระบุเป็นช่วงวันที่ เช่น <code>5, 12</code> หรือ <code>2-10</code> และในโหมดกำหนดช่วงวันที่สามารถกรอกเป็น <code>25/02/2026-04/03/2026</code> ได้)',
-        manualSection5Title: '5. การแก้ไขและตรวจสอบตาราง',
+            'ระบบไม่จัดเวรในวันที่ขอหยุดหรือวันก่อนหน้า 1 วัน ไม่จัดเวรวันหยุดติดกัน และเว้นระยะพักเวรตามที่ตั้งไว้ กรอกวันขอหยุดได้เป็นวันเดียว เช่น <code>5</code> เป็นรายการ เช่น <code>3,7</code> หรือเป็นช่วง เช่น <code>2-5</code> ในโหมดช่วงวันที่กำหนดเองให้กรอก <code>25/02/2026-04/03/2026</code> ระบบจะเตือนเมื่อการแก้ตารางไปชนวันขอหยุด ทั้งแบบช่วง แบบรายการ และวันที่ในช่วงกำหนดเอง',
+        manualSection5Title: '5. การแก้ไข ย้อนกลับ และตรวจสอบตาราง',
         manualSection5Body:
-            'ท่านสามารถลากและวาง (Drag & Drop) ชื่อแพทย์ในตาราง ปฏิทิน และมุมมองบุคคล (รองรับการสลับข้ามวัน) เพื่อสลับตัวแพทย์ด้วยตนเอง ระบบจะคำนวณสถิติใหม่พร้อมแสดงป้ายเตือนความขัดแย้ง (Conflict) ทันที',
-        manualSection6Title: '6. การบันทึก/โหลดและการอัปเดตสถิติ',
+            'ลากและวาง (Drag & Drop) ชื่อแพทย์ในตาราง ปฏิทิน และมุมมองบุคคลเพื่อสลับตัวด้วยตนเอง ระบบจะคำนวณสถิติใหม่และแสดงป้ายเตือนทันที กดปุ่มย้อนกลับ (Undo) หรือ <b>Ctrl+Z</b> เพื่อย้อนการแก้ไขทั้งหมด รวมถึงการสลับด้วยการลาก (ถ้าเคอร์เซอร์อยู่ในช่องพิมพ์ Ctrl+Z จะย้อนข้อความตามปกติ) เมื่อเปลี่ยนเดือน ปี หรือช่วงวันที่ การแก้ไขด้วยตนเองจะถูกล้างอัตโนมัติและมีข้อความแจ้งเตือน ส่วนการลบแพทย์ด้วย Backspace ก็ย้อนกลับได้เช่นกัน',
+        manualSection6Title: '6. การบันทึก/โหลดและการใช้งานออฟไลน์',
         manualSection6Body:
-            'ท่านสามารถส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ ระบบจะอัปเดตสถิติโดยอัตโนมัติทันทีที่มีการแก้ไขเวรด้วยตนเองหรือกดย้อนกลับ (Undo)',
+            'ส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อนำกลับมาใช้ใหม่ได้ หากไฟล์ที่นำเข้าอ่านไม่ได้ ระบบจะปฏิเสธไฟล์และคงการตั้งค่าเดิมไว้ ชื่อแพทย์จะถูกจัดให้เรียบร้อย คือตัดช่องว่างหน้าหลัง ลบชื่อซ้ำ และตัดอักขระ <code>: ; , /</code> ออก หากเดือนหรือปีไม่ถูกต้อง ระบบจะแจ้งข้อความแทนการสร้างตารางที่ผิด เมื่อโหลดหน้าเว็บครั้งแรกแล้ว แอปใช้งานแบบออฟไลน์ได้ และจะอัปเดตตัวเองอัตโนมัติเมื่อมีเวอร์ชันใหม่',
         manualSection7Title: '7. โหมดช่วงวันที่กำหนดเอง (Custom Date Range)',
         manualSection7Body:
-            "คุณสามารถสลับเปิด 'ใช้ช่วงวันที่กำหนดเอง' เพื่อจัดเวรตามวันที่ต้องการ (สูงสุด 90 วัน) แทนการจัดเวรตามเดือนปกติ โดยกรอกวันที่ในรูปแบบ DD/MM/YYYY",
+            "เปิด 'ใช้ช่วงวันที่กำหนดเอง' เพื่อจัดเวรตามวันที่ต้องการ (สูงสุด 90 วัน) แทนการจัดตามเดือน โดยกรอกวันที่ในรูปแบบ DD/MM/YYYY วันขอหยุดในโหมดนี้กรอกเป็นวันที่เต็ม เช่น <code>25/02/2026</code> หรือเป็นช่วงได้",
         manualSection8Title: '8. โหมดจัดเวร 3 ผลัด (Shift-Based Mode)',
         manualSection8Body:
-            'จัดตารางเวร 3 ผลัดต่อวัน (เช้า บ่าย ดึก) โดยสามารถระบุจำนวนคนในแต่ละผลัดได้อย่างอิสระ ระบบมีกฎห้ามอยู่เวรเช้าต่อจากเวรดึก (Night-to-Morning Spacing) และจะห้ามอยู่เวรดึกในวันก่อนวันหยุดของผู้ปฏิบัติงานนั้นๆ เท่านั้น (เวรเช้า/บ่ายของวันก่อนวันหยุดยังสามารถทำได้) พร้อมสถิติสรุปแบ่งตามแต่ละกะเวร',
+            'จัดเวร 3 ผลัดต่อวัน (เช้า บ่าย ดึก) และกำหนดจำนวนคนของแต่ละผลัดได้อิสระ ห้ามอยู่เวรเช้าต่อจากเวรดึก และห้ามอยู่เวรดึกในวันก่อนวันขอหยุดเท่านั้น (เวรเช้าและบ่ายยังจัดได้) สถิติสรุปจะแยกตามผลัด',
+        manualSection9Title: '9. หน้าจอ แถบความเท่าเทียม และส่งออกปฏิทิน',
+        manualSection9Body:
+            "บนจอแล็ปท็อปและ iPad แนวนอน (กว้างตั้งแต่ 1024px) การตั้งค่าอยู่คอลัมน์ซ้ายที่เลื่อนแยกได้ และตารางอยู่ด้านขวา ส่วน 'จำนวนแพทย์ต่อวัน' และ 'กฎขั้นสูง' พับเก็บได้ บนจอเล็กกว่านั้น กดปุ่ม 'ตั้งค่า' ที่ส่วนหัวเพื่อเปิดแผงเลื่อนเข้ามา แตะนอกแผงหรือกด Esc เพื่อปิด และบนมือถือแต่ละแถวของตารางจะแสดงเป็นการ์ด<br>แถบความเท่าเทียมเหนือตารางแสดงจำนวนเวรรวมของแพทย์แต่ละคน คนที่ห่างจากค่าเฉลี่ยมากที่สุดจะมีกรอบสีเหลืองอำพัน และส่วนต่างสูงสุดแสดงทางขวา ตารางเต็มอยู่ใน 'รายละเอียดรายบุคคล' ซึ่งเปิดไว้ตั้งแต่แรก<br>ส่งออกปฏิทินได้ทั้งหมด เฉพาะบทบาท หรือรายบุคคล 'Apple Calendar' จะดาวน์โหลดไฟล์ .ics ส่วน 'Google Calendar' จะดาวน์โหลดไฟล์แล้วเปิดหน้านำเข้าของ Google ให้คุณนำเข้าไฟล์เอง หากป๊อปอัปถูกบล็อก จะแสดงลิงก์ให้แทน การนำเข้าซ้ำจะเพิ่มกิจกรรมใหม่แต่ไม่ลบกิจกรรมเก่า",
         customDateRangeToggle: 'ใช้ช่วงวันที่กำหนดเอง',
         startDateLabel: 'เริ่ม',
         endDateLabel: 'สิ้นสุด',
@@ -376,28 +379,31 @@ const translations = {
             'This scheduler uses a Smart Solver algorithm (Monte Carlo Simulation) running 300 iterations to find the fairest workload distribution, satisfying these criteria:',
         manualSection1Title: '1. Doctors & Roles Setup',
         manualSection1Body:
-            'Add doctors and assign roles using the interactive UI tags and dropdowns. The system allocates duties within each role pool independently. (If you want to use unbalanced exact quotas, please turn on Allow Blank Days).',
+            'Add doctors and assign roles with the tags and dropdowns. Duties are filled separately within each role group. To use exact quotas that do not match the slots, turn on Allow Blank Days. Removing a doctor also removes them from the special-duty lock, off requests and manual edits.',
         manualSection2Title: '2. Slots & Daily Demands',
         manualSection2Body:
-            "Set daily needs using the numeric steppers. Define date-specific overrides in 'Custom Daily Slots'.",
+            "Set daily needs with the numeric steppers, and change specific days in 'Custom Daily Slots'. There you can also lock a doctor to a day. A locked doctor follows the same rules as everyone else: conflicts, rest period, consecutive holidays and the day before an off day. If they cannot work that day, the normal fill takes over.",
         manualSection3Title: '3. Conflict / Hate List',
         manualSection3Body:
-            'Select doctors who cannot work on the same shift using the conflict dropdowns. The solver automatically excludes them from matching pools.',
+            'Pick pairs of doctors who should not work together using the dropdowns. The scheduler never puts them on the same day. If a manual edit creates a clash, a warning badge appears.',
         manualSection4Title: '4. Holidays & Off Requests',
         manualSection4Body:
-            'The scheduler enforces strict rules: no shifts on Off days or the day prior, no consecutive holiday/weekend duties, and it strictly respects the configured Off-Duty rest period. Off requests can be entered as single days, comma-separated lists, or date ranges (e.g., <code>5, 12</code>, <code>2-10</code>, or <code>25/02/2026-04/03/2026</code>).',
-        manualSection5Title: '5. Manual Overrides & Warnings',
+            'No duties on an off day or the day before, no consecutive holiday duties, and the configured rest period is kept. Enter off days as a single day (<code>5</code>), a list (<code>3,7</code>) or a range (<code>2-5</code>); in custom range mode use <code>25/02/2026-04/03/2026</code>. Warnings appear when a manual edit lands on an off request, for ranges, lists and custom-range dates alike.',
+        manualSection5Title: '5. Editing, Undo & Warnings',
         manualSection5Body:
-            'Use Drag and Drop to move doctors in the Table, Calendar, and Person views (including cross-day swaps) for manual overrides. The system instantly auto-updates workload stats and displays real-time warning badges.',
-        manualSection6Title: '6. Save/Load Config & Stats Sync',
+            'Drag and drop doctors in the Table, Calendar and Person views to swap them by hand. Stats and warnings update immediately. Undo (button or <b>Ctrl+Z</b>) reverts edits, including drag-and-drop swaps; inside a text box Ctrl+Z undoes typing as usual. Switching month, year or custom range clears your manual edits and a message tells you. Removing a doctor with Backspace can also be undone.',
+        manualSection6Title: '6. Save/Load & Offline Use',
         manualSection6Body:
-            'Export configuration state as a JSON backup file to instantly reload later. The UI auto-recalculates summary stats immediately when manual edits, resets, or undo actions occur.',
+            'Export your setup as a JSON file to load it back later. A file that cannot be read is rejected and your current setup stays unchanged. Doctor names are tidied: spaces trimmed, duplicates removed, and the characters <code>: ; , /</code> removed. An invalid month or year shows a message instead of a wrong schedule. Once loaded, the app works offline and updates itself when a new version is published.',
         manualSection7Title: '7. Custom Date Range Mode',
         manualSection7Body:
-            "Toggle 'Use Custom Date Range' to schedule duties across any arbitrary dates (up to 90 days) instead of rigid months. Dates should be formatted as DD/MM/YYYY.",
+            "Turn on 'Use Custom Date Range' to schedule any dates you choose (up to 90 days) instead of a month. Enter dates as DD/MM/YYYY. Off requests in this mode use full dates such as <code>25/02/2026</code>, or ranges.",
         manualSection8Title: '8. Shift-Based Mode (Morning, Afternoon, Night)',
         manualSection8Body:
-            'Schedules 3 shifts per day (Morning, Afternoon, Night) with customizable slot counts. Enforces strict spacing: no Morning shifts following a Night shift, and blocks only the Night shift on the day before requested off. The stats table dynamically details Morning, Afternoon, and Night shifts worked by each doctor.',
+            'Schedules 3 shifts per day (Morning, Afternoon, Night) with your own headcount for each. No Morning shift right after a Night shift, and only the Night shift is blocked on the day before an off request. The stats break down shifts by type.',
+        manualSection9Title: '9. Layout, Fairness Row & Calendar Export',
+        manualSection9Body:
+            "On laptops and landscape iPad (1024px and wider), settings sit in a left column that scrolls on its own and the schedule fills the right. 'Doctors per day' and 'Advanced rules' can be collapsed. On narrower screens, tap the 'Settings' button in the header to open a slide-in panel; tap outside it or press Escape to close. On phones, schedule rows appear as cards.<br>The fairness row above the schedule shows each doctor's total. Doctors furthest from the average are outlined in amber, and the spread is shown on the right. The full table is in 'Per-doctor details', open by default.<br>Export the calendar for All, a role group or one person. 'Apple Calendar' downloads an .ics file. 'Google Calendar' downloads it and opens Google's import page, where you import the file yourself. If the pop-up is blocked, the link is shown instead. Re-importing adds events but does not remove old ones.",
         customDateRangeToggle: 'Use Custom Date Range',
         startDateLabel: 'Start Date',
         endDateLabel: 'End Date',
