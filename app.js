@@ -508,13 +508,13 @@ function applyTranslations() {
     const calHeaders = document.getElementById('calendarHeaderDays');
     if (calHeaders) {
         calHeaders.innerHTML = `
-            <div class="text-rose-500 py-1 uppercase tracking-wider">${translations[lang].daySun}</div>
-            <div class="py-1 uppercase tracking-wider">${translations[lang].dayMon}</div>
-            <div class="py-1 uppercase tracking-wider">${translations[lang].dayTue}</div>
-            <div class="py-1 uppercase tracking-wider">${translations[lang].dayWed}</div>
-            <div class="py-1 uppercase tracking-wider">${translations[lang].dayThu}</div>
-            <div class="py-1 uppercase tracking-wider">${translations[lang].dayFri}</div>
-            <div class="text-rose-500 py-1 uppercase tracking-wider">${translations[lang].daySat}</div>
+            <div class="text-rose-500 py-1">${translations[lang].daySun}</div>
+            <div class="py-1">${translations[lang].dayMon}</div>
+            <div class="py-1">${translations[lang].dayTue}</div>
+            <div class="py-1">${translations[lang].dayWed}</div>
+            <div class="py-1">${translations[lang].dayThu}</div>
+            <div class="py-1">${translations[lang].dayFri}</div>
+            <div class="text-rose-500 py-1">${translations[lang].daySat}</div>
         `;
     }
 
@@ -3301,7 +3301,7 @@ function renderSummaryTable(config) {
     if (sumHeader) {
         if (isShiftBased) {
             sumHeader.innerHTML = `
-                <tr class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[12px] uppercase tracking-wider rounded-t-lg">
+                <tr class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[12px] rounded-t-lg">
                     <th class="py-3 px-4 text-left font-bold rounded-tl-lg">${currentLang === 'th' ? 'แพทย์' : 'Doctor'}</th>
                     <th class="py-3 px-4 font-bold text-teal-600 dark:text-teal-400">${currentLang === 'th' ? 'เช้า (M)' : 'Morning (M)'}</th>
                     <th class="py-3 px-4 font-bold text-indigo-600 dark:text-indigo-400">${currentLang === 'th' ? 'บ่าย (A)' : 'Afternoon (A)'}</th>
@@ -3313,7 +3313,7 @@ function renderSummaryTable(config) {
             `;
         } else {
             sumHeader.innerHTML = `
-                <tr class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[12px] uppercase tracking-wider rounded-t-lg">
+                <tr class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[12px] rounded-t-lg">
                     <th class="py-3 px-4 text-left font-bold rounded-tl-lg">${currentLang === 'th' ? 'แพทย์' : 'Doctor'}</th>
                     <th class="py-3 px-4 font-bold text-teal-700 dark:text-teal-400">${currentLang === 'th' ? 'ทำการ (จ-ศ)' : 'Weekday'}</th>
                     <th class="py-3 px-4 font-bold text-orange-700 dark:text-orange-400">${currentLang === 'th' ? 'หยุด (ส-อา, พิเศษ)' : 'Weekend/Hol'}</th>
@@ -3340,9 +3340,9 @@ function renderSummaryTable(config) {
         const docQuota = quota[key];
         if (docQuota !== undefined && docQuota > 0) {
             if (sum.total >= docQuota) {
-                quotaIndicator = `<span class="ml-2 inline-flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] font-bold border border-emerald-200 dark:border-emerald-800/50 uppercase tracking-wider"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-0.5"><path d="M20 6 9 17l-5-5"/></svg>Quota</span>`;
+                quotaIndicator = `<span class="ml-2 inline-flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] font-bold border border-emerald-200 dark:border-emerald-800/50"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-0.5"><path d="M20 6 9 17l-5-5"/></svg>Quota</span>`;
             } else {
-                quotaIndicator = `<span class="ml-2 inline-flex items-center text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-1.5 py-0.5 rounded text-[10px] font-bold border border-orange-200 dark:border-orange-800/50 uppercase tracking-wider"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>${sum.total}/${docQuota}</span>`;
+                quotaIndicator = `<span class="ml-2 inline-flex items-center text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-1.5 py-0.5 rounded text-[10px] font-bold border border-orange-200 dark:border-orange-800/50"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>${sum.total}/${docQuota}</span>`;
             }
         }
 
@@ -3461,7 +3461,7 @@ function getRoleBadgeColorClass(role) {
 function renderTableView(config) {
     const headerRow = document.getElementById('scheduleTableHeader');
     let headerHtml = `
-        <tr class="text-slate-500 dark:text-slate-400 text-[13px] uppercase tracking-wider">
+        <tr class="text-slate-500 dark:text-slate-400 text-[13px]">
             <th class="py-3.5 px-6 border-b border-slate-200 dark:border-slate-800 font-bold w-16 whitespace-nowrap">${translations[currentLang].tableDateCol}</th>
             <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-800 font-bold w-24 whitespace-nowrap">${translations[currentLang].tableDayCol}</th>
     `;
@@ -3488,7 +3488,7 @@ function renderTableView(config) {
             const role = getSlotRole(i - 1);
             if (role && role !== 'Default') {
                 const colorClass = roleColors[role] || 'text-slate-500 dark:text-slate-400';
-                subHeader = `<div class="text-[10px] font-bold mt-0.5 uppercase ${colorClass}">${role}</div>`;
+                subHeader = `<div class="text-[10px] font-bold mt-0.5 ${colorClass}">${role}</div>`;
             }
         }
         headerHtml += `
@@ -4823,7 +4823,7 @@ function renderPersonCentricView(config) {
     const body = document.getElementById('personViewBody');
     if (!head || !body) return;
 
-    let headHtml = `<tr class="text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider"><th class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[120px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${translations[currentLang].tableHeaderDoctors || 'Doctor'}</th>`;
+    let headHtml = `<tr class="text-slate-500 dark:text-slate-400 text-[11px]"><th class="py-2 px-4 border-b border-r border-slate-200 dark:border-slate-800 font-bold sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[120px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] dark:shadow-none">${translations[currentLang].tableHeaderDoctors || 'Doctor'}</th>`;
     for (let d = 1; d <= config.numDays; d++) {
         const dayRow = globalResult.schedule[d - 1];
         const dayName = dayRow ? dayRow.dayName.substring(0, 2) : '';

@@ -63,5 +63,20 @@ runTest('every title attribute is translatable or already Thai', () => {
     assert.deepStrictEqual(offenders, []);
 });
 
+runTest('no all-caps label classes (Thai has no case, so EN would look bigger)', () => {
+    const offenders = [];
+    for (const f of ['index.html', 'app.js', 'structuredInputs.js']) {
+        const src = fs.readFileSync(f, 'utf8');
+        src.split('\n').forEach((line, i) => {
+            if (
+                /class(Name)?=["'`][^"'`]*\buppercase\b/.test(line) ||
+                /["'`\s]uppercase["'`\s]/.test(line)
+            )
+                offenders.push(`${f}:${i + 1}`);
+        });
+    }
+    assert.deepStrictEqual(offenders, []);
+});
+
 console.log(`\nPASSED: ${passed}/${total}, FAILED: ${total - passed}`);
 if (passed !== total) process.exit(1);
