@@ -444,6 +444,12 @@ function applyTranslations() {
         }
     });
 
+    // Update tooltip (title) attributes
+    document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+        const v = translations[lang][el.getAttribute('data-i18n-title')];
+        if (v) el.setAttribute('title', v);
+    });
+
     // Update HTML elements (preserves rich formatting like <code> tags)
     const htmlElements = document.querySelectorAll('[data-i18n-html]');
     htmlElements.forEach((el) => {

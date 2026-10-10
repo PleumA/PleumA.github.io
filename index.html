@@ -183,7 +183,7 @@
 <body class="text-slate-800 dark:text-slate-100 selection:bg-teal-200 selection:dark:bg-teal-900/60">
 
     <!-- Skip to main content (Accessibility) -->
-    <a href="#main-content" class="skip-link">ข้ามไปยังเนื้อหาหลัก / Skip to main content</a>
+    <a href="#main-content" class="skip-link" data-i18n="skipToContent">ข้ามไปยังเนื้อหาหลัก</a>
 
     <header
         class="bg-gradient-to-r from-teal-600 via-emerald-600 to-indigo-600 dark:from-teal-800 dark:via-emerald-800 dark:to-indigo-900 text-white shadow-lg sticky top-0 z-30">
@@ -220,7 +220,7 @@
                 <!-- Read Manual Button -->
                 <button onclick="openManualModal()" id="btnManual"
                     class="bg-white/10 hover:bg-white/20 border border-white/10 p-2.5 rounded-xl transition-all active:scale-95 text-white flex items-center justify-center gap-1.5 font-bold text-sm"
-                    title="Read Manual / คู่มือการใช้งาน"
+                    data-i18n-title="manualBtnTitle" title="คู่มือการใช้งาน"
                     aria-label="Open user manual">
                     <i data-lucide="help-circle" class="w-5 h-5" aria-hidden="true"></i>
                     <span data-i18n="manualBtn">คู่มือ</span>
@@ -271,7 +271,7 @@
                         class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                         <div>
                             <span class="block text-sm font-bold text-slate-700 dark:text-slate-200"
-                                data-i18n="customDateRangeToggle">ใช้ช่วงวันที่กำหนดเอง / Use Custom Date Range</span>
+                                data-i18n="customDateRangeToggle">ใช้ช่วงวันที่กำหนดเอง</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="chkCustomDateRange" class="sr-only peer">
@@ -286,14 +286,14 @@
                         <div>
                             <label
                                 class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                                data-i18n="startDateLabel">เริ่ม / Start</label>
+                                data-i18n="startDateLabel">เริ่ม</label>
                             <input type="date" id="inputStartDate" lang="en-GB"
                                 class="[color-scheme:light] dark:[color-scheme:dark] w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
                         </div>
                         <div>
                             <label
                                 class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wide"
-                                data-i18n="endDateLabel">สิ้นสุด / End</label>
+                                data-i18n="endDateLabel">สิ้นสุด</label>
                             <input type="date" id="inputEndDate" lang="en-GB"
                                 class="[color-scheme:light] dark:[color-scheme:dark] w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
                         </div>
@@ -646,12 +646,11 @@
                     <div>
                         <label
                             class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5 uppercase tracking-wide"
-                            data-i18n="lockConditionTypeLabel">ประเภทการล็อก / Lock Condition Type</label>
+                            data-i18n="lockConditionTypeLabel">ประเภทการล็อก</label>
                         <select id="lockConditionType" onchange="toggleLockConditionUI(); generateSchedule();"
                             class="w-full bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 font-semibold text-slate-800 dark:text-slate-100">
-                            <option value="firstNDays" data-i18n="firstNDaysOpt">ช่วงแรก N วัน / First N Days</option>
-                            <option value="everyWeekday" data-i18n="everyWeekdayOpt">ทุกวัน [weekday] / Every [Weekday]
-                            </option>
+                            <option value="firstNDays" data-i18n="firstNDaysOpt">ช่วงแรก N วัน</option>
+                            <option value="everyWeekday" data-i18n="everyWeekdayOpt">ทุกวัน</option>
                         </select>
                     </div>
                     <div id="lockFirstNDaysContainer">
@@ -672,16 +671,16 @@
                     <div id="lockEveryWeekdayContainer" class="hidden">
                         <label
                             class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5 uppercase tracking-wide"
-                            data-i18n="lockWeekdayLabel">วันที่ต้องการล็อก / Day to Lock</label>
+                            data-i18n="lockWeekdayLabel">วันที่ต้องการล็อก</label>
                         <select id="selectLockWeekday" onchange="generateSchedule();"
                             class="w-full bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 font-semibold text-slate-800 dark:text-slate-100">
-                            <option value="0" data-i18n="daySun">อา. / Sunday</option>
-                            <option value="1" data-i18n="dayMon">จ. / Monday</option>
-                            <option value="2" data-i18n="dayTue">อ. / Tuesday</option>
-                            <option value="3" data-i18n="dayWed">พ. / Wednesday</option>
-                            <option value="4" data-i18n="dayThu">พฤ. / Thursday</option>
-                            <option value="5" data-i18n="dayFri">ศ. / Friday</option>
-                            <option value="6" data-i18n="daySat">ส. / Saturday</option>
+                            <option value="0" data-i18n="daySun">อา.</option>
+                            <option value="1" data-i18n="dayMon">จ.</option>
+                            <option value="2" data-i18n="dayTue">อ.</option>
+                            <option value="3" data-i18n="dayWed">พ.</option>
+                            <option value="4" data-i18n="dayThu">พฤ.</option>
+                            <option value="5" data-i18n="dayFri">ศ.</option>
+                            <option value="6" data-i18n="daySat">ส.</option>
                         </select>
                     </div>
                     <div>
@@ -970,11 +969,10 @@
     <div id="mobileDoctorSheet" class="fixed inset-0 bg-black/50 z-50 hidden">
         <div
             class="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto shadow-2xl">
-            <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white">เปลี่ยนแพทย์ / Change Doctor</h3>
+            <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white" data-i18n="changeDoctorTitle">เปลี่ยนแพทย์</h3>
             <div id="mobileDoctorList"></div>
             <button onclick="closeMobileSheet()"
-                class="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl font-bold transition-colors">ยกเลิก
-                / Cancel</button>
+                class="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl font-bold transition-colors" data-i18n="cancelBtn">ยกเลิก</button>
         </div>
     </div>
 
