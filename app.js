@@ -851,7 +851,7 @@ function renderSpecialDocsCheckboxList() {
 
     container.innerHTML = '';
     if (doctors.length === 0) {
-        container.innerHTML = `<span class="text-xs text-slate-400 dark:text-slate-500">${currentLang === 'th' ? 'กรุณาเพิ่มรายชื่อแพทย์เพื่อตั้งค่า' : 'Please add doctors first'}</span>`;
+        container.innerHTML = `<span class="text-xs text-slate-500 dark:text-slate-400">${currentLang === 'th' ? 'กรุณาเพิ่มรายชื่อแพทย์เพื่อตั้งค่า' : 'Please add doctors first'}</span>`;
         return;
     }
 
@@ -959,7 +959,7 @@ function showToast(msg, isError = false) {
 function renderOffRequests() {
     const container = document.getElementById('offRequestsList');
     if (offData.length === 0) {
-        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-500 text-center py-2">${translations[currentLang].offRequestsNone || ''}</p>`;
+        container.innerHTML = `<p class="text-[12px] text-slate-500 dark:text-slate-400 text-center py-2">${translations[currentLang].offRequestsNone || ''}</p>`;
         return;
     }
     container.innerHTML = '';
@@ -976,7 +976,7 @@ function renderOffRequests() {
 
         div.innerHTML = `
             <div class="${isCustomDateRange ? 'w-56' : 'w-48'} shrink-0 font-sans">
-                <input type="text" placeholder="${isCustomDateRange ? (currentLang === 'th' ? 'เช่น 20/05/2026 หรือ 25/02/2026-04/03/2026' : 'e.g. 20/05/2026, or 25/02/2026-04/03/2026') : currentLang === 'th' ? 'เช่น 5, 12 หรือ 2-10' : 'e.g. 5, 12, or 2-10'}" value="${esc(req.date)}" onchange="updateOffRow(${req.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
+                <input type="text" aria-label="${translations[currentLang].tableDateCol}" placeholder="${isCustomDateRange ? (currentLang === 'th' ? 'เช่น 20/05/2026 หรือ 25/02/2026-04/03/2026' : 'e.g. 20/05/2026, or 25/02/2026-04/03/2026') : currentLang === 'th' ? 'เช่น 5, 12 หรือ 2-10' : 'e.g. 5, 12, or 2-10'}" value="${esc(req.date)}" onchange="updateOffRow(${req.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
             </div>
             <div class="relative flex-1">
                 <button type="button" onclick="toggleDropdown(event, 'dropdown-${req.id}')" class="w-full text-left border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-slate-900 flex justify-between items-center hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
@@ -987,7 +987,7 @@ function renderOffRequests() {
                     ${optionsHtml}
                 </div>
             </div>
-            <button type="button" onclick="deleteOffRow(${req.id})" class="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 p-1.5 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            <button type="button" onclick="deleteOffRow(${req.id})" aria-label="${translations[currentLang].ariaRemove}${req.date ? ' ' + esc(req.date) : ''}" class="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 p-1.5 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         `;
         container.appendChild(div);
     });
@@ -1015,7 +1015,7 @@ function deleteOffRow(id) {
 function renderExtraSlots() {
     const container = document.getElementById('extraSlotsList');
     if (extraSlotsData.length === 0) {
-        container.innerHTML = `<p class="text-[12px] text-slate-400 dark:text-slate-500 text-center py-2">${translations[currentLang].customSlotsNone || ''}</p>`;
+        container.innerHTML = `<p class="text-[12px] text-slate-500 dark:text-slate-400 text-center py-2">${translations[currentLang].customSlotsNone || ''}</p>`;
         return;
     }
     container.innerHTML = '';
@@ -1025,12 +1025,12 @@ function renderExtraSlots() {
             'flex gap-2 items-center bg-indigo-50/50 dark:bg-indigo-950/20 p-2 rounded-lg border border-indigo-100 dark:border-indigo-950/35 font-sans';
         div.innerHTML = `
             <div class="w-20 shrink-0">
-                <label class="text-[10px] text-slate-500 block">${translations[currentLang].tableDateCol}</label>
-                <input type="number" min="1" max="31" value="${esc(item.date)}" onchange="updateExtraSlot(${item.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-sm outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
+                <label for="extraDate-${item.id}" class="text-[10px] text-slate-500 dark:text-slate-400 block">${translations[currentLang].tableDateCol}</label>
+                <input type="number" id="extraDate-${item.id}" min="1" max="31" value="${esc(item.date)}" onchange="updateExtraSlot(${item.id}, 'date', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-sm outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100">
             </div>
             <div class="w-28 shrink-0">
-                <label class="text-[10px] text-slate-500 block">${translations[currentLang].defaultSlots}</label>
-                <input type="text" value="${esc(item.slots)}" onchange="updateExtraSlot(${item.id}, 'slots', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-xs outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100" placeholder="${esc(translations[currentLang].extraSlotPlaceholder)}">
+                <label for="extraSlots-${item.id}" class="text-[10px] text-slate-500 dark:text-slate-400 block">${translations[currentLang].defaultSlots}</label>
+                <input type="text" id="extraSlots-${item.id}" value="${esc(item.slots)}" onchange="updateExtraSlot(${item.id}, 'slots', this.value)" class="w-full text-center border border-slate-200 dark:border-slate-800 rounded py-1 text-xs outline-none bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-100" placeholder="${esc(translations[currentLang].extraSlotPlaceholder)}">
             </div>
             <button onclick="deleteExtraSlot(${item.id})" aria-label="${translations[currentLang].ariaRemove} ${esc(item.date)}" class="text-slate-400 hover:text-red-500 p-1 rounded transition-colors mt-4"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         `;
@@ -3022,7 +3022,9 @@ function updateDayNote(dayRow, offTodayList, config, ctx = resultCtx()) {
                 const docRole = doctorRoles[docName] || 'Default';
                 const reqRole = docObj.role || 'Default';
                 if (docRole !== reqRole && reqRole !== 'Default') {
-                    roleMismatches.push(`${docName}(${docRole}แทน${reqRole})`);
+                    roleMismatches.push(
+                        `${docName}(${docRole}${translations[lang].roleMismatchFor}${reqRole})`
+                    );
                 }
             }
         }
@@ -3080,6 +3082,7 @@ function updateTargetedCellDOM(day, slotIndex) {
     const btnTable = document.getElementById(`btn-day-${day}-slot-${slotIndex}`);
     if (btnTable) {
         btnTable.className = `w-full text-left text-sm px-2.5 py-1.5 rounded-lg ${badgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing`;
+        btnTable.setAttribute('aria-label', cellAria(day, slotIndex, displayDoc));
         const span = btnTable.querySelector('span.truncate');
         if (span) span.innerText = displayDoc;
     }
@@ -3088,9 +3091,17 @@ function updateTargetedCellDOM(day, slotIndex) {
     const btnCal = document.getElementById(`btn-cal-day-${day}-slot-${slotIndex}`);
     if (btnCal) {
         btnCal.className = `w-full text-left text-[11px] px-2 py-1 rounded-lg ${calBadgeClass} flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm cursor-grab active:cursor-grabbing`;
+        btnCal.setAttribute('aria-label', cellAria(day, slotIndex, displayDoc));
         const span = btnCal.querySelector('span.truncate');
         if (span) span.innerText = displayDoc;
     }
+
+    // A choice or reset closes this cell's dropdown
+    document
+        .querySelectorAll(
+            `#tablecelldropdown-${day}-${slotIndex}, #celldropdown-${day}-${slotIndex}`
+        )
+        .forEach((dd) => dd.classList.add('hidden'));
 
     // 3. Rebuild Notes
     let noteHtmlTable = '';
@@ -3450,6 +3461,8 @@ function updateStatsDashboard() {
     const avg = activeDocCount > 0 ? (totalDuties / activeDocCount).toFixed(1) : '0.0';
     document.getElementById('statAvgDuties').innerText =
         `${avg} ${currentLang === 'th' ? 'เวร/คน' : 'duties/doc'}`;
+
+    syncUndoBtn();
 
     // Toggle visibility of clear manual overrides button
     const clearOverridesBtn = document.getElementById('btnClearOverrides');
@@ -4981,13 +4994,35 @@ window.importConfigJSON = function (event) {
     reader.readAsText(file);
 };
 
+// Escape closes an open cell/off-request dropdown and returns focus to its button
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const open = [
+        ...document.querySelectorAll(
+            '[id^="dropdown-"], [id^="celldropdown-"], [id^="tablecelldropdown-"]'
+        ),
+    ].filter((dd) => !dd.classList.contains('hidden'));
+    open.forEach((dd) => dd.classList.add('hidden'));
+    const btn = open[0] && open[0].previousElementSibling;
+    if (btn && btn.focus) btn.focus();
+});
+
 // --- UI Utility: Drag and Drop & Undo Stack ---
 const undoStack = [];
 
 window.pushToUndoStack = function () {
     undoStack.push(JSON.parse(JSON.stringify(manualOverrides)));
     if (undoStack.length > 20) undoStack.shift();
+    syncUndoBtn();
 };
+
+// Show the Undo button only while there is history
+function syncUndoBtn() {
+    const b = document.getElementById('btnUndo');
+    if (!b) return;
+    if (undoStack.length > 0) b.classList.remove('hidden');
+    else b.classList.add('hidden');
+}
 
 window.undoLastAction = function () {
     if (undoStack.length > 0) {

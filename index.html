@@ -287,6 +287,19 @@
                 color: #000 !important;
                 box-shadow: none !important;
             }
+            /* The print viewport is narrow: undo the phone card layout */
+            #scheduleTableHeader {
+                display: table-header-group;
+            }
+            #scheduleTableBody tr {
+                display: table-row;
+                padding: 0;
+            }
+            #scheduleTableBody td,
+            #scheduleTableBody td:empty {
+                display: table-cell;
+                padding: 0.25rem 0.5rem;
+            }
         }
     </style>
 </head>
@@ -386,11 +399,11 @@
                     <div
                         class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                         <div>
-                            <span class="block text-sm font-bold text-slate-700 dark:text-slate-200"
+                            <span class="block text-sm font-bold text-slate-700 dark:text-slate-200" id="lblCustomRange"
                                 data-i18n="customDateRangeToggle">ใช้ช่วงวันที่กำหนดเอง</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="chkCustomDateRange" class="sr-only peer">
+                            <input type="checkbox" id="chkCustomDateRange" aria-labelledby="lblCustomRange" class="sr-only peer">
                             <div
                                 class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500">
                             </div>
@@ -400,14 +413,14 @@
                     <!-- Custom Date Range Inputs -->
                     <div id="customDateRangeContainer" class="hidden grid grid-cols-2 gap-4">
                         <div>
-                            <label
+                            <label for="inputStartDate"
                                 class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5"
                                 data-i18n="startDateLabel">เริ่ม</label>
                             <input type="date" id="inputStartDate" lang="en-GB"
                                 class="[color-scheme:light] dark:[color-scheme:dark] w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
                         </div>
                         <div>
-                            <label
+                            <label for="inputEndDate"
                                 class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5"
                                 data-i18n="endDateLabel">สิ้นสุด</label>
                             <input type="date" id="inputEndDate" lang="en-GB"
@@ -417,14 +430,14 @@
 
                     <div id="standardMonthYearContainer" class="grid grid-cols-2 gap-4">
                         <div>
-                            <label
+                            <label for="inputMonth"
                                 class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5"
                                 data-i18n="monthLabel">เดือน (1-12)</label>
                             <input type="number" id="inputMonth" min="1" max="12"
                                 class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-800 dark:text-slate-100">
                         </div>
                         <div>
-                            <label
+                            <label for="inputYear"
                                 class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5"
                                 data-i18n="yearLabel">ปี (พ.ศ. / ค.ศ.)</label>
                             <input type="number" id="inputYear"
@@ -434,7 +447,7 @@
 
                     <!-- Interactive Tag/Chip Input for Doctors -->
                     <div class="space-y-2">
-                        <label
+                        <label for="doctorInput"
                             class="block text-xs font-bold text-slate-600 dark:text-slate-400"
                             data-i18n="docListLabel">รายชื่อแพทย์</label>
                         <div id="doctorTagsContainer"
@@ -454,12 +467,12 @@
                         <div class="flex items-center justify-between px-4 py-3">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="badge-check" class="w-4 h-4 text-violet-500"></i>
-                                <h4 class="font-bold text-sm text-slate-700 dark:text-slate-200" data-i18n="roleToggle">
+                                <h4 class="font-bold text-sm text-slate-700 dark:text-slate-200" id="lblRoleToggle" data-i18n="roleToggle">
                                     โหมดแยกบทบาท (Role-Based)</h4>
                             </div>
                             <div
                                 class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
-                                <input type="checkbox" id="chkRoleBased" checked
+                                <input type="checkbox" id="chkRoleBased" aria-labelledby="lblRoleToggle" checked
                                     class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
                                 <label for="chkRoleBased"
                                     class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
@@ -499,7 +512,7 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label
+                        <label for="inputSpecialHolsUI"
                             class="block text-xs font-bold text-slate-600 dark:text-slate-400"
                             data-i18n="specialHolsLabel">วันหยุดพิเศษ</label>
                         <div id="structuredSpecialHolsContainer"
@@ -512,7 +525,7 @@
                     </div>
                     <div
                         class="space-y-2 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                        <label
+                        <label for="inputNoDutyUI"
                             class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400">
                             <i data-lucide="coffee" class="w-4 h-4 text-slate-400"></i>
                             <span data-i18n="noDutyLabel">วันที่งดเวร</span>
@@ -540,7 +553,7 @@
                 </summary>
                 <div class="p-5 space-y-4">
                     <div id="defaultSlotsContainer">
-                        <label
+                        <label for="inputDefaultSlots"
                             class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5"
                             data-i18n="defaultSlots">จำนวนคน (ค่าเริ่มต้น)</label>
                         <input type="number" id="inputDefaultSlots" value="2" min="1" max="10"
@@ -607,25 +620,25 @@
                 <div class="p-5 space-y-4 text-sm">
                     <div class="flex items-center justify-between p-2">
                         <div>
-                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleOffDutyPeriod">
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" id="lblOffDuty" data-i18n="ruleOffDutyPeriod">
                                 ระยะพักหลังเวร (วัน)</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
                                 data-i18n="ruleOffDutyPeriodDesc">จำนวนวันพักขั้นต่ำหลังอยู่เวร (1 = ไม่เว้น, 2 = เว้น 1 วัน)</p>
                         </div>
-                        <input type="number" id="inputOffDutyPeriod" value="2" min="1" max="7"
+                        <input type="number" id="inputOffDutyPeriod" aria-labelledby="lblOffDuty" value="2" min="1" max="7"
                             class="w-16 bg-white dark:bg-slate-950 border border-teal-200 dark:border-slate-800 rounded-xl px-2 py-2 text-sm outline-none text-center focus:border-teal-500 font-bold text-teal-700 dark:text-teal-400">
                     </div>
 
                     <div class="flex items-center justify-between p-2">
                         <div>
-                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleGaps">
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" id="lblGaps" data-i18n="ruleGaps">
                                 รักษาระยะห่างของเวร</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1" data-i18n="ruleGapsDesc">
                                 กระจายเวรไม่ให้เกิดช่องว่างที่นานเกินไป</p>
                         </div>
                         <div
                             class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
-                            <input type="checkbox" id="chkPreventLongGaps" checked
+                            <input type="checkbox" id="chkPreventLongGaps" aria-labelledby="lblGaps" checked
                                 class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
                             <label for="chkPreventLongGaps"
                                 class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
@@ -633,14 +646,14 @@
                     </div>
                     <div class="flex items-center justify-between p-2">
                         <div>
-                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleBalance">
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" id="lblBalance" data-i18n="ruleBalance">
                                 เฉลี่ยภาระงานของแพทย์ (Balance Workload)</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1" data-i18n="ruleBalanceDesc">
                                 จัดตารางเวรโดยเฉลี่ยจำนวนเวรรวมของทุกคนให้เท่ากันที่สุด</p>
                         </div>
                         <div
                             class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
-                            <input type="checkbox" id="chkBalanceShifts" checked
+                            <input type="checkbox" id="chkBalanceShifts" aria-labelledby="lblBalance" checked
                                 class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
                             <label for="chkBalanceShifts"
                                 class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
@@ -648,7 +661,7 @@
                     </div>
                     <div class="flex items-center justify-between p-2">
                         <div>
-                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleSoftAlternate">
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" id="lblSoftAlt" data-i18n="ruleSoftAlternate">
                                 สลับเวรอัตโนมัติ</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
                                 data-i18n="ruleSoftAlternateDesc">
@@ -656,7 +669,7 @@
                         </div>
                         <div
                             class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
-                            <input type="checkbox" id="chkSoftAlternate" checked
+                            <input type="checkbox" id="chkSoftAlternate" aria-labelledby="lblSoftAlt" checked
                                 class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
                             <label for="chkSoftAlternate"
                                 class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
@@ -675,7 +688,7 @@
                     </div>
                     <div class="flex items-center justify-between p-2">
                         <div>
-                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleShiftBased">
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" id="lblShiftBased" data-i18n="ruleShiftBased">
                                 โหมดจัดเวร 3 ผลัด</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
                                 data-i18n="ruleShiftBasedDesc">
@@ -683,7 +696,7 @@
                         </div>
                         <div
                             class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
-                            <input type="checkbox" id="chkShiftBased"
+                            <input type="checkbox" id="chkShiftBased" aria-labelledby="lblShiftBased"
                                 class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
                             <label for="chkShiftBased"
                                 class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
@@ -692,22 +705,22 @@
                     <div id="shiftSlotsCountsContainer" class="hidden p-3 bg-slate-100/50 dark:bg-slate-900/40 rounded-xl space-y-3 mt-2 mx-2">
                         <div class="grid grid-cols-3 gap-3">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center" data-i18n="morningSlotsLabel">เวรเช้า (Morning)</label>
+                                <label for="inputMorningSlots" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center" data-i18n="morningSlotsLabel">เวรเช้า (Morning)</label>
                                 <input type="number" id="inputMorningSlots" value="1" min="0" max="10" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs outline-none text-center font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center" data-i18n="afternoonSlotsLabel">เวรบ่าย (Afternoon)</label>
+                                <label for="inputAfternoonSlots" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center" data-i18n="afternoonSlotsLabel">เวรบ่าย (Afternoon)</label>
                                 <input type="number" id="inputAfternoonSlots" value="1" min="0" max="10" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs outline-none text-center font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center" data-i18n="nightSlotsLabel">เวรดึก (Night)</label>
+                                <label for="inputNightSlots" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center" data-i18n="nightSlotsLabel">เวรดึก (Night)</label>
                                 <input type="number" id="inputNightSlots" value="1" min="0" max="10" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs outline-none text-center font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-2">
                         <div>
-                            <h4 class="font-bold text-slate-700 dark:text-slate-200" data-i18n="ruleBlankDays">
+                            <h4 class="font-bold text-slate-700 dark:text-slate-200" id="lblBlankDays" data-i18n="ruleBlankDays">
                                 อนุญาตให้เว้นว่าง (Allow Blank Days)</h4>
                             <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1"
                                 data-i18n="ruleBlankDaysDesc">
@@ -715,7 +728,7 @@
                         </div>
                         <div
                             class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
-                            <input type="checkbox" id="chkAllowBlankDays"
+                            <input type="checkbox" id="chkAllowBlankDays" aria-labelledby="lblBlankDays"
                                 class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
                             <label for="chkAllowBlankDays"
                                 class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
@@ -735,7 +748,7 @@
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span
                                 data-i18n="addConflictBtn">เพิ่มคู่ขัดแย้ง</span>
                         </button>
-                        <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed"
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed"
                             data-i18n="conflictDesc">
                             *ระบุคู่ที่ขัดแย้งกันเพื่อให้ระบบไม่จัดให้อยู่เวรด้วยกัน</p>
                     </div>
@@ -748,12 +761,12 @@
                 <div
                     class="flex justify-between items-center px-5 py-4 border-b border-slate-100 dark:border-slate-800">
                     <h2 class="text-lg font-bold flex items-center gap-2 text-indigo-700 dark:text-indigo-400">
-                        <i data-lucide="sparkles" class="w-5 h-5 text-indigo-500"></i> <span
+                        <i data-lucide="sparkles" class="w-5 h-5 text-indigo-500"></i> <span id="lblLockSpecial"
                             data-i18n="lockSpecial">ล็อครายชื่อเวรพิเศษ</span>
                     </h2>
                     <div
                         class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in font-sans">
-                        <input type="checkbox" id="chkUseSpecialRule" onchange="toggleSpecialRuleUI()"
+                        <input type="checkbox" id="chkUseSpecialRule" aria-labelledby="lblLockSpecial" onchange="toggleSpecialRuleUI()"
                             class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-4 dark:border-slate-700 appearance-none cursor-pointer" />
                         <label for="chkUseSpecialRule"
                             class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-slate-700 cursor-pointer"></label>
@@ -762,7 +775,7 @@
 
                 <div id="specialRuleBody" class="p-5 space-y-4" style="display: none;">
                     <div>
-                        <label
+                        <label for="lockConditionType"
                             class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5"
                             data-i18n="lockConditionTypeLabel">ประเภทการล็อก</label>
                         <select id="lockConditionType" onchange="toggleLockConditionUI(); generateSchedule();"
@@ -773,21 +786,21 @@
                     </div>
                     <div id="lockFirstNDaysContainer">
                         <label
-                            class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5"
+                            class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5" id="lblLockDays"
                             data-i18n="lockDays">ในช่วงกี่วันแรก?</label>
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400"
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400" id="lblLockStart"
                                 data-i18n="lockDaysStart">เริ่มวันที่</span>
-                            <input type="number" id="inputSpecialStartDay" value="1" min="1" max="90"
+                            <input type="number" id="inputSpecialStartDay" aria-labelledby="lblLockDays lblLockStart" value="1" min="1" max="90"
                                 class="w-16 bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-2 py-2 text-sm outline-none text-center focus:border-indigo-500 font-bold text-indigo-700 dark:text-indigo-400">
-                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400"
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400" id="lblLockTo"
                                 data-i18n="lockDaysTo">ถึง</span>
-                            <input type="number" id="inputSpecialDays" value="14" min="1" max="90"
+                            <input type="number" id="inputSpecialDays" aria-labelledby="lblLockDays lblLockTo" value="14" min="1" max="90"
                                 class="w-16 bg-white dark:bg-slate-950 border border-indigo-200 dark:border-slate-800 rounded-xl px-2 py-2 text-sm outline-none text-center focus:border-indigo-500 font-bold text-indigo-700 dark:text-indigo-400">
                         </div>
                     </div>
                     <div id="lockEveryWeekdayContainer" class="hidden">
-                        <label
+                        <label for="selectLockWeekday"
                             class="block text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1.5"
                             data-i18n="lockWeekdayLabel">วันที่ต้องการล็อก</label>
                         <select id="selectLockWeekday" onchange="generateSchedule();"
@@ -964,6 +977,11 @@
                         <div id="scheduleToolbar" class="flex flex-wrap items-center gap-2 justify-start sm:justify-end font-sans">
                             <div class="flex flex-wrap items-center gap-2">
                             <!-- Reset Manual Overrides Button (Hidden by default, shown when manual overrides exist) -->
+                            <button id="btnUndo" onclick="undoLastAction()" data-i18n-aria="undoBtn" aria-label="ย้อนกลับ"
+                                class="hidden flex items-center justify-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2.5 rounded-xl transition-all">
+                                <i data-lucide="undo-2" class="w-4 h-4" aria-hidden="true"></i> <span
+                                    data-i18n="undoBtn">ย้อนกลับ</span>
+                            </button>
                             <button id="btnClearOverrides" onclick="clearManualOverrides()"
                                 class="hidden flex items-center justify-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 hover:bg-rose-100 dark:hover:bg-rose-900/50 px-3.5 py-2.5 rounded-xl transition-all">
                                 <i data-lucide="rotate-ccw" class="w-4 h-4"></i> <span
@@ -1060,13 +1078,12 @@
     <!-- Footer -->
     <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6">
         <div class="max-w-7xl mx-auto px-4 flex flex-col justify-center items-center gap-2">
-            <p class="text-sm font-medium text-slate-400 dark:text-slate-500 text-center">Designed by <a
+            <p class="text-sm font-medium text-slate-400 dark:text-slate-500 text-center"><span data-i18n="footerDesignedBy">Designed by</span> <a
                     class="hover:text-orange-600 dark:hover:text-orange-400 text-orange-400 dark:text-orange-600"
-                    href="https://th.linkedin.com/in/arnun-polsuksiri" target="_blank">Arnun Polsuksiri</a> & developed
-                by Antigravity</p>
-            <p class="text-sm font-medium text-slate-400 dark:text-slate-500 text-center">GitHub: <a
+                    href="https://th.linkedin.com/in/arnun-polsuksiri" target="_blank">Arnun Polsuksiri</a> <span data-i18n="footerDevelopedBy">& developed by Antigravity</span></p>
+            <p class="text-sm font-medium text-slate-400 dark:text-slate-500 text-center"><span data-i18n="footerGithub">GitHub:</span> <a
                     class="hover:text-orange-600 dark:hover:text-orange-400 text-orange-400 dark:text-orange-600"
-                    href="https://github.com/PleumA/PleumA.github.io" target="_blank">Link</a></p>
+                    href="https://github.com/PleumA/PleumA.github.io" target="_blank" data-i18n="footerLink">Link</a></p>
         </div>
     </footer>
 

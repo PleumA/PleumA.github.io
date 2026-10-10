@@ -36,19 +36,13 @@ const EVIL = '<img src=x onerror=alert(1)>';
         );
     });
 
-    await test('imported override names that are not doctors stay text', async () => {
+    await test('override names that are not doctors are pruned on commit, never rendered', async () => {
         reset(w);
-        w.eval(`manualOverrides = { 2: { 0: '<svg onload=alert(2)>' } };`);
+        w.eval(`pendingOverrides = { 2: { 0: '<svg onload=alert(2)>' } };`);
         await w.generateSchedule();
-        assert.strictEqual(
-            d.querySelector('#btn-day-2-slot-0 span.truncate').textContent,
-            '<svg onload=alert(2)>'
-        );
+        assert.deepStrictEqual(JSON.parse(w.eval('JSON.stringify(manualOverrides)')), {});
+        assert.ok(!d.querySelector('#btn-day-2-slot-0 span.truncate').textContent.includes('<svg'));
         w.setViewMode('calendar');
-        assert.strictEqual(
-            d.querySelector('#btn-cal-day-2-slot-0 span.truncate').textContent,
-            '<svg onload=alert(2)>'
-        );
         assert.strictEqual(d.querySelectorAll('[onload]').length, 0);
     });
 

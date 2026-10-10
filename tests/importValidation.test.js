@@ -42,7 +42,10 @@ const { loadApp, reset, settle, snap, importJSON, runner } = require('./domHarne
         ],
         [
             'override values must be strings with digit keys',
-            { manualOverrides: { 1: { 0: 5, 1: 'X' }, abc: { 0: 'X' }, 2: { zz: 'X' } } },
+            {
+                doctors: ['X', 'Y', 'Z'], // overrides naming non-doctors are pruned on commit
+                manualOverrides: { 1: { 0: 5, 1: 'X' }, abc: { 0: 'X' }, 2: { zz: 'X' } },
+            },
             { manualOverrides: { 1: { 1: 'X' } } },
         ],
         ['offData null entry', { offData: [null] }, { offData: [] }],

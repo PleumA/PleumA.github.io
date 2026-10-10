@@ -70,7 +70,7 @@ function renderStructuredDoctorRoles() {
     const activeDocs = typeof doctors !== 'undefined' ? doctors : [];
     if (activeDocs.length === 0) {
         const msg = translations[currentLang]?.noDocsWarning ?? 'Please add doctors first';
-        container.innerHTML = `<p class="text-xs text-slate-500 italic" data-i18n="noDocsWarning">${msg}</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-500 dark:text-slate-400 italic" data-i18n="noDocsWarning">${msg}</p>`;
         // Clear input if no docs
         document.getElementById('inputDoctorRoles').value = '';
         return;
@@ -91,8 +91,8 @@ function renderStructuredDoctorRoles() {
 
         html += `
         <div class="flex items-center gap-2 mb-2">
-            <input type="text" class="doc-role-name flex-1 min-w-0 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300" value="${esc(doc)}" readonly>
-            <select data-prev="${esc(role)}" class="doc-role-select w-[100px] flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100" onchange="handleDocRoleSelectChange(this)">
+            <input type="text" aria-label="${translations[currentLang].docListLabel}" class="doc-role-name flex-1 min-w-0 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300" value="${esc(doc)}" readonly>
+            <select data-prev="${esc(role)}" aria-label="${esc(translations[currentLang].roleSelectAria.replace('{name}', () => doc))}" class="doc-role-select w-[100px] flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 dark:text-slate-100" onchange="handleDocRoleSelectChange(this)">
                 ${roleOptions}
             </select>
         </div>
@@ -115,15 +115,25 @@ function handleDocRoleSelectChange(selectElem) {
             selectElem.value = selectElem.dataset.prev; // cancelled or empty: keep the old role
             return;
         }
-        if (![...selectElem.options].some((o) => o.value === rName)) {
+        if (rName === '__NEW__') {
+            selectElem.value = selectElem.dataset.prev; // reserved for the "new role" option
+            return;
+        }
+        // "r1" selects the existing "R1" instead of adding a lookalike role
+        const existing = [...selectElem.options].find(
+            (o) => o.value !== '__NEW__' && o.value.toLowerCase() === rName.toLowerCase()
+        );
+        if (existing) {
+            selectElem.value = existing.value;
+        } else {
             document.querySelectorAll('.doc-role-select').forEach((sel) => {
                 const opt = document.createElement('option');
                 opt.value = rName;
                 opt.textContent = rName;
                 sel.insertBefore(opt, sel.lastElementChild);
             });
+            selectElem.value = rName;
         }
-        selectElem.value = rName;
     }
     selectElem.dataset.prev = selectElem.value;
     syncStructuredDoctorRoles();
@@ -431,12 +441,12 @@ function renderStructuredConflicts(rows) {
 
         html += `
         <div class="flex items-center gap-2 mb-2 bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
-            <select class="conflict-doc-1 flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-sm outline-none" onchange="syncStructuredConflicts()">
+            <select aria-label="${translations[currentLang].conflictDoc1Aria}" class="conflict-doc-1 flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-sm outline-none" onchange="syncStructuredConflicts()">
                 <option value="">--</option>
                 ${doc1Options}
             </select>
             <span class="text-xs text-slate-500"><i data-lucide="zap" class="w-3.5 h-3.5 text-rose-400"></i></span>
-            <select class="conflict-doc-2 flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-sm outline-none" onchange="syncStructuredConflicts()">
+            <select aria-label="${translations[currentLang].conflictDoc2Aria}" class="conflict-doc-2 flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-sm outline-none" onchange="syncStructuredConflicts()">
                 <option value="">--</option>
                 ${doc2Options}
             </select>
