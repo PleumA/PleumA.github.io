@@ -38,12 +38,6 @@ runTest('th uses one unit word for shifts (เวร)', () => {
     assert.strictEqual(t.th.shiftsUnit, 'เวร');
 });
 
-runTest('mobile View Schedule button is translated', () => {
-    assert.ok(t.th.viewScheduleBtn && t.en.viewScheduleBtn);
-    assert.ok(html.includes('data-i18n="viewScheduleBtn"'));
-    assert.ok(!html.includes('ดูตาราง / View Schedule'));
-});
-
 runTest('index.html has no Thai " / English" duplicate in visible text or attributes', () => {
     // Blank out code/script/style blocks but keep newlines so line numbers stay right.
     const scanned = html.replace(/<(code|script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, (m) =>

@@ -167,14 +167,52 @@
             background: #64748b;
         }
 
-        /* Mobile View Schedule Button */
-        .mobile-view-btn {
-            display: none;
+        /* Settings: inline column at ≥1024px, native popover panel below */
+        @supports selector(:popover-open) {
+            @media (max-width: 1023px) {
+                #settingsPanel:not(:popover-open) {
+                    display: none;
+                }
+                #settingsPanel:popover-open {
+                    position: fixed;
+                    inset: 0 auto 0 0;
+                    margin: 0;
+                    border: 0;
+                    width: min(340px, 100vw);
+                    height: 100dvh;
+                    max-height: none;
+                    overflow-y: auto;
+                    padding: 1rem;
+                    background: #f8fafc;
+                    box-shadow: 0 10px 40px rgb(0 0 0 / 0.25);
+                }
+                /* flex-col children would otherwise shrink and clip inside the fixed-height panel */
+                #settingsPanel:popover-open > * {
+                    flex-shrink: 0;
+                }
+                .dark #settingsPanel:popover-open {
+                    background: #0f172a;
+                }
+                #settingsPanel::backdrop {
+                    background: rgb(15 23 42 / 0.3);
+                }
+            }
         }
-
-        @media (max-width: 1023px) {
-            body:has(#resultsContainer:not(.hidden)) .mobile-view-btn {
-                display: flex;
+        @supports not selector(:popover-open) {
+            #btnSettings {
+                display: none;
+            }
+        }
+        /* At ≥1024px undo the browser's [popover] defaults so the column sits inline */
+        @media (min-width: 1024px) {
+            #settingsPanel {
+                position: static;
+                inset: auto;
+                margin: 0;
+                border: 0;
+                padding: 0;
+                background: transparent;
+                color: inherit;
             }
         }
     </style>
@@ -201,6 +239,11 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+                <button popovertarget="settingsPanel" id="btnSettings"
+                    class="lg:hidden bg-white/10 hover:bg-white/20 border border-white/10 px-3 py-2.5 rounded-xl transition-all active:scale-95 text-white flex items-center justify-center gap-1.5 font-bold text-sm">
+                    <i data-lucide="sliders-horizontal" class="w-5 h-5" aria-hidden="true"></i>
+                    <span data-i18n="settingsBtn">ตั้งค่า</span>
+                </button>
                 <!-- Theme Toggle Button -->
                 <button onclick="toggleDarkMode()" id="btnDarkMode"
                     class="bg-white/10 hover:bg-white/20 border border-white/10 p-2.5 rounded-xl transition-all active:scale-95 text-white flex items-center justify-center"
@@ -239,7 +282,7 @@
     <main id="main-content" class="max-w-7xl mx-auto w-full px-4 py-8 flex flex-col lg:flex-row gap-8 lg:overflow-hidden">
 
         <!-- Left Column: Config -->
-        <section
+        <section id="settingsPanel" popover="auto"
             class="lg:w-[340px] lg:shrink-0 flex flex-col gap-6 lg:block lg:space-y-6 lg:h-[calc(100vh-150px)] lg:overflow-y-auto">
 
             <!-- Basic Config -->
@@ -700,14 +743,6 @@
                 </div>
             </div>
 
-            <!-- Mobile View Schedule Button -->
-            <div class="sticky bottom-4 z-40 mobile-view-btn justify-center lg:hidden">
-                <a href="#resultsContainer"
-                    class="bg-teal-600 text-white px-6 py-3 rounded-full shadow-xl font-bold flex items-center gap-2 active:scale-95 transition-transform">
-                    📋 <span data-i18n="viewScheduleBtn">ดูตาราง</span>
-                </a>
-            </div>
-
         </section>
 
         <!-- Right Column: Results -->
@@ -730,7 +765,7 @@
             <div id="resultsContainer" class="hidden animate-in fade-in duration-500 flex flex-col gap-6">
 
                 <!-- Stats Dashboard Grid -->
-                <div id="statsDashboard" class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in duration-500">
+                <div id="statsDashboard" class="grid grid-cols-2 md:grid-cols-3 gap-4 animate-in fade-in duration-500">
                     <div
                         class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3">
                         <div class="bg-teal-50 dark:bg-teal-950/40 p-2.5 rounded-xl text-teal-600 dark:text-teal-400">
@@ -771,19 +806,6 @@
                         </div>
                     </div>
 
-                    <div
-                        class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3">
-                        <div
-                            class="bg-orange-50 dark:bg-orange-950/40 p-2.5 rounded-xl text-orange-600 dark:text-orange-400">
-                            <i data-lucide="scale" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
-                                data-i18n="statsSpread">ความต่างเวร</p>
-                            <h4 id="statSpread" class="text-sm font-bold text-slate-800 dark:text-slate-100">Min: 0 |
-                                Max: 0</h4>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Summary Table -->
@@ -808,6 +830,9 @@
                             </div>
                         </div>
                     </div>
+                    <div id="fairnessStrip" class="flex flex-wrap items-center gap-2 px-6 py-3"></div>
+                    <details class="border-t border-slate-100 dark:border-slate-800">
+                        <summary class="px-6 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-pointer" data-i18n="summaryDetailsLabel">รายละเอียดรายบุคคล</summary>
                     <div class="overflow-x-auto p-2">
                         <table class="w-full text-center text-sm">
                             <thead id="summaryTableHeader">
@@ -828,6 +853,7 @@
                             </tbody>
                         </table>
                     </div>
+                    </details>
                 </div>
 
                 <!-- Schedule Table & Calendar Panel -->

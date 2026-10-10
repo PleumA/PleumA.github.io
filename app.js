@@ -77,6 +77,13 @@ let darkMode =
 
 // Initial setup on document load
 document.addEventListener('DOMContentLoaded', () => {
+    // An open settings popover must not float over the inline layout after an iPad rotates to landscape
+    window
+        .matchMedia('(min-width: 1024px)')
+        .addEventListener(
+            'change',
+            (e) => e.matches && document.getElementById('settingsPanel')?.hidePopover?.()
+        );
     const d = new Date();
     document.getElementById('inputMonth').value = d.getMonth() + 1;
     document.getElementById('inputYear').value =
@@ -3269,15 +3276,6 @@ function updateStatsDashboard() {
     document.getElementById('statAvgDuties').innerText =
         `${avg} ${currentLang === 'th' ? 'เวร/คน' : 'duties/doc'}`;
 
-    if (globalResult.summary && globalResult.summary.length > 0) {
-        const totals = globalResult.summary.map((s) => s.total);
-        const minVal = Math.min(...totals);
-        const maxVal = Math.max(...totals);
-        document.getElementById('statSpread').innerText = `Min: ${minVal} | Max: ${maxVal}`;
-    } else {
-        document.getElementById('statSpread').innerText = `Min: 0 | Max: 0`;
-    }
-
     // Toggle visibility of clear manual overrides button
     const clearOverridesBtn = document.getElementById('btnClearOverrides');
     if (clearOverridesBtn) {
@@ -3374,6 +3372,28 @@ function renderSummaryTable(config) {
 
     const sumTotalCount = document.getElementById('sumTotalCount');
     if (sumTotalCount) sumTotalCount.innerText = totalShifts;
+    renderFairnessStrip(globalResult.summary);
+}
+
+// Compact per-doctor totals; the doctor(s) furthest from the mean get an amber ring
+function renderFairnessStrip(summary) {
+    const strip = document.getElementById('fairnessStrip');
+    if (!strip) return;
+    if (!summary || summary.length === 0) {
+        strip.innerHTML = '';
+        return;
+    }
+    const totals = summary.map((s) => s.total);
+    const mean = totals.reduce((a, b) => a + b, 0) / totals.length;
+    const maxDev = Math.max(...totals.map((t) => Math.abs(t - mean)));
+    const chipsHtml = summary
+        .map((s) => {
+            const ring =
+                maxDev > 0 && Math.abs(s.total - mean) === maxDev ? ' ring-2 ring-amber-400' : '';
+            return `<span class="px-2.5 py-1 rounded-lg text-sm ${DOC_COLOR(s.name)}${ring}">${esc(s.name)} ${s.total}</span>`;
+        })
+        .join('');
+    strip.innerHTML = `${chipsHtml}<span class="ml-auto text-xs font-bold text-slate-500 dark:text-slate-400">${esc(translations[currentLang].statsSpread)} ${Math.min(...totals)}–${Math.max(...totals)}</span>`;
 }
 
 // Render Results Router (handles Table & Calendar view)

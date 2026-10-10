@@ -81,5 +81,67 @@ runTest('settings pane is 340px wide and the schedule views have no 600px cap', 
     });
 });
 
+runTest('settings column is a native popover opened by the header button', () => {
+    const panel = document.getElementById('settingsPanel');
+    assert.ok(panel, '#settingsPanel missing');
+    assert.strictEqual(panel.getAttribute('popover'), 'auto');
+    assert.ok(
+        panel.querySelector('[data-i18n="basicSettings"]'),
+        'panel must be the settings column'
+    );
+    const btn = document.getElementById('btnSettings');
+    assert.strictEqual(btn.getAttribute('popovertarget'), 'settingsPanel');
+    assert.ok(btn.className.includes('lg:hidden'));
+});
+
+runTest('spread tile and View schedule button are gone; new keys exist in th and en', () => {
+    assert.strictEqual(document.getElementById('statSpread'), null);
+    assert.strictEqual(document.querySelector('.mobile-view-btn'), null);
+    const t = window.eval('translations');
+    ['settingsBtn', 'summaryDetailsLabel'].forEach((k) => assert.ok(t.th[k] && t.en[k], k));
+    assert.strictEqual(t.th.viewScheduleBtn, undefined);
+});
+
+const strip = () => document.getElementById('fairnessStrip');
+const chips = () => [...strip().querySelectorAll('span.rounded-lg')];
+
+runTest('fairness row: one chip per doctor, ring only on the furthest from the mean', () => {
+    window.renderFairnessStrip([
+        { name: 'A', total: 10 },
+        { name: 'B', total: 11 },
+        { name: 'C', total: 10 },
+        { name: 'D', total: 14 },
+    ]);
+    assert.strictEqual(chips().length, 4);
+    const ringed = chips()
+        .filter((c) => c.className.includes('ring-amber-400'))
+        .map((c) => c.textContent.trim());
+    assert.deepStrictEqual(ringed, ['D 14']);
+    assert.ok(strip().textContent.includes('10–14'), 'spread min–max shown');
+});
+
+runTest('fairness row: equal totals or a single doctor → no ring', () => {
+    window.renderFairnessStrip([
+        { name: 'A', total: 10 },
+        { name: 'B', total: 10 },
+    ]);
+    assert.strictEqual(chips().filter((c) => c.className.includes('ring-amber-400')).length, 0);
+    window.renderFairnessStrip([{ name: 'A', total: 7 }]);
+    assert.strictEqual(chips().filter((c) => c.className.includes('ring-amber-400')).length, 0);
+});
+
+runTest('fairness row: names render as text (no HTML injection), empty summary clears it', () => {
+    window.renderFairnessStrip([{ name: '<img src=x onerror=alert(1)>', total: 3 }]);
+    assert.strictEqual(strip().querySelector('img'), null);
+    window.renderFairnessStrip([]);
+    assert.strictEqual(strip().innerHTML, '');
+});
+
+runTest('full summary table lives in a closed <details>', () => {
+    const d = document.getElementById('summaryTableBody').closest('details');
+    assert.ok(d, 'summary table not inside <details>');
+    assert.strictEqual(d.open, false);
+});
+
 console.log(`\nPASSED: ${passedTests}/${totalTests}, FAILED: ${totalTests - passedTests}`);
 if (passedTests !== totalTests) process.exit(1);
