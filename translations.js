@@ -35,6 +35,13 @@ const esc = (str) => {
         }
     });
 };
+
+// Doctor and role names live in "name:role, A:B" text formats, so strip the separators.
+const sanitizeName = (raw) =>
+    String(raw ?? '')
+        .replace(/[:;,\r\n]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 const translations = {
     th: {
         title: 'ระบบจัดตารางเวรอัตโนมัติ',
@@ -144,6 +151,7 @@ const translations = {
         calendarAppleHint: 'ดาวน์โหลดไฟล์ .ics แล้ว — เปิดไฟล์เพื่อเพิ่มลง Apple Calendar',
         calendarGoogleHint:
             'ดาวน์โหลดไฟล์ .ics แล้ว — นำเข้าไฟล์ในหน้า Google Calendar ที่เปิดขึ้น',
+        importInvalid: 'ไฟล์ตั้งค่าไม่ถูกต้อง ไม่มีการเปลี่ยนแปลงข้อมูล',
         tableDateCol: 'วันที่',
         tableDayCol: 'วัน',
         tableDutyCol: 'เวร',
@@ -321,6 +329,7 @@ const translations = {
         calendarAppleHint: '.ics downloaded — open it to add to Apple Calendar',
         calendarGoogleHint:
             '.ics downloaded — import it on the Google Calendar page that just opened',
+        importInvalid: 'Invalid config file. Nothing was changed.',
         tableDateCol: 'Date',
         tableDayCol: 'Day',
         tableDutyCol: 'Duty',

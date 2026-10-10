@@ -639,7 +639,7 @@ function renderDoctorTags() {
 }
 
 function addDoctor(name) {
-    name = name.trim();
+    name = sanitizeName(name);
     if (!name) return;
     if (doctors.includes(name)) {
         showToast(
@@ -4449,28 +4449,90 @@ window.exportConfigJSON = function () {
     showToast(currentLang === 'th' ? 'ส่งออกการตั้งค่าสำเร็จ!' : 'Config exported successfully!');
 };
 
+// Validate and coerce an imported config. Pure: it never touches app state, so a bad file
+// can be rejected before anything is assigned.
+function sanitizeConfig(raw) {
+    const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+    if (!isObj(raw)) return { ok: false, error: 'config must be a JSON object' };
+    for (const key of ['doctors', 'offData', 'extraSlotsData']) {
+        if (raw[key] != null && !Array.isArray(raw[key]))
+            return { ok: false, error: `${key} must be an array` };
+    }
+    for (const key of ['manualOverrides', 'inputs', 'checkboxes']) {
+        if (raw[key] != null && !isObj(raw[key]))
+            return { ok: false, error: `${key} must be an object` };
+    }
+
+    const scalar = (v) => (typeof v === 'string' || typeof v === 'number' ? v : '');
+    // Keep integer ids, renumber missing or repeated ones
+    const withIds = (rows) => {
+        const clean = rows.filter(isObj);
+        let next = 1 + Math.max(0, ...clean.map((r) => (Number.isInteger(r.id) ? r.id : 0)));
+        const used = new Set();
+        return clean.map((r) => {
+            const id = Number.isInteger(r.id) && !used.has(r.id) ? r.id : next++;
+            used.add(id);
+            return { ...r, id };
+        });
+    };
+
+    const config = { ...raw };
+    if (raw.doctors != null) {
+        config.doctors = [];
+        raw.doctors.forEach((d) => {
+            if (typeof d !== 'string' && typeof d !== 'number') return;
+            const name = sanitizeName(d);
+            if (name && !config.doctors.includes(name)) config.doctors.push(name);
+        });
+    }
+    if (raw.offData != null) {
+        config.offData = withIds(raw.offData).map((r) => ({
+            id: r.id,
+            date: scalar(r.date),
+            names: typeof r.names === 'string' ? r.names : '',
+        }));
+    }
+    if (raw.extraSlotsData != null) {
+        config.extraSlotsData = withIds(raw.extraSlotsData).map((r) => ({
+            id: r.id,
+            date: scalar(r.date),
+            slots: scalar(r.slots),
+        }));
+    }
+    if (raw.manualOverrides != null) {
+        config.manualOverrides = {};
+        Object.entries(raw.manualOverrides).forEach(([day, slots]) => {
+            if (!/^\d+$/.test(day) || !isObj(slots)) return;
+            const kept = {};
+            Object.entries(slots).forEach(([slot, name]) => {
+                if (/^\d+$/.test(slot) && typeof name === 'string') kept[slot] = name;
+            });
+            if (Object.keys(kept).length > 0) config.manualOverrides[day] = kept;
+        });
+    }
+    return { ok: true, config };
+}
+
 window.importConfigJSON = function (event) {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function (e) {
+        const previous = { doctors, offData, extraSlotsData, manualOverrides, quota };
         try {
-            const config = JSON.parse(e.target.result);
-
-            if (config.doctors && !Array.isArray(config.doctors)) throw new Error('Invalid format');
-            if (config.offData && !Array.isArray(config.offData)) throw new Error('Invalid format');
-            if (config.extraSlotsData && !Array.isArray(config.extraSlotsData))
-                throw new Error('Invalid format');
+            const checked = sanitizeConfig(JSON.parse(e.target.result));
+            if (!checked.ok) {
+                console.error('Invalid config:', checked.error);
+                showToast(translations[currentLang].importInvalid, true);
+                return;
+            }
+            const config = checked.config;
 
             if (config.doctors) doctors = config.doctors;
             if (config.offData) offData = config.offData;
             if (config.extraSlotsData) extraSlotsData = config.extraSlotsData;
-            if (config.manualOverrides) {
-                manualOverrides = config.manualOverrides;
-            } else {
-                manualOverrides = {};
-            }
+            manualOverrides = config.manualOverrides || {};
 
             if (config.quota) {
                 quota = config.quota;
@@ -4607,9 +4669,6 @@ window.importConfigJSON = function (event) {
             toggleShiftBasedUI();
             toggleSpecialRuleUI();
 
-            const importInput = document.getElementById('importConfigFile');
-            if (importInput) importInput.value = ''; // Reset file input
-
             showToast(
                 currentLang === 'th' ? 'นำเข้าการตั้งค่าสำเร็จ!' : 'Config imported successfully!'
             );
@@ -4619,6 +4678,9 @@ window.importConfigJSON = function (event) {
                 generateSchedule();
             }
         } catch (error) {
+            // Anything that throws after state was assigned must not leave a half-imported app.
+            // ponytail: only the five data globals roll back; input values already written stay.
+            ({ doctors, offData, extraSlotsData, manualOverrides, quota } = previous);
             console.error('Error parsing JSON:', error);
             showToast(
                 currentLang === 'th'
@@ -4626,6 +4688,9 @@ window.importConfigJSON = function (event) {
                     : 'Error reading JSON file',
                 true
             );
+        } finally {
+            const importInput = document.getElementById('importConfigFile');
+            if (importInput) importInput.value = ''; // Reset file input
         }
     };
     reader.readAsText(file);

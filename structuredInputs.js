@@ -106,8 +106,8 @@ function handleDocRoleSelectChange(selectElem) {
         const newRole = prompt(
             currentLang === 'th' ? 'ป้อนชื่อบทบาทใหม่ (เช่น R3)' : 'Enter new role name (e.g., R3)'
         );
-        if (newRole && newRole.trim() !== '') {
-            const rName = newRole.trim();
+        const rName = sanitizeName(newRole);
+        if (rName) {
             const selects = document.querySelectorAll('.doc-role-select');
             selects.forEach((sel) => {
                 const opt = document.createElement('option');

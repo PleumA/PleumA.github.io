@@ -33,6 +33,7 @@ module.exports = {
     translations: 'readonly',
     SHORTAGE_MARKER: 'readonly',
     esc: 'readonly',
+    sanitizeName: 'readonly',
     doctors: 'writable',
     isCustomDateRange: 'writable',
     initStructuredInputs: 'readonly',
