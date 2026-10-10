@@ -13,6 +13,8 @@ let scheduleDates = [];
 // Manual override object tracking custom cell edits
 // Format: { [day]: { [slotIndex]: docName } }
 let manualOverrides = {};
+// Period the manual overrides belong to; null means "adopt the next run's period" (set by import)
+let overridesPeriod = null;
 let quota = {};
 
 // Shared doctor badge color palette (indexed by doctor order)
@@ -2391,9 +2393,35 @@ function scoreSchedule(candidate) {
     return score - windowScore - pairScore;
 }
 
+// Overrides are keyed by day index only, so they are only meaningful inside one period
+function periodKey() {
+    if (isCustomDateRange) {
+        return `${document.getElementById('inputStartDate')?.value}_${document.getElementById('inputEndDate')?.value}`;
+    }
+    const year = parseInt(document.getElementById('inputYear').value);
+    return `${parseInt(document.getElementById('inputMonth').value)}-${year > 2500 ? year - 543 : year}`;
+}
+
 let isCalculating = false;
-window.generateSchedule = async function () {
-    if (isCalculating) return;
+let regenPending = false;
+let regenLoop = null;
+// A change made mid-calculation is remembered and re-run with the latest inputs afterwards.
+// The queued caller gets the running loop's promise, so awaiting it waits for the rerun too.
+window.generateSchedule = function () {
+    if (isCalculating) {
+        regenPending = true;
+        return regenLoop;
+    }
+    regenLoop = (async () => {
+        do {
+            regenPending = false;
+            await runScheduleOnce();
+        } while (regenPending);
+    })();
+    return regenLoop;
+};
+
+async function runScheduleOnce() {
     window.lockWarningShown = false;
 
     const btn = document.getElementById('btnCalculate');
@@ -2401,6 +2429,24 @@ window.generateSchedule = async function () {
     if (btn) originalHtml = btn.innerHTML;
 
     try {
+        // Read the period inputs once; the whole run, including its awaits, uses these locals
+        const year = parseInt(document.getElementById('inputYear').value);
+        const month = parseInt(document.getElementById('inputMonth').value);
+        const calcYear = year > 2500 ? year - 543 : year;
+        if (!isCustomDateRange && !(calcYear >= 1000)) {
+            showToast(translations[currentLang].yearInvalid, true);
+            return;
+        }
+        const key = periodKey();
+        if (overridesPeriod !== null && overridesPeriod !== key) {
+            if (Object.keys(manualOverrides).length > 0) {
+                showToast(translations[currentLang].overridesCleared);
+            }
+            manualOverrides = {};
+            undoStack.length = 0;
+        }
+        overridesPeriod = key;
+
         if (doctors.length < 2) {
             document.getElementById('resultsContainer').classList.add('hidden');
             document.getElementById('emptyState').classList.remove('hidden');
@@ -2457,15 +2503,6 @@ window.generateSchedule = async function () {
                 curr.setDate(curr.getDate() + 1);
             }
         } else {
-            const year = parseInt(document.getElementById('inputYear').value);
-            const month = parseInt(document.getElementById('inputMonth').value);
-            const calcYear = year > 2500 ? year - 543 : year;
-            if (!(calcYear >= 1000)) {
-                if (btn) btn.innerHTML = originalHtml;
-                isCalculating = false;
-                showToast(translations[currentLang].yearInvalid, true);
-                return;
-            }
             const daysInMonth = new Date(calcYear, month, 0).getDate();
             scheduleDates = [];
             for (let i = 1; i <= daysInMonth; i++) {
@@ -2486,14 +2523,13 @@ window.generateSchedule = async function () {
         showToast(currentLang === 'th' ? 'กำลังจัดตารางเวร...' : 'Calculating schedule...');
 
         // Yield to allow browser to render the disabled state, loader spinner, and toast
+        // Parse config ONCE, before the first await, so later input changes cannot mix into this run
+        const config = parseUIConfig();
         await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Run smart solver search: generate multiple schedules and pick the highest scoring one
         let bestCandidate = null;
         let bestScore = -Infinity;
-
-        // Parse config ONCE for all candidates
-        const config = parseUIConfig();
 
         // 1. Run baseline greedy (0 randomness)
         const baseline = generateSingleScheduleCandidate(0, config);
@@ -2544,23 +2580,14 @@ window.generateSchedule = async function () {
         }
 
         // 4. Finalize the UI properties for the chosen best candidate (called only once!)
-        const year = parseInt(document.getElementById('inputYear').value);
-        const month = parseInt(document.getElementById('inputMonth').value);
-        const calcYear = year > 2500 ? year - 543 : year;
-
         bestCandidate.schedule.forEach((row) => {
             const dateObj = isCustomDateRange
                 ? scheduleDates[row.day - 1]
                 : new Date(calcYear, month - 1, row.day);
             row.dayName = dayName(dateObj);
 
-            if (isCustomDateRange) {
-                const dd = String(dateObj.getDate()).padStart(2, '0');
-                const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const yyyy =
-                    currentLang === 'th' ? dateObj.getFullYear() + 543 : dateObj.getFullYear();
-                row.dayDisplay = `${dd}/${mm}/${yyyy}`;
-            }
+            if (isCustomDateRange)
+                row.dayDisplay = formatShortDate(row.day, month, year, currentLang);
 
             updateDayNote(row, null, config);
         });
@@ -2643,11 +2670,18 @@ window.generateSchedule = async function () {
             );
         }
     }
-};
+}
 
 // Apply manual edits to the current global result
 function applyManualOverrides(config) {
     if (!globalResult) return;
+
+    // Start from the solver's own picks so an override that was removed (undo, reset) reverts
+    if (globalResult.originalSchedule) {
+        globalResult.schedule.forEach((row, i) => {
+            row.selectedDocs = globalResult.originalSchedule[i].selectedDocs.map((s) => ({ ...s }));
+        });
+    }
 
     Object.keys(manualOverrides).forEach((dayStr) => {
         const day = parseInt(dayStr);
@@ -2662,10 +2696,11 @@ function applyManualOverrides(config) {
                     };
                 }
             });
-            // Refresh notes for this overridden day
-            updateDayNote(dayRow, null, config);
         }
     });
+
+    // Notes depend on who is assigned, so refresh them all
+    globalResult.schedule.forEach((row) => updateDayNote(row, null, config));
 
     // Recalculate summary totals based on overrides
     recalculateCounts(config);
@@ -4577,6 +4612,8 @@ function applyConfig(config) {
     if (config.offData) offData = config.offData;
     if (config.extraSlotsData) extraSlotsData = config.extraSlotsData;
     manualOverrides = config.manualOverrides || {};
+    undoStack.length = 0; // history from the previous file cannot apply to this one
+    overridesPeriod = null; // the first run adopts the imported period, keeping imported overrides
 
     if (config.quota) {
         quota = config.quota;

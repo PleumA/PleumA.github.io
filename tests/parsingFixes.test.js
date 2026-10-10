@@ -1,6 +1,6 @@
 process.env.TZ = 'America/New_York'; // before anything touches Date
 const assert = require('assert');
-const { loadApp, reset, settle, setInput, runner } = require('./domHarness');
+const { loadApp, reset, setInput, runner } = require('./domHarness');
 
 (async () => {
     const w = await loadApp();
@@ -141,11 +141,9 @@ const { loadApp, reset, settle, setInput, runner } = require('./domHarness');
     for (const tz of ['America/New_York', 'Asia/Bangkok', 'Pacific/Kiritimati']) {
         await test(`M-utc (${tz}): custom range days and the date-picker chip keep their date`, async () => {
             process.env.TZ = tz;
-            await settle(w); // a previous generateSchedule may still hold isCalculating
             reset(w);
             custom('2026-03-01', '2026-03-03');
             await w.generateSchedule();
-            await settle(w);
             assert.strictEqual(w.eval('scheduleDates.map((x) => x.getDate()).join()'), '1,2,3');
             const ui = d.getElementById('inputSpecialHolsUI');
             ui.type = 'date';

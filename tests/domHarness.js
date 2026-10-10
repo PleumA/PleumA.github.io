@@ -79,7 +79,7 @@ function reset(w, doctors = ['A', 'B', 'C', 'D']) {
     }).forEach(([id, v]) => setInput(w, id, v));
     w.eval(`
         doctors.length = 0; doctors.push(...${JSON.stringify(doctors)});
-        offData = []; extraSlotsData = []; manualOverrides = {}; undoStack.length = 0;
+        offData = []; extraSlotsData = []; manualOverrides = {}; undoStack.length = 0; overridesPeriod = null;
         isCustomDateRange = false; globalResult = null; viewMode = 'table'; currentLang = 'en';
         scheduleDates = Array.from({ length: 31 }, (_, i) => new Date(2026, 0, i + 1));
     `);
