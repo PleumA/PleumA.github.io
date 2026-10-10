@@ -155,13 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.value = '';
             }
         } else if (e.key === 'Backspace' && this.value === '') {
-            if (doctors.length > 0) {
-                doctors.pop();
-                syncDoctorsToInput();
-                renderDoctorTags();
-                initStructuredInputs();
-                generateSchedule();
-            }
+            if (doctors.length > 0) removeDoctor(doctors.length - 1);
         }
     });
 
@@ -538,13 +532,19 @@ function updateDayNamesLanguage() {
     const year = parseInt(document.getElementById('inputYear').value);
     const month = parseInt(document.getElementById('inputMonth').value);
     const calcYear = year > 2500 ? year - 543 : year;
+    const config = parseUIConfig();
 
     globalResult.schedule.forEach((row) => {
-        const dateObj = new Date(calcYear, month - 1, row.day);
+        // A custom range has real dates in scheduleDates; month + row index would be wrong
+        const dateObj =
+            isCustomDateRange && scheduleDates[row.day - 1]
+                ? scheduleDates[row.day - 1]
+                : new Date(calcYear, month - 1, row.day);
         row.dayName = dayName(dateObj);
+        if (isCustomDateRange) row.dayDisplay = formatShortDate(row.day, month, year, currentLang);
 
         // Reconstruct warning flags using active language i18n
-        updateDayNote(row, null, parseUIConfig());
+        updateDayNote(row, null, config);
     });
 }
 
@@ -638,6 +638,8 @@ function renderDoctorTags() {
     lucide.createIcons();
     updateDoctorSelectors();
     if (typeof renderStructuredDoctorRoles === 'function') renderStructuredDoctorRoles();
+    if (typeof window.renderStructuredSinglePoolQuotas === 'function')
+        window.renderStructuredSinglePoolQuotas();
 }
 
 function addDoctor(name) {
@@ -872,6 +874,7 @@ function toggleLockConditionUI() {
 }
 window.toggleLockConditionUI = toggleLockConditionUI;
 
+let toastTimer;
 function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
     const toastContent = document.getElementById('toastContent');
@@ -891,7 +894,8 @@ function showToast(msg, isError = false) {
     toast.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'pointer-events-none');
     toast.classList.add('opacity-100', 'translate-y-0', 'scale-100');
 
-    setTimeout(() => {
+    clearTimeout(toastTimer); // an older toast's timeout must not hide this one early
+    toastTimer = setTimeout(() => {
         toast.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
         toast.classList.add('opacity-0', 'translate-y-8', 'scale-95', 'pointer-events-none');
     }, 3000);
@@ -3971,6 +3975,29 @@ function formatShortDate(dayIndex, month, year, lang) {
     return `${dd}/${mm}/${y}`;
 }
 
+function copyToClipboard(text, okMsg) {
+    if (!navigator.clipboard) {
+        showToast(translations[currentLang].clipboardUnavailable, true);
+        return;
+    }
+    navigator.clipboard
+        .writeText(text)
+        .then(() => showToast(okMsg))
+        .catch(() => {
+            showToast(currentLang === 'th' ? 'เกิดข้อผิดพลาดในการคัดลอก' : 'Copy failed', true);
+        });
+}
+
+// "Month 1/2026", or "Range 25/01/2026 - 05/02/2026" when a custom range is active
+function periodLabel(lang) {
+    if (isCustomDateRange && scheduleDates.length > 0) {
+        const from = formatShortDate(1, 0, 0, lang);
+        const to = formatShortDate(scheduleDates.length, 0, 0, lang);
+        return `${lang === 'th' ? 'ช่วง' : 'Range'} ${from} - ${to}`;
+    }
+    return `${lang === 'th' ? 'เดือน' : 'Month'} ${globalResult.month}/${globalResult.year}`;
+}
+
 window.copyScheduleForExcel = function () {
     if (!globalResult || globalResult.schedule.length === 0) {
         showToast(
@@ -4030,14 +4057,7 @@ window.copyScheduleForExcel = function () {
         tsvData += `${row.note}\n`;
     });
 
-    navigator.clipboard
-        .writeText(tsvData)
-        .then(() => {
-            showToast(translations[currentLang].copyExcelBtn + ' copy success!');
-        })
-        .catch(() => {
-            showToast(currentLang === 'th' ? 'เกิดข้อผิดพลาดในการคัดลอก' : 'Copy failed', true);
-        });
+    copyToClipboard(tsvData, translations[currentLang].copyExcelBtn + ' copy success!');
 };
 
 window.copySummary = function () {
@@ -4049,13 +4069,13 @@ window.copySummary = function () {
     if (isShiftBased) {
         text =
             currentLang === 'th'
-                ? `📊 สรุปจำนวนเวร เดือน ${globalResult.month}/${globalResult.year}\n---------------------------------------------------------------\nชื่อ      | เช้า(M) | บ่าย(A) | ดึก(N) | ทำการ | วันหยุด | รวม\n---------------------------------------------------------------\n`
-                : `📊 On-call Summary Month ${globalResult.month}/${globalResult.year}\n---------------------------------------------------------------\nName     | Morning | Afternoon | Night | Weekdays | Holidays | Total\n---------------------------------------------------------------\n`;
+                ? `📊 สรุปจำนวนเวร ${periodLabel('th')}\n---------------------------------------------------------------\nชื่อ      | เช้า(M) | บ่าย(A) | ดึก(N) | ทำการ | วันหยุด | รวม\n---------------------------------------------------------------\n`
+                : `📊 On-call Summary ${periodLabel('en')}\n---------------------------------------------------------------\nName     | Morning | Afternoon | Night | Weekdays | Holidays | Total\n---------------------------------------------------------------\n`;
     } else {
         text =
             currentLang === 'th'
-                ? `📊 สรุปจำนวนเวร เดือน ${globalResult.month}/${globalResult.year}\n---------------------------------\nชื่อ      | ทำการ | วันหยุด | รวม\n---------------------------------\n`
-                : `📊 On-call Summary Month ${globalResult.month}/${globalResult.year}\n---------------------------------\nName     | Weekdays | Holidays | Total\n---------------------------------\n`;
+                ? `📊 สรุปจำนวนเวร ${periodLabel('th')}\n---------------------------------\nชื่อ      | ทำการ | วันหยุด | รวม\n---------------------------------\n`
+                : `📊 On-call Summary ${periodLabel('en')}\n---------------------------------\nName     | Weekdays | Holidays | Total\n---------------------------------\n`;
     }
 
     let totalShifts = 0;
@@ -4082,14 +4102,7 @@ window.copySummary = function () {
         text += `---------------------------------\n${currentLang === 'th' ? 'รวมทั้งหมด' : 'Total shifts'}: ${totalShifts} ${translations[currentLang].shiftsUnit}\n`;
     }
 
-    navigator.clipboard
-        .writeText(text)
-        .then(() => {
-            showToast(translations[currentLang].copySummaryBtn + ' copy success!');
-        })
-        .catch(() => {
-            showToast(currentLang === 'th' ? 'เกิดข้อผิดพลาดในการคัดลอก' : 'Copy failed', true);
-        });
+    copyToClipboard(text, translations[currentLang].copySummaryBtn + ' copy success!');
 };
 
 // Excel Export File function
@@ -4153,7 +4166,13 @@ window.exportToExcel = function () {
 
         const ws = window.XLSX.utils.aoa_to_sheet(data);
         const wb = window.XLSX.utils.book_new();
-        window.XLSX.utils.book_append_sheet(wb, ws, `Schedule Month ${globalResult.month}`);
+        const range = isCustomDateRange && scheduleDates.length > 0;
+        const iso = (dt) =>
+            `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        const sheetName = range
+            ? `Schedule ${iso(scheduleDates[0])}`
+            : `Schedule Month ${globalResult.month}`;
+        window.XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
         // Add Individual Duty Summary to a second sheet
         let summaryHeaders = [];
@@ -4216,7 +4235,12 @@ window.exportToExcel = function () {
         if (currentLang === 'th' && displayYear < 2500) displayYear += 543;
         if (currentLang === 'en' && displayYear > 2500) displayYear -= 543;
 
-        window.XLSX.writeFile(wb, `OnCall_Month_${globalResult.month}_Year_${displayYear}.xlsx`);
+        window.XLSX.writeFile(
+            wb,
+            range
+                ? `OnCall_${iso(scheduleDates[0])}_${iso(scheduleDates[scheduleDates.length - 1])}.xlsx`
+                : `OnCall_Month_${globalResult.month}_Year_${displayYear}.xlsx`
+        );
         showToast(
             currentLang === 'th'
                 ? 'ดาวน์โหลดไฟล์ Excel สำเร็จ!'
@@ -4814,6 +4838,14 @@ window.undoLastAction = function () {
 
 document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        // Inside a text field Ctrl+Z belongs to the field's own undo
+        const t = e.target;
+        if (
+            t &&
+            t.closest &&
+            t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')
+        )
+            return;
         e.preventDefault();
         window.undoLastAction();
     }
@@ -4865,6 +4897,8 @@ window.handleDrop = function (e, targetDay, targetSlotIndex, targetDocIndex) {
         );
     } catch (err) {
         console.error('Drag and drop failed:', err);
+    } finally {
+        window.isDragAndDropOperation = false;
     }
 };
 
@@ -4963,6 +4997,8 @@ window.handlePersonDrop = function (e, targetDay, targetDocIndex, targetSlotInde
         }
     } catch (err) {
         console.error('Person drag and drop failed:', err);
+    } finally {
+        window.isDragAndDropOperation = false;
     }
 };
 
