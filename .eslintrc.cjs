@@ -16,6 +16,7 @@ module.exports = {
     XLSX: 'readonly',
     // App globals exposed on window
     generateSchedule: 'writable',
+    exportCalendar: 'writable',
     toggleDarkMode: 'writable',
     toggleLanguage: 'writable',
     openManualModal: 'writable',

@@ -1,10 +1,11 @@
-const CACHE_NAME = 'doctor-scheduler-v2';
+const CACHE_NAME = 'doctor-scheduler-v3';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './app.js',
     './structuredInputs.js',
     './translations.js',
+    './calendarExport.js',
     './dist/output.css',
     './manifest.json',
     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',

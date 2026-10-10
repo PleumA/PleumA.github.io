@@ -3360,6 +3360,7 @@ function renderResults() {
 
     const config = parseUIConfig();
     renderSummaryTable(config);
+    renderCalendarScopeOptions(config);
 
     if (viewMode === 'table') {
         renderTableView(config);
@@ -4131,6 +4132,78 @@ window.exportToExcel = function () {
             currentLang === 'th' ? 'เกิดข้อผิดพลาดในการสร้างไฟล์ Excel' : 'Error exporting Excel',
             true
         );
+    }
+};
+
+// Calendar export (.ics): Apple Calendar opens the file directly; Google has no bulk-add URL,
+// so we download the same file and open Google's Import page.
+function renderCalendarScopeOptions(config) {
+    const sel = document.getElementById('selectCalendarScope');
+    if (!sel) return;
+    const prev = sel.value;
+    const t = translations[currentLang];
+    const { groups, people } = listCalendarScopes(doctors, config.doctorRoles, config.roleBased);
+    const opt = (value, label) => `<option value="${esc(value)}">${esc(label)}</option>`;
+    let html = opt('all', t.calendarScopeAll);
+    if (groups.length) {
+        html += `<optgroup label="${esc(t.calendarScopeGroup)}">${groups.map((g) => opt(`group:${g}`, g)).join('')}</optgroup>`;
+    }
+    html += `<optgroup label="${esc(t.calendarScopePerson)}">${people.map((p) => opt(`person:${p}`, p)).join('')}</optgroup>`;
+    sel.innerHTML = html;
+    if ([...sel.options].some((o) => o.value === prev)) sel.value = prev;
+}
+
+window.exportCalendar = function (target) {
+    const t = translations[currentLang];
+    if (!globalResult || globalResult.schedule.length === 0) {
+        showToast(t.calendarNoData, true);
+        return;
+    }
+    const config = parseUIConfig();
+    const scope = parseCalendarScope(
+        document.getElementById('selectCalendarScope')?.value || 'all'
+    );
+    const M = config.morningSlots || 0;
+    const A = config.afternoonSlots || 0;
+    const slotLabel = (i, docObj) => {
+        if (config.isShiftBased) {
+            return i < M ? t.shiftMorning : i < M + A ? t.shiftAfternoon : t.shiftNight;
+        }
+        return config.roleBased && docObj.role && docObj.role !== 'Default' ? docObj.role : '';
+    };
+    const events = collectDutyEvents(globalResult.schedule, scheduleDates, scope, {
+        doctorRoles: config.doctorRoles,
+        slotLabel,
+        titlePrefix: t.calendarEventPrefix,
+        skipNames: [SHORTAGE_MARKER],
+    });
+    if (events.length === 0) {
+        showToast(t.calendarNoEvents, true);
+        return;
+    }
+
+    const scopeName =
+        scope.type === 'all'
+            ? t.calendarScopeAll
+            : scope.type === 'group'
+              ? scope.role
+              : scope.name;
+    const ics = buildICS(events, `${t.calendarName} – ${scopeName}`);
+    // Blob URL, not data: URL. iOS Safari only offers "Add to Calendar" for a real text/calendar file.
+    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `schedule-${scopeName.replace(/[\\/:*?"<>|\s]+/g, '_')}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    if (target === 'google') {
+        window.open('https://calendar.google.com/calendar/r/settings/export', '_blank', 'noopener');
+        showToast(t.calendarGoogleHint);
+    } else {
+        showToast(t.calendarAppleHint);
     }
 };
 
