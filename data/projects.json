@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-10T03:15:13.210Z",
+  "generated_at": "2026-11-10T11:12:31.767Z",
   "username": "PleumA",
   "projects": [
     {
@@ -21,7 +21,37 @@
       "category": "Software",
       "stars": 0,
       "forks": 0,
-      "updated_at": "2026-09-10T03:15:06Z",
+      "updated_at": "2026-11-10T11:00:58Z",
+      "featured": true
+    },
+    {
+      "display_name": "Super-AI-Engineer-Season-6",
+      "description": "Super AI Engineer Season 6 hackathon projects covering data analytics, RAG/LLM, computer vision, NLP, and machine learning.",
+      "github_url": "https://github.com/PleumA/Super-AI-Engineer-Season-6",
+      "homepage": null,
+      "language": "Jupyter Notebook",
+      "topics": [
+        "ai-engineering",
+        "artificial-intelligence",
+        "computer-vision",
+        "data-science",
+        "deep-learning",
+        "featured",
+        "hackathon",
+        "healthcare",
+        "kaggle",
+        "llm",
+        "machine-learning",
+        "medical-ai",
+        "natural-language-processing",
+        "portfolio",
+        "python",
+        "rag"
+      ],
+      "category": "Medical AI",
+      "stars": 0,
+      "forks": 0,
+      "updated_at": "2026-09-10T07:31:18Z",
       "featured": true
     }
   ]

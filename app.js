@@ -31,6 +31,10 @@ function createProjectCard(project) {
     ? project.topics.slice(0, 5)
     : [];
 
+  const cardClass = project.featured
+    ? "project-card featured"
+    : "project-card";
+
   const tags = topics
     .map((topic) => `<span>${escapeHTML(topic)}</span>`)
     .join("");
@@ -42,13 +46,13 @@ function createProjectCard(project) {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Live demo ↗
+        Live demo
       </a>
     `
     : "";
 
   return `
-    <article class="project-card">
+    <article class="${cardClass}">
 
       <div class="project-top">
         <span class="project-category">
@@ -83,7 +87,7 @@ function createProjectCard(project) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            GitHub ↗
+            GitHub
           </a>
 
           ${homepage}

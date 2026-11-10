@@ -36,7 +36,7 @@ GitHub repo topics → scripts/fetch-github-projects.js → data/projects.json �
 - `app.js` renders everything by string interpolation into `innerHTML`; every dynamic value passes through `escapeHTML()`. Preserve that for any new fields (descriptions/topics come from GitHub and are untrusted input).
 - Filter buttons are rebuilt on each click (`renderFilters()` re-renders and re-binds) — the active category lives in the module-level `activeCategory` variable.
 - The `#projects-grid` on load shows a fallback "Projects could not be loaded" message if the fetch fails.
-- Sections in `index.html` are hand-written static content (hero, research, about, skills, contact) and are not data-driven.
+- Sections in `index.html` are hand-written static content (hero, research, about, stack, contact) and are not data-driven.
 
 ## CI/CD
 

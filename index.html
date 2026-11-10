@@ -8,7 +8,14 @@
 
   <meta
     name="description"
-    content="Arnun Polsuksiri — physician transitioning into computer science and AI, building intelligent systems for healthcare."
+    content="Arnun Polsuksiri — physician moving into computer science and AI, building systems for healthcare."
+  />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap"
   />
 
   <link rel="stylesheet" href="styles.css" />
@@ -16,90 +23,86 @@
 
 <body>
 
+  <a class="skip-link" href="#work">Skip to work</a>
+
+
   <!-- Navigation -->
-  <header class="site-header">
-    <nav class="nav container">
-      <a href="#" class="logo">AP</a>
+  <header class="nav-wrap">
+    <nav class="nav-pill" aria-label="Main navigation">
+      <a href="#top" class="brand">AP</a>
 
       <div class="nav-links">
-        <a href="#projects">Projects</a>
+        <a href="#work">Work</a>
         <a href="#research">Research</a>
         <a href="#about">About</a>
-        <a href="#skills">Skills</a>
+        <a href="#stack">Stack</a>
         <a href="#contact">Contact</a>
       </div>
     </nav>
   </header>
 
 
-  <main>
+  <main id="top">
 
     <!-- Hero -->
     <section class="hero">
-      <div class="container hero-content">
+      <div class="container">
 
-        <p class="eyebrow">PHYSICIAN × COMPUTER SCIENCE × AI</p>
+        <p class="badge">
+          <span class="badge-dot" aria-hidden="true"></span>
+          Physician moving into AI engineering
+        </p>
 
-        <h1>
-          Building intelligent<br />
-          systems for healthcare.
+        <h1 class="hero-title">
+          <span class="line"><span>Clinical care,</span></span>
+          <span class="line"><span>made computable.</span></span>
         </h1>
 
         <p class="hero-description">
-          I'm Arnun Polsuksiri, a physician transitioning into computer
-          science and artificial intelligence. I build technical systems
-          that connect healthcare problems with computation, data, and AI.
+          I'm Arnun Polsuksiri, a physician building technical systems at
+          the intersection of medicine and computation — from clinical data
+          and machine learning to the software underneath.
         </p>
 
         <div class="hero-actions">
-          <a href="#projects" class="button button-primary">
-            Explore my work
-          </a>
-
+          <a href="#work" class="button button-primary">See the work</a>
           <a
             href="https://github.com/PleumA"
             target="_blank"
             rel="noopener noreferrer"
-            class="button button-secondary"
+            class="button button-ghost"
           >
-            GitHub ↗
+            GitHub
           </a>
         </div>
 
-        <div class="hero-meta">
-          <span>MD</span>
-          <span>Healthcare</span>
-          <span>AI / ML</span>
-          <span>Software</span>
-          <span>Research</span>
-        </div>
+        <ul class="facts">
+          <li>Doctor of Medicine</li>
+          <li>Super AI Engineer, Season 6</li>
+          <li>Clinical research and medical AI</li>
+        </ul>
 
       </div>
     </section>
 
 
-    <!-- Projects -->
-    <section id="projects" class="section">
+    <!-- Work -->
+    <section id="work" class="section">
       <div class="container">
 
         <div class="section-heading">
-          <div>
-            <p class="section-label">01 / PROJECTS</p>
-            <h2>Selected work</h2>
-          </div>
+          <h2>Selected work</h2>
 
           <p>
-            Technical projects at the intersection of healthcare,
-            data, software, and artificial intelligence.
+            Technical projects at the intersection of healthcare, data,
+            software, and artificial intelligence.
           </p>
         </div>
 
         <div id="project-filters" class="filters"></div>
 
         <div id="projects-grid" class="projects-grid">
-          <div class="loading">
-            Loading projects...
-          </div>
+          <div class="loading">Loading projects…</div>
         </div>
 
       </div>
@@ -107,45 +110,41 @@
 
 
     <!-- Research -->
-    <section id="research" class="section section-alt">
+    <section id="research" class="section">
       <div class="container">
 
         <div class="section-heading">
-          <div>
-            <p class="section-label">02 / RESEARCH</p>
-            <h2>Healthcare research</h2>
-          </div>
+          <h2>Healthcare research</h2>
+
+          <p>
+            Questions I want to answer with clinical data and
+            computational methods.
+          </p>
         </div>
 
-        <div class="research-grid">
+        <div class="rows">
 
-          <article class="research-card">
-            <span class="research-number">01</span>
-            <h3>Clinical Epidemiology</h3>
+          <article class="row">
+            <h3>Clinical epidemiology</h3>
             <p>
-              Applying epidemiological methods, statistics, and
-              healthcare data to investigate clinically meaningful
-              questions.
+              Applying epidemiological methods, statistics, and healthcare
+              data to investigate clinically meaningful questions.
             </p>
           </article>
 
-          <article class="research-card">
-            <span class="research-number">02</span>
+          <article class="row">
             <h3>Medical AI</h3>
             <p>
-              Exploring machine learning, medical imaging, and
-              computational approaches to support clinicians and
-              improve healthcare workflows.
+              Exploring machine learning, medical imaging, and computational
+              approaches that support clinicians and improve workflows.
             </p>
           </article>
 
-          <article class="research-card">
-            <span class="research-number">03</span>
-            <h3>Healthcare Data</h3>
+          <article class="row">
+            <h3>Healthcare data</h3>
             <p>
               Working with clinical, biomedical, and high-dimensional
-              biological data to develop reproducible computational
-              analyses.
+              biological data to build reproducible computational analyses.
             </p>
           </article>
 
@@ -159,30 +158,26 @@
     <section id="about" class="section">
       <div class="container about-grid">
 
-        <div>
-          <p class="section-label">03 / ABOUT</p>
-          <h2>From medicine to machines.</h2>
-        </div>
+        <h2>From medicine<br />to machines.</h2>
 
         <div class="about-text">
           <p>
             My background is in medicine, but my long-term direction is
-            increasingly technical. I'm interested in understanding how
-            software, mathematics, statistics, and artificial intelligence
-            can be used to solve difficult problems in healthcare.
+            increasingly technical. I'm interested in how software,
+            mathematics, statistics, and artificial intelligence can solve
+            difficult problems in healthcare.
           </p>
 
           <p>
             Rather than treating AI as a tool that sits on top of
             healthcare, I want to understand the engineering and
-            computational foundations underneath it — from algorithms
-            and data structures to machine learning systems.
+            computational foundations underneath it — from algorithms and
+            data structures to machine learning systems.
           </p>
 
           <p>
-            My goal is to become an AI engineer and researcher who can
-            move fluently between clinical problems and technical
-            solutions.
+            My goal is to become an AI engineer and researcher who can move
+            fluently between clinical problems and technical solutions.
           </p>
         </div>
 
@@ -190,48 +185,39 @@
     </section>
 
 
-    <!-- Skills -->
-    <section id="skills" class="section section-alt">
+    <!-- Stack -->
+    <section id="stack" class="section">
       <div class="container">
 
         <div class="section-heading">
-          <div>
-            <p class="section-label">04 / SKILLS</p>
-            <h2>Technical foundation</h2>
-          </div>
+          <h2>Technical foundation</h2>
+
+          <p>
+            What I work with now, and what I'm building depth in.
+          </p>
         </div>
 
-        <div class="skills-grid">
+        <div class="rows">
 
-          <div class="skill-group">
+          <div class="row">
             <h3>Programming</h3>
-            <div class="tags">
-              <span>Python</span>
-              <span>Git</span>
-              <span>Linux</span>
-            </div>
+            <p>Python, Git, Linux</p>
           </div>
 
-          <div class="skill-group">
-            <h3>AI & Data</h3>
-            <div class="tags">
-              <span>Machine Learning</span>
-              <span>Deep Learning</span>
-              <span>Computer Vision</span>
-              <span>NLP</span>
-              <span>Data Science</span>
-            </div>
+          <div class="row">
+            <h3>AI and data</h3>
+            <p>
+              Machine learning, deep learning, computer vision, NLP,
+              data science
+            </p>
           </div>
 
-          <div class="skill-group">
+          <div class="row">
             <h3>Healthcare</h3>
-            <div class="tags">
-              <span>Medical Imaging</span>
-              <span>Clinical Research</span>
-              <span>Epidemiology</span>
-              <span>Biomedical Data</span>
-              <span>Digital Health</span>
-            </div>
+            <p>
+              Medical imaging, clinical research, epidemiology,
+              biomedical data, digital health
+            </p>
           </div>
 
         </div>
@@ -241,16 +227,14 @@
 
 
     <!-- Contact -->
-    <section id="contact" class="section contact-section">
-      <div class="container contact-content">
-
-        <p class="section-label">05 / CONTACT</p>
+    <section id="contact" class="section contact">
+      <div class="container">
 
         <h2>Let's build something useful.</h2>
 
-        <p>
+        <p class="contact-intro">
           I'm interested in healthcare AI, software engineering,
-          computational research, and technically challenging problems.
+          computational research, and technically difficult problems.
         </p>
 
         <div class="contact-links">
@@ -271,7 +255,7 @@
             rel="noopener noreferrer"
           >
             <span>LinkedIn</span>
-            <strong>arnun-polsuksiri ↗</strong>
+            <strong>arnun-polsuksiri</strong>
           </a>
 
           <a
@@ -280,7 +264,7 @@
             rel="noopener noreferrer"
           >
             <span>GitHub</span>
-            <strong>PleumA ↗</strong>
+            <strong>PleumA</strong>
           </a>
 
         </div>
