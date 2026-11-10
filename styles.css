@@ -451,6 +451,38 @@ h2 {
 
 
 /* =========================
+   Live demo
+   ========================= */
+
+.inline-link {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  transition: color 0.18s ease, text-decoration-color 0.18s ease;
+}
+
+.inline-link:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.embed {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.embed iframe {
+  display: block;
+  width: 100%;
+  height: clamp(480px, 70vh, 720px);
+  border: 0;
+}
+
+
+/* =========================
    Rows (research, stack)
    ========================= */
 
